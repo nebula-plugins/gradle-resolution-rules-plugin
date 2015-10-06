@@ -1,0 +1,110 @@
+/*
+ * Copyright 2015 Netflix, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
+buildscript {
+    repositories { jcenter() }
+    ext {
+        versions = [:]
+        libraries = [:]
+        versions.kotlin = '0.14.451'
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${versions.kotlin}"
+    }
+}
+
+plugins {
+    id 'groovy'
+    id 'idea'
+    id 'jacoco'
+
+    // FIXME kotlin plugin appears to be causing JNA 4.0 to get on the classpath and break our native code
+    // id 'nebula.info' version '3.0.3'
+    id 'nebula.contacts' version '3.0.1'
+    // FIXME getting publishing block early evaluation problems when using Kotlin
+    // id 'nebula.maven-publish' version '4.2.1'
+    id 'nebula.nebula-release' version '3.0.3'
+    id 'nebula.nebula-bintray' version '3.1.0'
+    id 'nebula.facet' version '3.0.3'
+    id 'nebula.javadoc-jar' version '4.0.1'
+    id 'nebula.maven-apache-license' version '4.0.1'
+    id 'nebula.source-jar' version '4.0.1'
+
+    id 'com.gradle.plugin-publish' version '0.9.1'
+    id 'com.github.kt3k.coveralls' version '2.4.0'
+
+    id 'com.github.ben-manes.versions' version '0.11.3'
+}
+
+apply plugin: 'kotlin'
+
+dependencies {
+    compile "org.jetbrains.kotlin:kotlin-stdlib:${versions.kotlin}"
+
+    compile 'joda-time:joda-time:2.8.2'
+    compile 'com.fasterxml.jackson.module:jackson-module-kotlin:2.6.2-3'
+    compile 'com.fasterxml.jackson.datatype:jackson-datatype-joda:2.6.3'
+
+    runtime "org.jetbrains.kotlin:kotlin-reflect:${versions.kotlin}"
+}
+
+// Attempt to get out of Gradle dependency hell (at least somewhat reflect the runtime classloading scheme) by forcefully ordering Gradle dependencies last
+
+configurations {
+    gradleApi
+}
+
+dependencies {
+    gradleApi gradleApi()
+    gradleApi localGroovy()
+}
+
+sourceSets.each {
+    it.compileClasspath = it.compileClasspath - configurations.gradleApi + configurations.gradleApi
+    it.runtimeClasspath = it.runtimeClasspath - configurations.gradleApi + configurations.gradleApi
+}
+
+facets {
+    functionalTest {
+        parentSourceSet = 'test'
+        testTaskName = 'functionalTest'
+    }
+}
+
+apply from: 'gradle/idea.gradle'
+
+apply from: 'https://raw.githubusercontent.com/nebula-plugins/nebula-core/596569bf3e7bd32da076784a8273dbd145bc016f/common.gradle'
+
+description 'Gradle resolution rules plugin'
+
+contacts {
+    'dmthomas@gmail.com' {
+        moniker 'Danny Thomas'
+        github 'DanielThomas'
+    }
+}
+
+pluginBundle {
+    plugins {
+        resolutionRules {
+            id = 'nebula.resolution-rules'
+            displayName = 'Gradle Resolution Rules plugin'
+            description = project.description
+            tags = ['nebula', 'resolve', 'resolution', 'rules']
+        }
+    }
+}
