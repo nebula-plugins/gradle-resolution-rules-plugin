@@ -141,7 +141,7 @@ class PluginFunctionalTest extends IntegrationSpec {
         buildFile.delete()
         buildFile << """
                      apply plugin: 'java'
-                     apply plugin: 'nebula.resolve-rules'
+                     apply plugin: 'nebula.resolution-rules'
                      """.stripIndent()
 
         when:
