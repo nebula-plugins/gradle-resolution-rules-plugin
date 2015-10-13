@@ -7,7 +7,7 @@
 
 Gradle plugin for providing dependency resolution rules.
 
-Similar to the [![Blacklist Plugin](https://github.com/nebula-plugins/gradle-blacklist-plugin)], but provides general purpose rule types, and supports remote configuration rather than extension based configuration via an enterprise plugin.
+Similar to the [Blacklist Plugin](https://github.com/nebula-plugins/gradle-blacklist-plugin), but provides general purpose rule types, and supports remote configuration rather than extension based configuration via an enterprise plugin.
 
 # Usage
 
