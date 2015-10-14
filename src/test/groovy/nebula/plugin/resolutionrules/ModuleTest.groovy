@@ -22,12 +22,12 @@ import spock.lang.Specification
 class ModuleTest extends Specification {
     def 'module version identifier parsed'() {
         given:
-        def module = ModuleKt.toModuleVersionIdentifier('com.sun.jersey:jersey-bundle')
+        def module = ModuleVersionIdentifier.valueOf('com.sun.jersey:jersey-bundle')
 
         expect:
         module.organization == 'com.sun.jersey'
         module.name == 'jersey-bundle'
-        module.coordinates == 'com.sun.jersey:jersey-bundle'
+        module.toString() == 'com.sun.jersey:jersey-bundle'
         !module.hasVersion()
     }
 }

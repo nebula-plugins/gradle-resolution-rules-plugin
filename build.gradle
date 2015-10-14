@@ -20,10 +20,6 @@ buildscript {
     ext {
         versions = [:]
         libraries = [:]
-        versions.kotlin = '0.14.451'
-    }
-    dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${versions.kotlin}"
     }
 }
 
@@ -32,11 +28,9 @@ plugins {
     id 'idea'
     id 'jacoco'
 
-    // FIXME kotlin plugin appears to be causing JNA 4.0 to get on the classpath and break our native code
-    // id 'nebula.info' version '3.0.3'
+    id 'nebula.info' version '3.0.3'
     id 'nebula.contacts' version '3.0.1'
-    // FIXME getting publishing block early evaluation problems when using Kotlin
-    // id 'nebula.maven-publish' version '4.2.1'
+    id 'nebula.maven-publish' version '4.2.1'
     id 'nebula.nebula-release' version '3.0.3'
     id 'nebula.nebula-bintray' version '3.1.0'
     id 'nebula.facet' version '3.0.3'
@@ -50,16 +44,9 @@ plugins {
     id 'com.github.ben-manes.versions' version '0.11.3'
 }
 
-apply plugin: 'kotlin'
-
 dependencies {
-    compile "org.jetbrains.kotlin:kotlin-stdlib:${versions.kotlin}"
-
     compile 'joda-time:joda-time:2.8.2'
-    compile 'com.fasterxml.jackson.module:jackson-module-kotlin:2.6.2-3'
     compile 'com.fasterxml.jackson.datatype:jackson-datatype-joda:2.6.3'
-
-    runtime "org.jetbrains.kotlin:kotlin-reflect:${versions.kotlin}"
 }
 
 // Attempt to get out of Gradle dependency hell (at least somewhat reflect the runtime classloading scheme) by forcefully ordering Gradle dependencies last
