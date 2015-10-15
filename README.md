@@ -8,7 +8,9 @@
 
 Gradle plugin for providing dependency resolution rules.
 
-Similar to the [Blacklist Plugin](https://github.com/nebula-plugins/gradle-blacklist-plugin), but provides general purpose rule types, and supports remote configuration rather than extension based configuration via an enterprise plugin.
+Gradle resolution strategies and module metadata provide an effective way to mediate the dependency resolution process in your builds, however they don't adapt well to enterprises that need a curated and shared source for rules.
+
+The [Blacklist Plugin](https://github.com/nebula-plugins/gradle-blacklist-plugin) allows this problem to be solved with enterprise plugins for specific cases. This plugin provides general purpose rule types and supports artifact based configuration, allowing rules to be versioned and dependency locked.
 
 # Usage
 
@@ -30,7 +32,27 @@ Or using the Gradle plugin portal:
         id 'nebula.resolution-rules' version '1.0.0'
     }
 
-# Dependency rules
+# Dependency rules types
+
+## Replace
+ 
+Replace rules cause dependencies to be replaced with one at different coordinates, if both dependencies are present, avoiding class conflicts due to coordinate relocations.
+
+## Substitute
+
+Dependency is force replaced with new coordinates, regardless if the new dependency is visible in the graph.
+
+## Deny
+
+Deny rules fail the build if the specified dependency is present, forcing consumers to make a decision about the replacement of a dependency.
+
+Versions are optional, and access to an entire dependency can be denied. This is particularly useful for 'bundle' style dependencies, which fat jar dependencies without shading classes.
+ 
+## Reject 
+
+Reject rules prevent a dependency version from being considered by dynamic version or `latest.*` version calculation. It does not prevent that dependency from being used if it's explicitly requested by the project.
+
+# Consuming rules
 
 Dependency rules are read from the `resolutionRules` configuration. Zip and jar archives are supported, as are flat JSON files. JSON files within archives can at any directory level, and more than one json file can be provided.
 
@@ -39,7 +61,11 @@ Dependency rules are read from the `resolutionRules` configuration. Zip and jar 
         resolutionRules 'com.myorg:resolution-rules:latest.release'
     }
 
-# Example JSON
+# Producing rules
+
+To come.
+
+# Example rules JSON
 
     {
         "replace" : [
