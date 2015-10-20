@@ -70,48 +70,7 @@ class PluginFunctionalTest extends IntegrationSpec {
                                 },
                                 {
                                     "module": "com.sun.jersey:jersey-bundle",
-                                    "reason" : "jersey-bundle is a far jar that includes non-relocated (shaded) third party classes, which can cause duplicated classes on the classpath. Please specify the jersey- libraries you need directly",
-                                    "author" : "Danny Thomas <dmthomas@gmail.com>",
-                                    "date" : "2015-10-07T20:21:20.368Z"
-                                }
-                            ],
-                            "reject": [
-                                {
-                                    "module": "com.google.guava:guava:12.0",
-                                    "reason" : "Guava 12.0 significantly regressed LocalCache performance",
-                                    "author" : "Danny Thomas <dmthomas@gmail.com>",
-                                    "date" : "2015-10-07T20:21:20.368Z"
-                                }
-                            ]
-                        }                        {
-                            "replace" : [
-                                {
-                                    "module" : "asm:asm",
-                                    "with" : "org.ow2.asm:asm",
-                                    "reason" : "The asm group id changed for 4.0 and later",
-                                    "author" : "Danny Thomas <dmthomas@gmail.com>",
-                                    "date" : "2015-10-07T20:21:20.368Z"
-                                }
-                            ],
-                            "substitute": [
-                                {
-                                    "module" : "bouncycastle:bcprov-jdk15",
-                                    "with" : "org.bouncycastle:bcprov-jdk15:latest.release",
-                                    "reason" : "The latest version of BC is required, using the new coordinate",
-                                    "author" : "Danny Thomas <dmthomas@gmail.com>",
-                                    "date" : "2015-10-07T20:21:20.368Z"
-                                }
-                            ],
-                            "deny": [
-                                {
-                                    "module": "com.google.guava:guava:19.0-rc2",
-                                    "reason" : "Guava 19.0-rc2 is not permitted",
-                                    "author" : "Danny Thomas <dmthomas@gmail.com>",
-                                    "date" : "2015-10-07T20:21:20.368Z"
-                                },
-                                {
-                                    "module": "com.sun.jersey:jersey-bundle",
-                                    "reason" : "jersey-bundle is a far jar that includes non-relocated (shaded) third party classes, which can cause duplicated classes on the classpath. Please specify the jersey- libraries you need directly",
+                                    "reason" : "jersey-bundle is a fat jar that includes non-relocated (shaded) third party classes, which can cause duplicated classes on the classpath. Please specify the jersey- libraries you need directly",
                                     "author" : "Danny Thomas <dmthomas@gmail.com>",
                                     "date" : "2015-10-07T20:21:20.368Z"
                                 }
