@@ -256,7 +256,7 @@ class PluginFunctionalTest extends IntegrationSpec {
         then:
         def rootCause = StackTraceUtils.extractRootCause(result.failure)
         rootCause.class.simpleName == 'DependencyDeniedException'
-        rootCause.message == "Dependency com.sun.jersey:jersey-bundle denied by dependency rule: jersey-bundle is a far jar that includes non-relocated (shaded) third party classes, which can cause duplicated classes on the classpath. Please specify the jersey- libraries you need directly"
+        rootCause.message == "Dependency com.sun.jersey:jersey-bundle denied by dependency rule: jersey-bundle is a fat jar that includes non-relocated (shaded) third party classes, which can cause duplicated classes on the classpath. Please specify the jersey- libraries you need directly"
     }
 
     def 'reject dependency'() {
