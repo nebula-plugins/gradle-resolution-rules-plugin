@@ -1,4 +1,4 @@
-# Gradle Resolution Rules Plugin
+# Gradle resolution-rules Plugin
 
 ![Version](https://img.shields.io/maven-central/v/com.netflix.nebula/gradle-resolution-rules-plugin.svg)
 [![Build Status](https://travis-ci.org/nebula-plugins/gradle-resolution-rules-plugin.svg?branch=master)](https://travis-ci.org/nebula-plugins/gradle-resolution-rules-plugin)
@@ -60,10 +60,10 @@ Dependency rules are read from the `resolutionRules` configuration. Zip and jar 
         resolutionRules files('local-rules.json')
         resolutionRules 'com.myorg:resolution-rules:latest.release'
     }
-
+    
 # Producing rules
 
-To come.
+The `nebula.resolution-rules-producer' plugin is provided to facilitate creation of rules files. Documentation for it can be found later in this document. 
 
 # Example rules JSON
 
@@ -109,3 +109,41 @@ To come.
             }
         ]
     }
+
+
+# Gradle resolution-rules-producer Plugin
+
+This plugin can be used to validate and package rule files. To use, put your rules file (or files) in `src/resolutionRules` and execute the packageRules task. If successful, a jar with the validated rule files will be placed in your build directory.
+
+# Usage
+
+    buildscript {
+        repositories {
+            jcenter()
+        }
+
+        dependencies {
+            classpath 'com.netflix.nebula:gradle-resolution-rules-plugin:1.0.0'
+        }
+    }
+
+    apply plugin: 'nebula.resolution-rules-producer'
+
+Or using the Gradle plugin portal:
+
+    plugins {
+        id 'nebula.resolution-rules' version '1.0.0'
+    }
+
+
+Once configured, run the following:
+
+    $ ./gradlew packageRules
+    
+
+# Customizing rule file locations
+
+    checkResolutionRulesSyntax {
+        rules files('./alternative-rules.json', './src/rules/moreRules.json')
+    }
+
