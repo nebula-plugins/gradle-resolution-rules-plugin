@@ -1,3 +1,20 @@
+/*
+ * Copyright 2015 Netflix, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
 package nebula.plugin.resolutionrules
 
 import groovy.json.JsonOutput
@@ -11,7 +28,7 @@ import java.util.regex.Matcher
 class ResolutionJsonValidator extends DefaultTask {
 
     @InputFiles
-    def rules =  project.files("${project.rootDir.absolutePath}/src/resolutionRules/resolution-rules.json")
+    def rules = project.files("${project.rootDir.absolutePath}/src/resolutionRules/resolution-rules.json")
 
     def checkValidGav(gav) {
         Matcher matcher = gav =~ /(?smx)
@@ -46,7 +63,7 @@ class ResolutionJsonValidator extends DefaultTask {
 
     def validateNonEmptyFields = { entry, action, fields ->
         def errors = []
-        fields.each { field -> 
+        fields.each { field ->
             if (!entry[field]) {
                 errors << "* ${action}: ${entry} does not have a '${field}' property"
             }
@@ -76,19 +93,28 @@ class ResolutionJsonValidator extends DefaultTask {
             throw new GradleException('All resolution rule types must be lists')
         }
 
-        def replaceErrors = json.replace.collect({[
-                validateModuleName(it, 'replace'), validateWith(it, 'replace'), validateNonEmptyFields(it, 'replace', ['reason', 'author'])
-        ]})
-        def substErrors = json.substitute.collect({[
-             validateModuleName(it, 'substitute'), validateWith(it, 'substitute'),
-             validateNonEmptyFields(it, 'substitute', ['reason', 'author'])
-        ]})
-        def denyErrors = json.deny.collect({[
-                validateModuleName(it, 'deny'), validateNonEmptyFields(it, 'deny', ['reason', 'author'])
-        ]})
-        def rejectErrors = json.reject.collect({[
-                validateModuleName(it, 'reject'), validateNonEmptyFields(it, 'reject', ['reason', 'author'])
-        ]})
+        def replaceErrors = json.replace.collect({
+            [
+                    validateModuleName(it, 'replace'), validateWith(it, 'replace'),
+                    validateNonEmptyFields(it, 'replace', ['reason', 'author'])
+            ]
+        })
+        def substErrors = json.substitute.collect({
+            [
+                    validateModuleName(it, 'substitute'), validateWith(it, 'substitute'),
+                    validateNonEmptyFields(it, 'substitute', ['reason', 'author'])
+            ]
+        })
+        def denyErrors = json.deny.collect({
+            [
+                    validateModuleName(it, 'deny'), validateNonEmptyFields(it, 'deny', ['reason', 'author'])
+            ]
+        })
+        def rejectErrors = json.reject.collect({
+            [
+                    validateModuleName(it, 'reject'), validateNonEmptyFields(it, 'reject', ['reason', 'author'])
+            ]
+        })
 
         def errors = [replaceErrors, substErrors, denyErrors, rejectErrors].flatten().findAll { it }
         if (errors) {
@@ -98,7 +124,7 @@ class ResolutionJsonValidator extends DefaultTask {
 
     @TaskAction
     def validate() {
-        rules.files.each { 
+        rules.files.each {
             validateJsonFile(it)
         }
     }

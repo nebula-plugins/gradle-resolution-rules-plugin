@@ -14,6 +14,7 @@ The [Blacklist Plugin](https://github.com/nebula-plugins/gradle-blacklist-plugin
 
 # Usage
 
+```groovy
     buildscript {
         repositories {
             jcenter()
@@ -25,12 +26,15 @@ The [Blacklist Plugin](https://github.com/nebula-plugins/gradle-blacklist-plugin
     }
 
     apply plugin: 'nebula.resolution-rules'
+```
 
 Or using the Gradle plugin portal:
 
+```groovy
     plugins {
         id 'nebula.resolution-rules' version '1.0.0'
     }
+```
 
 # Dependency rules types
 
@@ -56,17 +60,20 @@ Reject rules prevent a dependency version from being considered by dynamic versi
 
 Dependency rules are read from the `resolutionRules` configuration. Zip and jar archives are supported, as are flat JSON files. JSON files within archives can at any directory level, and more than one json file can be provided.
 
+```groovy
     dependencies {
         resolutionRules files('local-rules.json')
         resolutionRules 'com.myorg:resolution-rules:latest.release'
     }
+```
     
 # Producing rules
 
-The `nebula.resolution-rules-producer' plugin is provided to facilitate creation of rules files. Documentation for it can be found later in this document. 
+The `nebula.resolution-rules-producer` plugin is provided to facilitate creation of rule files. Please see documentation below.  
 
 # Example rules JSON
 
+```json
     {
         "replace" : [
             {
@@ -109,14 +116,15 @@ The `nebula.resolution-rules-producer' plugin is provided to facilitate creation
             }
         ]
     }
-
+```
 
 # Gradle resolution-rules-producer Plugin
 
-This plugin can be used to validate and package rule files. To use, put your rules file (or files) in `src/resolutionRules` and execute the packageRules task. If successful, a jar with the validated rule files will be placed in your build directory.
+This plugin can be used to validate and package rule files. To use, put your rules file in `src/resolutionRules/resolution-rules.json` and execute the packageRules task. If successful, a jar with the validated rules file will be placed in your build directory. For specifying more than one source file, see documentation below.
 
 # Usage
 
+```groovy
     buildscript {
         repositories {
             jcenter()
@@ -128,12 +136,15 @@ This plugin can be used to validate and package rule files. To use, put your rul
     }
 
     apply plugin: 'nebula.resolution-rules-producer'
+```    
 
 Or using the Gradle plugin portal:
 
+```groovy
     plugins {
         id 'nebula.resolution-rules' version '1.0.0'
     }
+```
 
 
 Once configured, run the following:
@@ -143,7 +154,9 @@ Once configured, run the following:
 
 # Customizing rule file locations
 
+```groovy
     checkResolutionRulesSyntax {
         rules files('./alternative-rules.json', './src/rules/moreRules.json')
     }
+```
 
