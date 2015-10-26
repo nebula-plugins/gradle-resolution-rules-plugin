@@ -51,6 +51,7 @@ class ResolutionRulesPlugin implements Plugin<Project> {
         }
         for (file in files) {
             if (file.name.endsWith(".json")) {
+                ResolutionJsonValidator.validateJsonFile(file)
                 logger.info("Using $file as a dependency rules source")
                 rules.add(mapper.readValue(file, Rules))
             } else if (file.name.endsWith(".jar") || file.name.endsWith(".zip")) {
@@ -61,6 +62,7 @@ class ResolutionRulesPlugin implements Plugin<Project> {
                     while (entries.hasMoreElements()) {
                         ZipEntry entry = entries.nextElement()
                         if (entry.name.endsWith(".json")) {
+                            ResolutionJsonValidator.validateJsonStream(jar.getInputStream(entry))
                             rules.add(mapper.readValue(jar.getInputStream(entry), Rules))
                         }
                     }

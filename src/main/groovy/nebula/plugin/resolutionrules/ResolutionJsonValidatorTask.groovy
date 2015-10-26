@@ -17,22 +17,20 @@
 
 package nebula.plugin.resolutionrules
 
-import org.gradle.api.Plugin
-import org.gradle.api.Project
-import org.gradle.api.plugins.JavaPlugin
-import org.gradle.api.tasks.bundling.Jar
+import org.gradle.api.DefaultTask
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.TaskAction
 
-class ResolutionRulesProducerPlugin implements Plugin<Project> {
+class ResolutionJsonValidatorTask extends DefaultTask {
 
-    @Override
-    void apply(Project project) {
-        project.tasks.create('checkResolutionRulesSyntax', ResolutionJsonValidatorTask)
+    @InputFiles
+    def rules = project.files("${project.rootDir.absolutePath}/src/resolutionRules/resolution-rules.json")
 
-        project.plugins.apply(JavaPlugin)
-        project.tasks.create('packageRules', Jar) {
-            baseName 'dependency-rules'
-            dependsOn project.tasks.checkResolutionRulesSyntax
-            from project.tasks.checkResolutionRulesSyntax.inputs.files
+    @TaskAction
+    def validate() {
+        rules.files.each {
+            ResolutionJsonValidator.validateJsonFile(it)
         }
     }
 }
+

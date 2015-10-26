@@ -225,6 +225,22 @@ class PluginFunctionalTest extends IntegrationSpec {
         rootCause.message == "The dependency to be substituted (org.ow2.asm:asm) must have a version. Invalid rule: SubstituteRule(module=asm:asm, with=org.ow2.asm:asm, reason=The asm group id changed for 4.0 and later, author=Danny Thomas <dmthomas@gmail.com>, date=2015-10-07T20:21:20.368Z)"
     }
 
+    def 'validator gives error for invalid json'() {
+        given:
+        rulesJsonFile.delete()
+        rulesJsonFile << """
+                         {}
+                         """
+
+        when:
+        def result = runTasks('dependencies', '--configuration', 'compile')
+
+        then:
+        def rootCause = StackTraceUtils.extractRootCause(result.failure)
+        rootCause.class.simpleName == 'InvalidRulesJsonException'
+        rootCause.message.endsWith("is not a valid resolution json file")
+    }
+
     def 'deny dependency'() {
         given:
         buildFile << """
