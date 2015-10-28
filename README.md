@@ -69,7 +69,45 @@ Dependency rules are read from the `resolutionRules` configuration. Zip and jar 
     
 # Producing rules
 
-The `nebula.resolution-rules-producer` plugin is provided to facilitate creation of rule files. Please see documentation below.  
+The `nebula.resolution-rules-producer` plugin is provided to facilitate creation of rule files. This plugin can be used to validate and package rule files. To use, put your rules file in `src/resolutionRules/resolution-rules.json` and execute the packageRules task. If successful, a jar with the validated rules file will be placed in your build directory. For specifying more than one source file, see documentation below.
+
+## Usage
+
+```groovy
+    buildscript {
+        repositories {
+            jcenter()
+        }
+
+        dependencies {
+            classpath 'com.netflix.nebula:gradle-resolution-rules-plugin:1.0.0'
+        }
+    }
+
+    apply plugin: 'nebula.resolution-rules-producer'
+```    
+
+Or using the Gradle plugin portal:
+
+```groovy
+    plugins {
+        id 'nebula.resolution-rules' version '1.0.0'
+    }
+```
+
+
+Once configured, run the following:
+
+    $ ./gradlew packageRules
+    
+
+## Customizing rule file locations
+
+```groovy
+    checkResolutionRulesSyntax {
+        rules files('./alternative-rules.json', './src/rules/moreRules.json')
+    }
+```
 
 # Example rules JSON
 
@@ -117,46 +155,3 @@ The `nebula.resolution-rules-producer` plugin is provided to facilitate creation
         ]
     }
 ```
-
-# Gradle resolution-rules-producer Plugin
-
-This plugin can be used to validate and package rule files. To use, put your rules file in `src/resolutionRules/resolution-rules.json` and execute the packageRules task. If successful, a jar with the validated rules file will be placed in your build directory. For specifying more than one source file, see documentation below.
-
-# Usage
-
-```groovy
-    buildscript {
-        repositories {
-            jcenter()
-        }
-
-        dependencies {
-            classpath 'com.netflix.nebula:gradle-resolution-rules-plugin:1.0.0'
-        }
-    }
-
-    apply plugin: 'nebula.resolution-rules-producer'
-```    
-
-Or using the Gradle plugin portal:
-
-```groovy
-    plugins {
-        id 'nebula.resolution-rules' version '1.0.0'
-    }
-```
-
-
-Once configured, run the following:
-
-    $ ./gradlew packageRules
-    
-
-# Customizing rule file locations
-
-```groovy
-    checkResolutionRulesSyntax {
-        rules files('./alternative-rules.json', './src/rules/moreRules.json')
-    }
-```
-
