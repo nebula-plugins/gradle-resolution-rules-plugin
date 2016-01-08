@@ -140,7 +140,7 @@ Once configured, run the following:
             },
             {
                 "module": "com.sun.jersey:jersey-bundle",
-                "reason" : "jersey-bundle is a far jar that includes non-relocated (shaded) third party classes, which can cause duplicated classes on the classpath. Please specify the jersey- libraries you need directly",
+                "reason" : "jersey-bundle is a fat jar that includes non-relocated (shaded) third party classes, which can cause duplicated classes on the classpath. Please specify the jersey- libraries you need directly",
                 "author" : "Danny Thomas <dmthomas@gmail.com>",
                 "date" : "2015-10-07T20:21:20.368Z"
             }
