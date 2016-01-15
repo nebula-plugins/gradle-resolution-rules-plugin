@@ -10,7 +10,7 @@ Gradle plugin for providing dependency resolution rules.
 
 Gradle resolution strategies and module metadata provide an effective way to mediate the dependency resolution process in your builds, however they don't adapt well to enterprises that need a curated and shared source for rules.
 
-The [Blacklist Plugin](https://github.com/nebula-plugins/gradle-blacklist-plugin) allows this problem to be solved with enterprise plugins for specific cases. This plugin provides general purpose rule types and supports artifact based configuration, allowing rules to be versioned and dependency locked.
+The [Gradle resolution-rules Plugin](https://github.com/nebula-plugins/gradle-resolution-rules-plugin) allows this problem to be solved with enterprise plugins for specific cases. This plugin provides general purpose rule types and supports artifact based configuration, allowing rules to be versioned and dependency locked.
 
 # Usage
 
