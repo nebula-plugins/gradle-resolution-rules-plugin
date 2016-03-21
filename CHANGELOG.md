@@ -1,4 +1,16 @@
-1.1.0 / 2016/03/17
+1.1.3 / 2016/03/21
+==================
+- Publish nebula.resolution-rules-producer to gradle plugin portal
+
+1.1.2 / 2016/03/21
+==================
+- Attempt to add nebula.resolution-rules-producer to gradle plugin portal
+
+1.1.1 / 2016/03/21
+==================
+- Fix publishing to bintray
+
+1.1.0 / 2016/03/21
 ==================
 - Add in align rule
 

@@ -21,7 +21,7 @@ The [Blacklist Plugin](https://github.com/nebula-plugins/gradle-blacklist-plugin
         }
 
         dependencies {
-            classpath 'com.netflix.nebula:gradle-resolution-rules-plugin:1.1.0'
+            classpath 'com.netflix.nebula:gradle-resolution-rules-plugin:1.1.3'
         }
     }
 
@@ -32,7 +32,7 @@ Or using the Gradle plugin portal:
 
 ```groovy
     plugins {
-        id 'nebula.resolution-rules' version '1.1.0'
+        id 'nebula.resolution-rules' version '1.1.3'
     }
 ```
 
@@ -138,7 +138,7 @@ The `nebula.resolution-rules-producer` plugin is provided to facilitate creation
         }
 
         dependencies {
-            classpath 'com.netflix.nebula:gradle-resolution-rules-plugin:1.1.0'
+            classpath 'com.netflix.nebula:gradle-resolution-rules-plugin:1.1.3'
         }
     }
 
@@ -149,7 +149,7 @@ Or using the Gradle plugin portal:
 
 ```groovy
     plugins {
-        id 'nebula.resolution-rules-producer' version '1.1.0'
+        id 'nebula.resolution-rules-producer' version '1.1.3'
     }
 ```
 
