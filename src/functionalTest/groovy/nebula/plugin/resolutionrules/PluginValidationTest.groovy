@@ -51,7 +51,8 @@ class PluginValidationTest extends IntegrationSpec {
                     "author" : "Danny Thomas <dmthomas@gmail.com>",
                     "date" : "2015-10-07T20:21:20.368Z"
                 }
-            ]
+            ],
+            "align": []
         }
         """
 
@@ -150,7 +151,7 @@ class PluginValidationTest extends IntegrationSpec {
 
         then:
         def rootCause = extractRootCause(result.failure)
-        rootCause.message.contains('There must be exactly 4 resolution rule types defined')
+        rootCause.message.contains('There must be exactly 5 resolution rule types defined')
     }
 
     def 'check that validation task mandates lists for types'() {

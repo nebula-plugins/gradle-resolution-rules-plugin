@@ -36,6 +36,7 @@ public class ModuleIdentifier {
 public class ModuleVersionIdentifier extends ModuleIdentifier {
     String version = ""
 
+    @Override
     public String toString() {
         return (version.isEmpty()) ? "$organization:$name" : "$organization:$name:$version"
     }

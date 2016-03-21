@@ -23,6 +23,8 @@ import org.gradle.api.Project
 import org.gradle.api.artifacts.*
 import org.gradle.api.artifacts.component.ComponentSelector
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
+import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.VersionInfo
+import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.DefaultVersionComparator
 import org.joda.time.DateTime
 
 public class Rules {
@@ -30,6 +32,7 @@ public class Rules {
     List<SubstituteRule> substitute
     List<RejectRule> reject
     List<DenyRule> deny
+    List<AlignRule> align
 
     public List<ProjectRule> projectRules() {
         return replace
@@ -37,6 +40,10 @@ public class Rules {
 
     public List<ConfigurationRule> configurationRules() {
         return Arrays.asList(substitute, reject, deny).flatten()
+    }
+
+    public List<ProjectConfigurationRule> projectConfigurationRules() {
+        return align
     }
 }
 
@@ -46,6 +53,10 @@ interface ProjectRule {
 
 interface ConfigurationRule {
     public void apply(Configuration configuration)
+}
+
+interface ProjectConfigurationRule {
+    public void apply(Project project, Configuration configuration)
 }
 
 class ReplaceRule implements ProjectRule {
@@ -117,6 +128,7 @@ class DenyRule implements ConfigurationRule {
     String author
     DateTime date
 
+    @Override
     public void apply(Configuration configuration) {
         ModuleVersionIdentifier moduleId = ModuleVersionIdentifier.valueOf(module)
         Dependency match = configuration.dependencies.find {
@@ -124,6 +136,58 @@ class DenyRule implements ConfigurationRule {
         }
         if (match != null && (!moduleId.hasVersion() || match.version == moduleId.version)) {
             throw new DependencyDeniedException(moduleId, this)
+        }
+    }
+}
+
+class AlignRule implements ProjectConfigurationRule {
+    String group
+    Collection<String> includes = []
+    Collection<String> excludes = []
+    String reason
+    String author
+    DateTime date
+
+    boolean resolvedMatches(ResolvedDependency dep) {
+        ruleMatches(dep.moduleGroup, dep.moduleName)
+    }
+
+    boolean dependencyMatches(DependencyResolveDetails details) {
+        ruleMatches(details.requested.group, details.requested.name)
+    }
+
+    boolean ruleMatches(String inputGroup, String inputName) {
+        inputGroup == group &&
+                (includes.isEmpty() || includes.contains(inputName)) &&
+                (excludes.isEmpty() || !excludes.contains(inputName))
+    }
+
+    @Override
+    void apply(Project project, Configuration configuration) {
+        def detached = project.configurations.detachedConfiguration(configuration.dependencies.toArray(new Dependency[configuration.dependencies.size()]))
+        def matches = []
+        def recurseDeps
+        recurseDeps = { Collection<ResolvedDependency> col ->
+            if (!col.isEmpty()) {
+                col.each { ResolvedDependency dep ->
+                    if (resolvedMatches(dep))
+                    matches.add(dep)
+                }
+                recurseDeps(col*.children.flatten())
+            }
+        }
+
+        recurseDeps(detached.resolvedConfiguration.firstLevelModuleDependencies)
+        def versions = matches.collect { it.moduleVersion }.toUnique().collect { new VersionInfo(it) }
+        def comparator = new DefaultVersionComparator()
+        def alignedVersion = versions.max { a, b -> comparator.compare(a, b)}
+
+        configuration.resolutionStrategy { ResolutionStrategy rs ->
+            rs.eachDependency { DependencyResolveDetails details ->
+                if (dependencyMatches(details)) {
+                    details.useTarget group: details.requested.group, name: details.requested.name, version: alignedVersion.version
+                }
+            }
         }
     }
 }

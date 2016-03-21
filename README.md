@@ -21,7 +21,7 @@ The [Blacklist Plugin](https://github.com/nebula-plugins/gradle-blacklist-plugin
         }
 
         dependencies {
-            classpath 'com.netflix.nebula:gradle-resolution-rules-plugin:1.0.1'
+            classpath 'com.netflix.nebula:gradle-resolution-rules-plugin:1.1.0'
         }
     }
 
@@ -32,7 +32,7 @@ Or using the Gradle plugin portal:
 
 ```groovy
     plugins {
-        id 'nebula.resolution-rules' version '1.0.1'
+        id 'nebula.resolution-rules' version '1.1.0'
     }
 ```
 
@@ -55,6 +55,64 @@ Versions are optional, and access to an entire dependency can be denied. This is
 ## Reject 
 
 Reject rules prevent a dependency version from being considered by dynamic version or `latest.*` version calculation. It does not prevent that dependency from being used if it's explicitly requested by the project.
+
+## Align
+
+Align rules allows the user to have a group of dependencies if present to have the same version. Example: if `jersey-core` and `jersey-server` are present make sure they use the same version. By default this will choose the largest version provided among the list.
+
+This rule has different options depending on your use case. `includes` and `excludes` are mutually exclusive, the plugin will error out if both are present in one rule.
+
+#### Lock only a few dependencies in a group
+
+```json
+    {
+        "align": [
+            {
+                "group": "example.foo",
+                "includes": [ "bar", "baz" ]
+            }
+        ]
+    }
+```
+
+#### Lock most dependencies in a group, but exclude some
+
+```json
+    {
+        "align": [
+            {
+                "group": "example.bar",
+                "excludes": [ "qux", "thud" ]
+            }
+        ]
+    }
+```
+
+#### Align along the major version, instead of an exact
+
+```json
+    {
+        "align": [
+            {
+                "group": "example.baz",
+                "along": "major"
+            }
+        ]
+    }
+```
+
+#### Align along the minor version, instead of an exact
+
+```json
+    {
+        "align": [
+            {
+                "group": "example.baz",
+                "along": "minor"
+            }
+        ]
+    }
+```
 
 # Consuming rules
 
@@ -80,7 +138,7 @@ The `nebula.resolution-rules-producer` plugin is provided to facilitate creation
         }
 
         dependencies {
-            classpath 'com.netflix.nebula:gradle-resolution-rules-plugin:1.0.1'
+            classpath 'com.netflix.nebula:gradle-resolution-rules-plugin:1.1.0'
         }
     }
 
@@ -91,7 +149,7 @@ Or using the Gradle plugin portal:
 
 ```groovy
     plugins {
-        id 'nebula.resolution-rules' version '1.0.1'
+        id 'nebula.resolution-rules-producer' version '1.1.0'
     }
 ```
 
@@ -151,6 +209,14 @@ Once configured, run the following:
                 "reason" : "Guava 12.0 significantly regressed LocalCache performance",
                 "author" : "Danny Thomas <dmthomas@gmail.com>",
                 "date" : "2015-10-07T20:21:20.368Z"
+            }
+        ],
+        "align": [
+            {
+                "group": "com.sun.jersey",
+                "reason": "Make sure jersey-core, jersey-server, etc. are aligned e.g. 1.19.1",
+                "author": "Example Person <person@example.org>",
+                "date": "2015-10-08T20:15:14.321Z"
             }
         ]
     }

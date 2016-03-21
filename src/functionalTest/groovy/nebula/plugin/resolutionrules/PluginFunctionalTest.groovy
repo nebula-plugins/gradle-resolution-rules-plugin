@@ -82,7 +82,8 @@ class PluginFunctionalTest extends IntegrationSpec {
                                     "author" : "Danny Thomas <dmthomas@gmail.com>",
                                     "date" : "2015-10-07T20:21:20.368Z"
                                 }
-                            ]
+                            ],
+                            "align": []
                         }
                         """.stripIndent()
     }
@@ -213,7 +214,8 @@ class PluginFunctionalTest extends IntegrationSpec {
                                  }
                              ],
                              "reject": [],
-                             "deny": []
+                             "deny": [],
+                             "align": []
                          }
                          """.stripIndent()
         when:

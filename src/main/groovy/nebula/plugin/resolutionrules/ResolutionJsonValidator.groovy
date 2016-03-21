@@ -47,15 +47,15 @@ class ResolutionJsonValidator {
     }
 
     static def validateJson(Object json) {
-        // ensure there are exactly 4 types
-        if (json.size() != 4) {
-            throw new InvalidRulesJsonException('There must be exactly 4 resolution rule types defined')
+        // ensure there are exactly 5 types
+        if (json.size() != 5) {
+            throw new InvalidRulesJsonException('There must be exactly 5 resolution rule types defined')
         }
 
-        // also ensure these 4 are the ones requires
+        // also ensure these 5 are the ones requires
         def typesProvided = json.collect { it.key }
-        if (['replace', 'substitute', 'deny', 'reject'].intersect(typesProvided).size() != 4) {
-            throw new InvalidRulesJsonException('All resolution rule types must be specified (replace, substitute, deny, reject)')
+        if (['replace', 'substitute', 'deny', 'reject', 'align'].intersect(typesProvided).size() != 5) {
+            throw new InvalidRulesJsonException('All resolution rule types must be specified (replace, substitute, deny, reject, align)')
         }
 
         // ensure all types are lists
@@ -116,8 +116,13 @@ class ResolutionJsonValidator {
                     validateModuleName(it, 'reject'), validateNonEmptyFields(it, 'reject', ['reason', 'author'])
             ]
         })
+        def alignErrors = json.align.collect({
+            [
+                    validateNonEmptyFields(it, 'align', ['group', 'reason', 'author'])
+            ]
+        })
 
-        def errors = [replaceErrors, substErrors, denyErrors, rejectErrors].flatten().findAll { it }
+        def errors = [replaceErrors, substErrors, denyErrors, rejectErrors, alignErrors].flatten().findAll { it }
         if (errors) {
             throw new InvalidRulesJsonException(errors as List<String>)
         }

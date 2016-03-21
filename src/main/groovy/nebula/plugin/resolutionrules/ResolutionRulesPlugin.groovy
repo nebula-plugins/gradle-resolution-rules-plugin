@@ -81,7 +81,8 @@ class ResolutionRulesPlugin implements Plugin<Project> {
         List<SubstituteRule> substitute = rules.collectMany { it.substitute }.flatten() as List<SubstituteRule>
         List<RejectRule> reject = rules.collectMany { it.reject }.flatten() as List<RejectRule>
         List<DenyRule> deny = rules.collectMany { it.deny }.flatten() as List<DenyRule>
-        return new Rules(replace: replace, substitute: substitute, reject: reject, deny: deny)
+        List<AlignRule> align = rules.collectMany { it.align }.flatten() as List<AlignRule>
+        return new Rules(replace: replace, substitute: substitute, reject: reject, deny: deny, align: align)
     }
 
     private static ObjectMapper createMapper() {
@@ -105,6 +106,7 @@ class ResolutionRulesPlugin implements Plugin<Project> {
             rules.configurationRules().each {
                 it.apply(configuration)
             }
+            rules.projectConfigurationRules().each { it.apply(project, configuration) }
         })
     }
 }
