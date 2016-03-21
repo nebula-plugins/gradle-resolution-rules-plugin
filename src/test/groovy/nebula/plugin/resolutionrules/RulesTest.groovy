@@ -41,7 +41,8 @@ class RulesTest extends Specification {
                         ],
                         "substitute": [],
                         "reject": [],
-                        "deny": []
+                        "deny": [],
+                        "align": []
                       }"""
         ObjectMapper mapper = new ObjectMapper()
                 .setSerializationInclusion(JsonInclude.Include.NON_NULL)
