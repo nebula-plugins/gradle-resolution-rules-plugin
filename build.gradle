@@ -100,5 +100,11 @@ pluginBundle {
             description = project.description
             tags = ['nebula', 'resolve', 'resolution', 'rules']
         }
+        resolutionRulesProducer {
+            id = 'nebula.resolution-rules-producer'
+            displayName = 'Gradle Resolution Rules Producer plugin'
+            description = 'Produces a resolution rules file tp be consumed by \'nebula.resolution-rules\''
+            tags = ['nebula', 'resolve', 'resolution', 'rules']
+        }
     }
 }
