@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Netflix, Inc.
+ * Copyright 2015-2016 Netflix, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,13 +14,9 @@
  * limitations under the License.
  *
  */
-
 package nebula.plugin.resolutionrules
 
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.joda.JodaModule
+import groovy.json.JsonSlurper
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
@@ -44,7 +40,6 @@ class ResolutionRulesPlugin implements Plugin<Project> {
 
     private Rules rulesFromConfiguration(Configuration configuration) {
         List<Rules> rules = new ArrayList<Rules>();
-        ObjectMapper mapper = createMapper()
         Set<File> files = configuration.resolve()
         if (files.isEmpty()) {
             logger.warn("No resolution rules have been added to the '{}' configuration", configuration.name)
@@ -53,7 +48,7 @@ class ResolutionRulesPlugin implements Plugin<Project> {
             if (file.name.endsWith(".json")) {
                 ResolutionJsonValidator.validateJsonFile(file)
                 logger.info("Using $file as a dependency rules source")
-                rules.add(mapper.readValue(file, Rules))
+                rules.add(parseJsonFile(file))
             } else if (file.name.endsWith(".jar") || file.name.endsWith(".zip")) {
                 logger.info("Using $file as a dependency rules source")
                 ZipFile jar = new ZipFile(file)
@@ -63,7 +58,7 @@ class ResolutionRulesPlugin implements Plugin<Project> {
                         ZipEntry entry = entries.nextElement()
                         if (entry.name.endsWith(".json")) {
                             ResolutionJsonValidator.validateJsonStream(jar.getInputStream(entry))
-                            rules.add(mapper.readValue(jar.getInputStream(entry), Rules))
+                            rules.add(parseJsonStream(jar.getInputStream(entry)))
                         }
                     }
                 } finally {
@@ -76,6 +71,29 @@ class ResolutionRulesPlugin implements Plugin<Project> {
         return flattenRules(rules)
     }
 
+    static Rules parseJsonFile(File file) {
+        rulesFromJson(new JsonSlurper().parse(file))
+    }
+
+    static Rules parseJsonText(String json) {
+        rulesFromJson(new JsonSlurper().parseText(json))
+    }
+
+    static Rules parseJsonStream(InputStream stream) {
+        rulesFromJson(new JsonSlurper().parse(stream))
+    }
+
+    static Rules rulesFromJson(Map json) {
+        Rules rules = new Rules()
+        rules.replace = json.replace.collect { new ReplaceRule(it) }
+        rules.substitute = json.substitute.collect { new SubstituteRule(it) }
+        rules.reject = json.reject.collect { new RejectRule(it) }
+        rules.deny = json.deny.collect { new DenyRule(it) }
+        rules.align = json.align.collect { new AlignRule(it) }
+
+        rules
+    }
+
     private static Rules flattenRules(Iterable<Rules> rules) {
         List<ReplaceRule> replace = rules.collectMany { it.replace }.flatten() as List<ReplaceRule>
         List<SubstituteRule> substitute = rules.collectMany { it.substitute }.flatten() as List<SubstituteRule>
@@ -83,14 +101,6 @@ class ResolutionRulesPlugin implements Plugin<Project> {
         List<DenyRule> deny = rules.collectMany { it.deny }.flatten() as List<DenyRule>
         List<AlignRule> align = rules.collectMany { it.align }.flatten() as List<AlignRule>
         return new Rules(replace: replace, substitute: substitute, reject: reject, deny: deny, align: align)
-    }
-
-    private static ObjectMapper createMapper() {
-        ObjectMapper mapper = new ObjectMapper()
-        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL)
-                .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-                .registerModule(new JodaModule())
-        return mapper
     }
 
     private void applyRules(Rules rules, Project project) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Netflix, Inc.
+ * Copyright 2015-2016 Netflix, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,13 +12,9 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
-
 package nebula.plugin.resolutionrules
 
-import nebula.plugin.resolutionrules.ModuleIdentifier
-import nebula.plugin.resolutionrules.ModuleVersionIdentifier
 import org.gradle.api.Project
 import org.gradle.api.artifacts.*
 import org.gradle.api.artifacts.component.ComponentSelector
@@ -26,6 +22,7 @@ import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.VersionInfo
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.DefaultVersionComparator
 import org.joda.time.DateTime
+import org.joda.time.DateTimeZone
 
 public class Rules {
     List<ReplaceRule> replace
@@ -59,12 +56,27 @@ interface ProjectConfigurationRule {
     public void apply(Project project, Configuration configuration)
 }
 
-class ReplaceRule implements ProjectRule {
-    String module
-    String with
+abstract class BaseRule {
     String reason
     String author
     DateTime date
+
+    BaseRule(Map map) {
+        reason = map.reason
+        author = map.author
+        date = new DateTime(map.date).toDateTime(DateTimeZone.UTC)
+    }
+}
+
+class ReplaceRule extends BaseRule implements ProjectRule {
+    String module
+    String with
+
+    ReplaceRule(Map map) {
+        super(map)
+        module = map.module
+        with = map.with
+    }
 
     public void apply(Project project) {
         ModuleIdentifier moduleId = ModuleIdentifier.valueOf(module)
@@ -76,12 +88,15 @@ class ReplaceRule implements ProjectRule {
     }
 }
 
-class SubstituteRule implements ConfigurationRule {
+class SubstituteRule extends BaseRule implements ConfigurationRule {
     String module
     String with
-    String reason
-    String author
-    DateTime date
+
+    SubstituteRule(Map map) {
+        super(map)
+        module = map.module
+        with = map.with
+    }
 
     public void apply(Configuration configuration) {
         ResolutionStrategy resolutionStrategy = configuration.resolutionStrategy
@@ -103,11 +118,13 @@ class SubstituteRule implements ConfigurationRule {
     }
 }
 
-class RejectRule implements ConfigurationRule {
+class RejectRule extends BaseRule implements ConfigurationRule {
     String module
-    String reason
-    String author
-    DateTime date
+
+    RejectRule(Map map) {
+        super(map)
+        module = map.module
+    }
 
     public void apply(Configuration configuration) {
         ModuleVersionIdentifier moduleId = ModuleVersionIdentifier.valueOf(module)
@@ -122,11 +139,13 @@ class RejectRule implements ConfigurationRule {
     }
 }
 
-class DenyRule implements ConfigurationRule {
+class DenyRule extends BaseRule implements ConfigurationRule {
     String module
-    String reason
-    String author
-    DateTime date
+
+    DenyRule(Map map) {
+        super(map)
+        module = map.module
+    }
 
     @Override
     public void apply(Configuration configuration) {
@@ -140,13 +159,17 @@ class DenyRule implements ConfigurationRule {
     }
 }
 
-class AlignRule implements ProjectConfigurationRule {
+class AlignRule extends BaseRule implements ProjectConfigurationRule {
     String group
-    Collection<String> includes = []
-    Collection<String> excludes = []
-    String reason
-    String author
-    DateTime date
+    Collection<String> includes
+    Collection<String> excludes
+
+    AlignRule(Map map) {
+        super(map)
+        group = map.group
+        includes = map.includes ?: []
+        excludes = map.excludes ?: []
+    }
 
     boolean resolvedMatches(ResolvedDependency dep) {
         ruleMatches(dep.moduleGroup, dep.moduleName)

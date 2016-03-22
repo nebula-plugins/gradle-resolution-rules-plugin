@@ -45,24 +45,9 @@ plugins {
 }
 
 dependencies {
+    compile gradleApi()
+    compile localGroovy()
     compile 'joda-time:joda-time:2.8.2'
-    compile 'com.fasterxml.jackson.datatype:jackson-datatype-joda:2.6.3'
-}
-
-// Attempt to get out of Gradle dependency hell (at least somewhat reflect the runtime classloading scheme) by forcefully ordering Gradle dependencies last
-
-configurations {
-    gradleApi
-}
-
-dependencies {
-    gradleApi gradleApi()
-    gradleApi localGroovy()
-}
-
-sourceSets.each {
-    it.compileClasspath = it.compileClasspath - configurations.gradleApi + configurations.gradleApi
-    it.runtimeClasspath = it.runtimeClasspath - configurations.gradleApi + configurations.gradleApi
 }
 
 facets {

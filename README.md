@@ -21,7 +21,7 @@ The [Blacklist Plugin](https://github.com/nebula-plugins/gradle-blacklist-plugin
         }
 
         dependencies {
-            classpath 'com.netflix.nebula:gradle-resolution-rules-plugin:1.1.3'
+            classpath 'com.netflix.nebula:gradle-resolution-rules-plugin:1.1.4'
         }
     }
 
@@ -32,7 +32,7 @@ Or using the Gradle plugin portal:
 
 ```groovy
     plugins {
-        id 'nebula.resolution-rules' version '1.1.3'
+        id 'nebula.resolution-rules' version '1.1.4'
     }
 ```
 
@@ -138,7 +138,7 @@ The `nebula.resolution-rules-producer` plugin is provided to facilitate creation
         }
 
         dependencies {
-            classpath 'com.netflix.nebula:gradle-resolution-rules-plugin:1.1.3'
+            classpath 'com.netflix.nebula:gradle-resolution-rules-plugin:1.1.4'
         }
     }
 
@@ -149,7 +149,7 @@ Or using the Gradle plugin portal:
 
 ```groovy
     plugins {
-        id 'nebula.resolution-rules-producer' version '1.1.3'
+        id 'nebula.resolution-rules-producer' version '1.1.4'
     }
 ```
 
@@ -176,7 +176,7 @@ Once configured, run the following:
                 "module" : "asm:asm",
                 "with" : "org.ow2.asm:asm",
                 "reason" : "The asm group id changed for 4.0 and later",
-                "author" : "Danny Thomas <dmthomas@gmail.com>",
+                "author" : "Example Person <person@example.org>",
                 "date" : "2015-10-07T20:21:20.368Z"
             }
         ],
@@ -185,7 +185,7 @@ Once configured, run the following:
                 "module" : "bouncycastle:bcprov-jdk15",
                 "with" : "org.bouncycastle:bcprov-jdk15:latest.release",
                 "reason" : "The latest version of BC is required, using the new coordinate",
-                "author" : "Danny Thomas <dmthomas@gmail.com>",
+                "author" : "Example Person <person@example.org>",
                 "date" : "2015-10-07T20:21:20.368Z"
             }
         ],
@@ -193,13 +193,13 @@ Once configured, run the following:
             {
                 "module": "com.google.guava:guava:19.0-rc2",
                 "reason" : "Guava 19.0-rc2 is not permitted",
-                "author" : "Danny Thomas <dmthomas@gmail.com>",
+                "author" : "Example Person <person@example.org>",
                 "date" : "2015-10-07T20:21:20.368Z"
             },
             {
                 "module": "com.sun.jersey:jersey-bundle",
                 "reason" : "jersey-bundle is a fat jar that includes non-relocated (shaded) third party classes, which can cause duplicated classes on the classpath. Please specify the jersey- libraries you need directly",
-                "author" : "Danny Thomas <dmthomas@gmail.com>",
+                "author" : "Example Person <person@example.org>",
                 "date" : "2015-10-07T20:21:20.368Z"
             }
         ],
@@ -207,7 +207,7 @@ Once configured, run the following:
             {
                 "module": "com.google.guava:guava:12.0",
                 "reason" : "Guava 12.0 significantly regressed LocalCache performance",
-                "author" : "Danny Thomas <dmthomas@gmail.com>",
+                "author" : "Example Person <person@example.org>",
                 "date" : "2015-10-07T20:21:20.368Z"
             }
         ],

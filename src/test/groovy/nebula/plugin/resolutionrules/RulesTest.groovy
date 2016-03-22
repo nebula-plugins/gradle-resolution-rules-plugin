@@ -17,10 +17,7 @@
 
 package nebula.plugin.resolutionrules
 
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.joda.JodaModule
+import groovy.json.JsonSlurper
 import spock.lang.Specification
 
 /**
@@ -44,14 +41,12 @@ class RulesTest extends Specification {
                         "deny": [],
                         "align": []
                       }"""
-        ObjectMapper mapper = new ObjectMapper()
-                .setSerializationInclusion(JsonInclude.Include.NON_NULL)
-                .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-                .registerModule(new JodaModule())
 
-        Rules rules = mapper.readValue(json, Rules)
+
+        Rules rules = ResolutionRulesPlugin.parseJsonText(json)
 
         then:
         !rules.replace.isEmpty()
+        rules.replace[0].class == ReplaceRule
     }
 }
