@@ -1,3 +1,7 @@
+1.1.4 / 2016/03/22
+==================
+- Remove dependency on jackson libraries
+
 1.1.3 / 2016/03/21
 ==================
 - Publish nebula.resolution-rules-producer to gradle plugin portal
