@@ -103,7 +103,7 @@ pluginBundle {
         resolutionRulesProducer {
             id = 'nebula.resolution-rules-producer'
             displayName = 'Gradle Resolution Rules Producer plugin'
-            description = 'Produces a resolution rules file tp be consumed by \'nebula.resolution-rules\''
+            description = 'Produces a resolution rules file to be consumed by \'nebula.resolution-rules\''
             tags = ['nebula', 'resolve', 'resolution', 'rules']
         }
     }
