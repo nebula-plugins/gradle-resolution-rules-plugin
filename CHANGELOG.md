@@ -1,3 +1,9 @@
+1.1.5 / 2016/03/31
+==================
+- Fix interaction bug with nebula.dependency-recommender (omitted versions causing issues)
+- Fix interaction bug with spring-boot plugin (omitted versions causing issues)
+- Fix handling of dependency graphs with cycles in them
+
 1.1.4 / 2016/03/22
 ==================
 - Remove dependency on jackson libraries

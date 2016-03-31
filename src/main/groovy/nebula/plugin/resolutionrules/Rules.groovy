@@ -171,8 +171,8 @@ class AlignRule extends BaseRule implements ProjectConfigurationRule {
         excludes = map.excludes ?: []
     }
 
-    boolean resolvedMatches(ResolvedDependency dep) {
-        ruleMatches(dep.moduleGroup, dep.moduleName)
+    boolean resolvedMatches(ResolvedModuleVersion dep) {
+        ruleMatches(dep.id.group, dep.id.name)
     }
 
     boolean dependencyMatches(DependencyResolveDetails details) {
@@ -187,21 +187,12 @@ class AlignRule extends BaseRule implements ProjectConfigurationRule {
 
     @Override
     void apply(Project project, Configuration configuration) {
-        def detached = project.configurations.detachedConfiguration(configuration.dependencies.toArray(new Dependency[configuration.dependencies.size()]))
-        def matches = []
-        def recurseDeps
-        recurseDeps = { Collection<ResolvedDependency> col ->
-            if (!col.isEmpty()) {
-                col.each { ResolvedDependency dep ->
-                    if (resolvedMatches(dep))
-                    matches.add(dep)
-                }
-                recurseDeps(col*.children.flatten())
-            }
-        }
+        def detached = configuration.copy()
 
-        recurseDeps(detached.resolvedConfiguration.firstLevelModuleDependencies)
-        def versions = matches.collect { it.moduleVersion }.toUnique().collect { new VersionInfo(it) }
+        def artifacts = detached.resolvedConfiguration.resolvedArtifacts.collect { it.moduleVersion }
+        def matches = artifacts.findAll { resolvedMatches(it) }
+        def versions = matches.collect { it.id.version }.toUnique().collect { new VersionInfo(it) }
+
         def comparator = new DefaultVersionComparator()
         def alignedVersion = versions.max { a, b -> comparator.compare(a, b)}
 
