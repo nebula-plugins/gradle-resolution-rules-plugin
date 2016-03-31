@@ -76,6 +76,49 @@ class AlignRulesSpec extends IntegrationSpec {
         def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
 
         then:
+        println result.standardOutput
+        result.standardOutput.contains '+--- test.nebula:a:1.0.0\n'
+        result.standardOutput.contains '\\--- test.nebula:b:0.15.0 -> 1.0.0\n'
+    }
+
+    def 'can align direct dependencies from ivy repositories'() {
+        def graph = new DependencyGraphBuilder()
+                .addModule('test.nebula:a:1.0.0')
+                .addModule('test.nebula:a:0.15.0')
+                .addModule('test.nebula:b:1.0.0')
+                .addModule('test.nebula:b:0.15.0')
+                .build()
+        GradleDependencyGenerator ivyrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen")
+        ivyrepo.generateTestIvyRepo()
+
+        rulesJsonFile << '''\
+            {
+                "deny": [], "reject": [], "substitute": [], "replace": [],
+                "align": [
+                    {
+                        "group": "test.nebula",
+                        "reason": "Align test.nebula dependencies",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    }
+                ]
+            }
+        '''.stripIndent()
+
+        buildFile << """\
+            repositories {
+                ${ivyrepo.ivyRepositoryBlock}
+            }
+            dependencies {
+                compile 'test.nebula:a:1.0.0'
+                compile 'test.nebula:b:0.15.0'
+            }
+        """.stripIndent()
+
+        when:
+        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+
+        then:
         result.standardOutput.contains '+--- test.nebula:a:1.0.0\n'
         result.standardOutput.contains '\\--- test.nebula:b:0.15.0 -> 1.0.0\n'
     }
@@ -338,5 +381,90 @@ class AlignRulesSpec extends IntegrationSpec {
         result.standardOutput.contains '+--- test.nebula:a:1.0.0\n'
         result.standardOutput.contains '+--- test.nebula:b:1.1.0\n'
         result.standardOutput.contains '\\--- test.nebula:c:0.42.0 -> 1.1.0'
+    }
+
+    def 'dependencies with cycles do not lead to infinite loops'() {
+        def graph = new DependencyGraphBuilder()
+                .addModule(new ModuleBuilder('test.nebula:a:1.0.0').addDependency('test.other:b:1.0.0').build())
+                .addModule(new ModuleBuilder('test.other:b:1.0.0').addDependency('test.nebula:b:1.0.0').build())
+                .addModule(new ModuleBuilder('test.nebula:a:1.1.0').addDependency('test.other:b:1.0.0').build())
+                .addModule('test.nebula:b:1.0.0')
+                .addModule(new ModuleBuilder('test.nebula:b:1.1.0').addDependency('test.other:b:1.0.0').build())
+                .build()
+        File mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
+
+        rulesJsonFile << '''\
+            {
+                "deny": [], "reject": [], "substitute": [], "replace": [],
+                "align": [
+                    {
+                        "group": "test.nebula",
+                        "reason": "Align test.nebula dependencies",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    }
+                ]
+            }
+        '''.stripIndent()
+
+        buildFile << """\
+            repositories {
+                maven { url '${mavenrepo.absolutePath}' }
+            }
+            dependencies {
+                compile 'test.nebula:a:1.1.0'
+                compile 'test.nebula:b:1.0.0'
+            }
+        """.stripIndent()
+
+        when:
+        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+
+        then:
+        result.standardOutput.contains '+--- test.nebula:a:1.1.0\n'
+        result.standardOutput.contains '|    \\--- test.other:b:1.0.0\n'
+        result.standardOutput.contains '|         \\--- test.nebula:b:1.0.0 -> 1.1.0\n'
+        result.standardOutput.contains '|              \\--- test.other:b:1.0.0 (*)\n'
+        result.standardOutput.contains '\\--- test.nebula:b:1.0.0 -> 1.1.0 (*)\n'
+    }
+
+    def 'able to omit dependency versions to take what is given transitively'() {
+        def graph = new DependencyGraphBuilder()
+                .addModule(new ModuleBuilder('test.nebula:a:1.0.0').addDependency('test.nebula:b:1.0.0').build())
+                .addModule('test.nebula:b:1.0.0')
+                .build()
+        File mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
+
+        rulesJsonFile << '''\
+            {
+                "deny": [], "reject": [], "substitute": [], "replace": [],
+                "align": [
+                    {
+                        "group": "test.nebula",
+                        "reason": "Align test.nebula dependencies",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    }
+                ]
+            }
+        '''.stripIndent()
+
+        buildFile << """\
+            repositories {
+                maven { url '${mavenrepo.absolutePath}' }
+            }
+            dependencies {
+                compile 'test.nebula:a:1.0.0'
+                compile 'test.nebula:b'
+            }
+        """.stripIndent()
+
+        when:
+        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+
+        then:
+        result.standardOutput.contains '+--- test.nebula:a:1.0.0\n'
+        result.standardOutput.contains '|    \\--- test.nebula:b:1.0.0\n'
+        result.standardOutput.contains '\\--- test.nebula:b: -> 1.0.0\n'
     }
 }
