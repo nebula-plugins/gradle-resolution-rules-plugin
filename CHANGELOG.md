@@ -1,3 +1,9 @@
+1.2.0 / 2016/04/06
+==================
+- Allow opt out of rules for shared company wide rules that apply to your project, e.g. there is a common align rule for a:foo and a:bar and you produce them
+- Performance improvement if there are multiple align rules
+- BUGFIX for unresolvable dependencies fixed by a resolution rule
+
 1.1.5 / 2016/03/31
 ==================
 - Fix interaction bug with nebula.dependency-recommender (omitted versions causing issues)

@@ -53,6 +53,7 @@ class AlignRulesSpec extends IntegrationSpec {
                 "deny": [], "reject": [], "substitute": [], "replace": [],
                 "align": [
                     {
+                        "name": "testNebula",
                         "group": "test.nebula",
                         "reason": "Align test.nebula dependencies",
                         "author": "Example Person <person@example.org>",
@@ -76,7 +77,6 @@ class AlignRulesSpec extends IntegrationSpec {
         def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
 
         then:
-        println result.standardOutput
         result.standardOutput.contains '+--- test.nebula:a:1.0.0\n'
         result.standardOutput.contains '\\--- test.nebula:b:0.15.0 -> 1.0.0\n'
     }
@@ -96,6 +96,7 @@ class AlignRulesSpec extends IntegrationSpec {
                 "deny": [], "reject": [], "substitute": [], "replace": [],
                 "align": [
                     {
+                        "name": "testNebula",
                         "group": "test.nebula",
                         "reason": "Align test.nebula dependencies",
                         "author": "Example Person <person@example.org>",
@@ -135,6 +136,7 @@ class AlignRulesSpec extends IntegrationSpec {
                 "deny": [], "reject": [], "substitute": [], "replace": [],
                 "align": [
                     {
+                        "name": "testNebula",
                         "group": "test.nebula",
                         "reason": "Align test.nebula dependencies",
                         "author": "Example Person <person@example.org>",
@@ -172,6 +174,7 @@ class AlignRulesSpec extends IntegrationSpec {
                 "deny": [], "reject": [], "substitute": [], "replace": [],
                 "align": [
                     {
+                        "name": "testNebula",
                         "group": "test.nebula",
                         "reason": "Align test.nebula dependencies",
                         "author": "Example Person <person@example.org>",
@@ -212,6 +215,7 @@ class AlignRulesSpec extends IntegrationSpec {
                 "deny": [], "reject": [], "substitute": [], "replace": [],
                 "align": [
                     {
+                        "name": "testNebula",
                         "group": "test.nebula",
                         "reason": "Align test.nebula dependencies",
                         "author": "Example Person <person@example.org>",
@@ -256,6 +260,7 @@ class AlignRulesSpec extends IntegrationSpec {
                 "deny": [], "reject": [], "substitute": [], "replace": [],
                 "align": [
                     {
+                        "name": "testNebula",
                         "group": "test.nebula",
                         "reason": "Align test.nebula dependencies",
                         "author": "Example Person <person@example.org>",
@@ -304,6 +309,7 @@ class AlignRulesSpec extends IntegrationSpec {
                 "deny": [], "reject": [], "substitute": [], "replace": [],
                 "align": [
                     {
+                        "name": "testNebula",
                         "group": "test.nebula",
                         "includes": [ "a", "b" ],
                         "reason": "Align test.nebula dependencies",
@@ -353,6 +359,7 @@ class AlignRulesSpec extends IntegrationSpec {
                 "deny": [], "reject": [], "substitute": [], "replace": [],
                 "align": [
                     {
+                        "name": "testNebula",
                         "group": "test.nebula",
                         "excludes": [ "a" ],
                         "reason": "Align test.nebula dependencies",
@@ -398,6 +405,7 @@ class AlignRulesSpec extends IntegrationSpec {
                 "deny": [], "reject": [], "substitute": [], "replace": [],
                 "align": [
                     {
+                        "name": "testNebula",
                         "group": "test.nebula",
                         "reason": "Align test.nebula dependencies",
                         "author": "Example Person <person@example.org>",
@@ -440,6 +448,7 @@ class AlignRulesSpec extends IntegrationSpec {
                 "deny": [], "reject": [], "substitute": [], "replace": [],
                 "align": [
                     {
+                        "name": "testNebula",
                         "group": "test.nebula",
                         "reason": "Align test.nebula dependencies",
                         "author": "Example Person <person@example.org>",
@@ -466,5 +475,239 @@ class AlignRulesSpec extends IntegrationSpec {
         result.standardOutput.contains '+--- test.nebula:a:1.0.0\n'
         result.standardOutput.contains '|    \\--- test.nebula:b:1.0.0\n'
         result.standardOutput.contains '\\--- test.nebula:b: -> 1.0.0\n'
+    }
+
+    def 'a project can build in presence of align rules for jars it produces'() {
+        rulesJsonFile << '''\
+            {
+                "deny": [], "reject": [], "substitute": [], "replace": [],
+                "align": [
+                    {
+                        "name": "testNebula",
+                        "group": "test.nebula",
+                        "includes": ["aligntest", "b"],
+                        "reason": "Align test.nebula dependencies",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    }
+                ]
+            }
+        '''.stripIndent()
+
+        buildFile << '''\
+            group = 'test.nebula'
+            version = '0.1.0'
+
+            apply plugin: 'maven-publish'
+
+            publishing {
+                publications {
+                    test(MavenPublication) {
+                        from components.java
+                    }
+                }
+                repositories {
+                    maven {
+                        name 'repo'
+                        url 'build/repo'
+                    }
+                }
+            }
+        '''.stripIndent()
+
+        when:
+        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+
+        then:
+        noExceptionThrown()
+    }
+
+    def 'multiple align rules'() {
+        def graph = new DependencyGraphBuilder()
+                .addModule('test.nebula:a:1.0.0')
+                .addModule('test.nebula:a:1.1.0')
+                .addModule('test.nebula:b:1.0.0')
+                .addModule('test.nebula:b:1.1.0')
+                .addModule('test.other:c:0.12.2')
+                .addModule('test.other:c:1.0.0')
+                .addModule('test.other:d:0.12.2')
+                .addModule('test.other:d:1.0.0')
+                .build()
+        def mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen")
+        mavenrepo.generateTestMavenRepo()
+
+        rulesJsonFile << '''\
+            {
+                "deny": [], "reject": [], "substitute": [], "replace": [],
+                "align": [
+                    {
+                        "name": "testNebula",
+                        "group": "test.nebula",
+                        "reason": "Align test.nebula dependencies",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    },
+                    {
+                        "name": "testOther",
+                        "group": "test.other",
+                        "reason": "Aligning test",
+                        "author": "Example Tester <test@example.org>",
+                        "date": "2016-04-05T19:19:49.495Z"
+                    }
+                ]
+            }
+        '''.stripIndent()
+
+        buildFile << """\
+            repositories {
+                ${mavenrepo.mavenRepositoryBlock}
+            }
+            dependencies {
+                compile 'test.nebula:a:1.0.0'
+                compile 'test.nebula:b:1.1.0'
+                compile 'test.other:c:1.0.0'
+                compile 'test.other:d:0.12.+'
+            }
+        """.stripIndent()
+
+        when:
+        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+
+        then:
+        result.standardOutput.contains 'test.nebula:a:1.0.0 -> 1.1.0\n'
+        result.standardOutput.contains 'test.nebula:b:1.1.0\n'
+        result.standardOutput.contains 'test.other:c:1.0.0\n'
+        result.standardOutput.contains 'test.other:d:0.12.+ -> 1.0.0\n'
+    }
+
+    def 'substitute and align work together'() {
+        def graph = new DependencyGraphBuilder()
+                .addModule('test.nebula:a:1.0.0')
+                .addModule('test.nebula:a:0.15.0')
+                .addModule('test.nebula:b:1.0.0')
+                .addModule('test.nebula:b:0.15.0')
+                .addModule('old.org:sub:0.1.0')
+                .addModule('new.org:sub:0.2.0')
+                .build()
+        File mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
+
+        rulesJsonFile << '''\
+            {
+                "deny": [], "reject": [],
+                "substitute": [
+                    {
+                        "module" : "old.org:sub",
+                        "with" : "new.org:sub:latest.release",
+                        "reason" : "swap old.org to new.org",
+                        "author" : "Example Person <person@example.org>",
+                        "date" : "2016-03-18T20:21:20.368Z"
+                    }
+                ],
+                "replace": [],
+                "align": [
+                    {
+                        "name": "testNebula",
+                        "group": "test.nebula",
+                        "reason": "Align test.nebula dependencies",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    }
+                ]
+            }
+        '''.stripIndent()
+
+        buildFile << """\
+            repositories {
+                maven { url '${mavenrepo.absolutePath}' }
+            }
+            dependencies {
+                compile 'test.nebula:a:1.0.0'
+                compile 'test.nebula:b:0.15.0'
+                compile 'old.org:sub:latest.release'
+            }
+        """.stripIndent()
+
+        when:
+        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+
+        then:
+        result.standardOutput.contains '+--- test.nebula:a:1.0.0\n'
+        result.standardOutput.contains '+--- test.nebula:b:0.15.0 -> 1.0.0\n'
+        result.standardOutput.contains '\\--- old.org:sub:latest.release -> new.org:sub:0.2.0\n'
+    }
+
+    def 'jcenter align'() {
+        rulesJsonFile << '''\
+            {
+                "deny": [], "reject": [], "substitute": [], "replace": [],
+                "align": [
+                    {
+                        "name": "testNebula",
+                        "group": "com.google.guava",
+                        "reason": "Align guava",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    }
+                ]
+            }
+        '''.stripIndent()
+
+        buildFile << """\
+            repositories { jcenter() }
+            dependencies {
+                compile 'com.google.guava:guava:12.0'
+            }
+        """
+
+        when:
+        def results = runTasks('dependencies', '--configuration', 'compile')
+
+        then:
+        noExceptionThrown()
+    }
+
+    def 'allow skipping an align rule'() {
+        def graph = new DependencyGraphBuilder()
+                .addModule('test.nebula:a:1.0.0')
+                .addModule('test.nebula:a:0.15.0')
+                .addModule('test.nebula:b:1.0.0')
+                .addModule('test.nebula:b:0.15.0')
+                .build()
+        File mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
+
+        rulesJsonFile << '''\
+            {
+                "deny": [], "reject": [], "substitute": [], "replace": [],
+                "align": [
+                    {
+                        "name": "testNebula",
+                        "group": "test.nebula",
+                        "reason": "Align test.nebula dependencies",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    }
+                ]
+            }
+        '''.stripIndent()
+
+        buildFile << """\
+            repositories {
+                maven { url '${mavenrepo.absolutePath}' }
+            }
+            nebulaResolutionRules {
+                skipAlignRules = ['testNebula']
+            }
+            dependencies {
+                compile 'test.nebula:a:1.0.0'
+                compile 'test.nebula:b:0.15.0'
+            }
+        """.stripIndent()
+
+        when:
+        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+
+        then:
+        result.standardOutput.contains '+--- test.nebula:a:1.0.0\n'
+        result.standardOutput.contains '\\--- test.nebula:b:0.15.0\n'
     }
 }
