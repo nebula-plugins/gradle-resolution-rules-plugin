@@ -32,9 +32,10 @@ class ResolutionRulesPlugin implements Plugin<Project> {
 
     public void apply(Project project) {
         Configuration configuration = project.configurations.create(configurationName)
+        def extension = project.extensions.create('nebulaResolutionRules', NebulaResolutionRulesExtension)
         project.afterEvaluate {
             Rules rules = rulesFromConfiguration(configuration)
-            applyRules(rules, project)
+            applyRules(rules, project, extension)
         }
     }
 
@@ -103,7 +104,7 @@ class ResolutionRulesPlugin implements Plugin<Project> {
         return new Rules(replace: replace, substitute: substitute, reject: reject, deny: deny, align: align)
     }
 
-    private void applyRules(Rules rules, Project project) {
+    private void applyRules(Rules rules, Project project, NebulaResolutionRulesExtension extension) {
         rules.projectRules().each { it.apply(project) }
         project.configurations.all({ configuration ->
             if (configuration.name == configurationName) {
@@ -116,7 +117,7 @@ class ResolutionRulesPlugin implements Plugin<Project> {
             rules.configurationRules().each {
                 it.apply(configuration)
             }
-            rules.projectConfigurationRules().each { it.apply(project, configuration) }
+            rules.projectConfigurationRules().each { it.apply(project, configuration, extension) }
         })
     }
 }

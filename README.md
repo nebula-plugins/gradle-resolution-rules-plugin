@@ -21,7 +21,7 @@ The [Blacklist Plugin](https://github.com/nebula-plugins/gradle-blacklist-plugin
         }
 
         dependencies {
-            classpath 'com.netflix.nebula:gradle-resolution-rules-plugin:1.1.5'
+            classpath 'com.netflix.nebula:gradle-resolution-rules-plugin:1.2.0'
         }
     }
 
@@ -32,7 +32,7 @@ Or using the Gradle plugin portal:
 
 ```groovy
     plugins {
-        id 'nebula.resolution-rules' version '1.1.5'
+        id 'nebula.resolution-rules' version '1.2.0'
     }
 ```
 
@@ -62,6 +62,14 @@ Align rules allows the user to have a group of dependencies if present to have t
 
 This rule has different options depending on your use case. `includes` and `excludes` are mutually exclusive, the plugin will error out if both are present in one rule.
 
+##### If you need to skip a rule, you can use this extension
+
+```groovy
+    nebulaResolutionRules { // If you need to skip a rule 
+        skipAlignRules = ['<names>']
+    }    
+```
+
 #### Lock only a few dependencies in a group
 
 ```json
@@ -81,6 +89,7 @@ This rule has different options depending on your use case. `includes` and `excl
     {
         "align": [
             {
+                "name": "example",
                 "group": "example.bar",
                 "excludes": [ "qux", "thud" ]
             }
@@ -94,6 +103,7 @@ This rule has different options depending on your use case. `includes` and `excl
     {
         "align": [
             {
+                "name": "exampleMajor",
                 "group": "example.baz",
                 "along": "major"
             }
@@ -107,6 +117,7 @@ This rule has different options depending on your use case. `includes` and `excl
     {
         "align": [
             {
+                "name": "exampleMinor",
                 "group": "example.baz",
                 "along": "minor"
             }
@@ -138,7 +149,7 @@ The `nebula.resolution-rules-producer` plugin is provided to facilitate creation
         }
 
         dependencies {
-            classpath 'com.netflix.nebula:gradle-resolution-rules-plugin:1.1.4'
+            classpath 'com.netflix.nebula:gradle-resolution-rules-plugin:1.2.0'
         }
     }
 
@@ -149,7 +160,7 @@ Or using the Gradle plugin portal:
 
 ```groovy
     plugins {
-        id 'nebula.resolution-rules-producer' version '1.1.4'
+        id 'nebula.resolution-rules-producer' version '1.2.0'
     }
 ```
 
@@ -213,6 +224,7 @@ Once configured, run the following:
         ],
         "align": [
             {
+                "name": "alignJersey",
                 "group": "com.sun.jersey",
                 "reason": "Make sure jersey-core, jersey-server, etc. are aligned e.g. 1.19.1",
                 "author": "Example Person <person@example.org>",

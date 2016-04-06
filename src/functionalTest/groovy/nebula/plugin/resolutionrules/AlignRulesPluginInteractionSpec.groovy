@@ -36,6 +36,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
                 "deny": [], "reject": [], "substitute": [], "replace": [],
                 "align": [
                     {
+                        "name": "testNebula",
                         "group": "test.nebula",
                         "reason": "Align test.nebula dependencies",
                         "author": "Example Person <person@example.org>",
@@ -93,6 +94,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
                 "deny": [], "reject": [], "substitute": [], "replace": [],
                 "align": [
                     {
+                        "name": "testNebula",
                         "group": "test.nebula",
                         "reason": "Align test.nebula dependencies",
                         "author": "Example Person <person@example.org>",
@@ -144,6 +146,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
                 "deny": [], "reject": [], "substitute": [], "replace": [],
                 "align": [
                     {
+                        "name": "testNebula",
                         "group": "test.nebula",
                         "reason": "Align test.nebula dependencies",
                         "author": "Example Person <person@example.org>",
@@ -176,5 +179,59 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
 
         then:
         noExceptionThrown()
+    }
+
+    def 'align rules work with extra-configurations and publishing'() {
+        def graph = new DependencyGraphBuilder()
+                .addModule('test.a:a:1.42.2')
+                .build()
+        def mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen")
+        mavenrepo.generateTestMavenRepo()
+
+        def rulesJsonFile = new File(projectDir, 'rules.json')
+
+        rulesJsonFile << '''\
+            {
+                "deny": [], "reject": [], "substitute": [], "replace": [],
+                "align": [
+                    {
+                        "name": "testNebula",
+                        "group": "test.a",
+                        "reason": "Align test.a dependencies",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-04-01T20:21:20.368Z"
+                    }
+                ]
+            }
+        '''.stripIndent()
+
+        buildFile << """\
+            buildscript {
+                repositories { jcenter() }
+
+                dependencies {
+                    classpath 'com.netflix.nebula:gradle-extra-configurations-plugin:3.0.3'
+                }
+            }
+
+            ${applyPlugin(ResolutionRulesPlugin)}
+            apply plugin: 'java'
+            apply plugin: 'nebula.provided-base'
+
+            repositories {
+                ${mavenrepo.mavenRepositoryBlock}
+            }
+
+            dependencies {
+                resolutionRules files('$rulesJsonFile')
+                provided 'test.a:a:1.+'
+            }
+        """.stripIndent()
+
+        when:
+        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+
+        then:
+        result.standardOutput.contains '\\--- test.a:a:1.+ -> 1.42.2\n'
     }
 }

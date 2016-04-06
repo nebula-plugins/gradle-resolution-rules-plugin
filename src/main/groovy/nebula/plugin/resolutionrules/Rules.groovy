@@ -19,7 +19,6 @@ import org.gradle.api.Project
 import org.gradle.api.artifacts.*
 import org.gradle.api.artifacts.component.ComponentSelector
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
-import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.VersionInfo
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.DefaultVersionComparator
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
@@ -40,7 +39,7 @@ public class Rules {
     }
 
     public List<ProjectConfigurationRule> projectConfigurationRules() {
-        return align
+        return [new AlignRules(aligns: align)]
     }
 }
 
@@ -53,7 +52,7 @@ interface ConfigurationRule {
 }
 
 interface ProjectConfigurationRule {
-    public void apply(Project project, Configuration configuration)
+    public void apply(Project project, Configuration configuration, NebulaResolutionRulesExtension extension)
 }
 
 abstract class BaseRule {
@@ -159,13 +158,15 @@ class DenyRule extends BaseRule implements ConfigurationRule {
     }
 }
 
-class AlignRule extends BaseRule implements ProjectConfigurationRule {
+class AlignRule extends BaseRule {
+    String name
     String group
     Collection<String> includes
     Collection<String> excludes
 
     AlignRule(Map map) {
         super(map)
+        name = map.name
         group = map.group
         includes = map.includes ?: []
         excludes = map.excludes ?: []
@@ -185,21 +186,47 @@ class AlignRule extends BaseRule implements ProjectConfigurationRule {
                 (excludes.isEmpty() || !excludes.contains(inputName))
     }
 
+    boolean shouldNotBeSkipped(NebulaResolutionRulesExtension extension) {
+        !extension.skipAlignRules.contains(name)
+    }
+}
+
+class AlignRules implements ProjectConfigurationRule {
+    List<AlignRule> aligns
+
     @Override
-    void apply(Project project, Configuration configuration) {
-        def detached = configuration.copy()
+    void apply(Project project, Configuration configuration, NebulaResolutionRulesExtension extension) {
+        if (aligns.size() == 0) { // don't do extra resolves if there are no align rules
+            return
+        }
 
-        def artifacts = detached.resolvedConfiguration.resolvedArtifacts.collect { it.moduleVersion }
-        def matches = artifacts.findAll { resolvedMatches(it) }
-        def versions = matches.collect { it.id.version }.toUnique().collect { new VersionInfo(it) }
+        def detached = configuration.copyRecursive()
+        def artifacts
+        if (detached.resolvedConfiguration.hasError()) {
+            project.logger.info('Cannot resolve all dependencies to align')
+            artifacts = detached.resolvedConfiguration.lenientConfiguration.getArtifacts()
+        } else {
+            artifacts = detached.resolvedConfiguration.resolvedArtifacts.collect { it.moduleVersion }
+        }
 
-        def comparator = new DefaultVersionComparator()
-        def alignedVersion = versions.max { a, b -> comparator.compare(a, b)}
+        def selectedVersion = [:]
+        aligns.each { AlignRule align ->
+            if (align.shouldNotBeSkipped(extension)) {
+                def matches = artifacts.findAll { ResolvedModuleVersion dep -> align.resolvedMatches(dep) }
+                def versions = matches.collect { ResolvedModuleVersion dep -> dep.id.version }.toUnique()
+                def comparator = new DefaultVersionComparator().asStringComparator()
+                def alignedVersion = versions.max { a, b -> comparator.compare(a, b) }
+                if (alignedVersion) {
+                    selectedVersion[align] = alignedVersion
+                }
+            }
+        }
 
         configuration.resolutionStrategy { ResolutionStrategy rs ->
             rs.eachDependency { DependencyResolveDetails details ->
-                if (dependencyMatches(details)) {
-                    details.useTarget group: details.requested.group, name: details.requested.name, version: alignedVersion.version
+                def foundMatch = selectedVersion.find { AlignRule rule, String version -> rule.dependencyMatches(details) }
+                if (foundMatch) {
+                    details.useTarget group: details.requested.group, name: details.requested.name, version: foundMatch.value
                 }
             }
         }
