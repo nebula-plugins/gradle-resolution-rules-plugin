@@ -1,4 +1,4 @@
-1.2.0 / 2016/04/06
+1.2.0 / 2016/04/11
 ==================
 - Allow opt out of rules for shared company wide rules that apply to your project, e.g. there is a common align rule for a:foo and a:bar and you produce them
 - Performance improvement if there are multiple align rules
