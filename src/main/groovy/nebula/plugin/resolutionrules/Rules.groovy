@@ -200,29 +200,29 @@ class AlignRules implements ProjectConfigurationRule {
             return
         }
 
-        def detached = configuration.copyRecursive()
-        def artifacts
-        if (detached.resolvedConfiguration.hasError()) {
-            project.logger.info('Cannot resolve all dependencies to align')
-            artifacts = detached.resolvedConfiguration.lenientConfiguration.getArtifacts()
-        } else {
-            artifacts = detached.resolvedConfiguration.resolvedArtifacts.collect { it.moduleVersion }
-        }
+        configuration.resolutionStrategy { ResolutionStrategy rs ->
+            def detached = configuration.copyRecursive()
+            def artifacts
+            if (detached.resolvedConfiguration.hasError()) {
+                project.logger.info('Cannot resolve all dependencies to align')
+                artifacts = detached.resolvedConfiguration.lenientConfiguration.getArtifacts()
+            } else {
+                artifacts = detached.resolvedConfiguration.resolvedArtifacts.collect { it.moduleVersion }
+            }
 
-        def selectedVersion = [:]
-        aligns.each { AlignRule align ->
-            if (align.shouldNotBeSkipped(extension)) {
-                def matches = artifacts.findAll { ResolvedModuleVersion dep -> align.resolvedMatches(dep) }
-                def versions = matches.collect { ResolvedModuleVersion dep -> dep.id.version }.toUnique()
-                def comparator = new DefaultVersionComparator().asStringComparator()
-                def alignedVersion = versions.max { a, b -> comparator.compare(a, b) }
-                if (alignedVersion) {
-                    selectedVersion[align] = alignedVersion
+            def selectedVersion = [:]
+            aligns.each { AlignRule align ->
+                if (align.shouldNotBeSkipped(extension)) {
+                    def matches = artifacts.findAll { ResolvedModuleVersion dep -> align.resolvedMatches(dep) }
+                    def versions = matches.collect { ResolvedModuleVersion dep -> dep.id.version }.toUnique()
+                    def comparator = new DefaultVersionComparator().asStringComparator()
+                    def alignedVersion = versions.max { a, b -> comparator.compare(a, b) }
+                    if (alignedVersion) {
+                        selectedVersion[align] = alignedVersion
+                    }
                 }
             }
-        }
 
-        configuration.resolutionStrategy { ResolutionStrategy rs ->
             rs.eachDependency { DependencyResolveDetails details ->
                 def foundMatch = selectedVersion.find { AlignRule rule, String version -> rule.dependencyMatches(details) }
                 if (foundMatch) {

@@ -234,4 +234,136 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
         then:
         result.standardOutput.contains '\\--- test.a:a:1.+ -> 1.42.2\n'
     }
+
+    def 'publishing, provided, and dependency-recommender interacting with resolution-rules'() {
+        def graph = new DependencyGraphBuilder()
+                .addModule('test.a:a:1.42.2')
+                .addModule('test.a:b:1.2.1')
+                .build()
+        def mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen")
+        mavenrepo.generateTestMavenRepo()
+
+        def rulesJsonFile = new File(projectDir, 'rules.json')
+
+        rulesJsonFile << '''\
+            {
+                "deny": [], "reject": [], "substitute": [], "replace": [],
+                "align": [
+                    {
+                        "name": "testNebula",
+                        "group": "test.nebula",
+                        "reason": "Align test.nebula dependencies",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    }
+                ]
+            }
+        '''.stripIndent()
+
+        buildFile << """\
+            buildscript {
+                repositories { jcenter() }
+
+                dependencies {
+                    classpath 'com.netflix.nebula:nebula-dependency-recommender:3.1.0'
+                    classpath 'com.netflix.nebula:nebula-publishing-plugin:4.4.4'
+                    classpath 'com.netflix.nebula:gradle-extra-configurations-plugin:3.0.3'
+                }
+            }
+
+            apply plugin: 'nebula.dependency-recommender'
+            apply plugin: 'nebula.maven-publish'
+            ${applyPlugin(ResolutionRulesPlugin)}
+            apply plugin: 'java'
+            apply plugin: 'nebula.provided-base'
+
+
+            repositories {
+                ${mavenrepo.mavenRepositoryBlock}
+            }
+
+            dependencyRecommendations {
+               map recommendations: ['test.a:a': '1.42.2', 'test.a:b': '1.2.1']
+            }
+
+            dependencies {
+                resolutionRules files('$rulesJsonFile')
+                compile 'test.a:a'
+                provided 'test.a:b'
+            }
+        """.stripIndent()
+
+        when:
+        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+
+        then:
+        result.standardOutput.contains '+--- test.a:a: -> 1.42.2\n'
+        result.standardOutput.contains '\\--- test.a:b: -> 1.2.1\n'
+    }
+
+    @spock.lang.Ignore
+    def 'cycle like behavior'() {
+        def graph = new DependencyGraphBuilder()
+                .addModule('test.nebula:c:1.42.2')
+                .addModule('test.nebula:d:1.2.1')
+                .build()
+        def mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen")
+        mavenrepo.generateTestMavenRepo()
+
+        def rulesJsonFile = new File(projectDir, 'rules.json')
+
+        rulesJsonFile << '''\
+            {
+                "deny": [], "reject": [], "substitute": [], "replace": [],
+                "align": [
+                ]
+            }
+        '''.stripIndent()
+
+        buildFile << """\
+            buildscript {
+                repositories { jcenter() }
+
+                dependencies {
+                    classpath 'com.netflix.nebula:nebula-publishing-plugin:4.4.4'
+                    classpath 'com.netflix.nebula:gradle-extra-configurations-plugin:3.0.3'
+                }
+            }
+            subprojects {
+                apply plugin: 'nebula.maven-publish'
+                apply plugin: 'nebula.provided-base'
+                ${applyPlugin(ResolutionRulesPlugin)}
+                apply plugin: 'java'
+
+
+
+                repositories {
+                    ${mavenrepo.mavenRepositoryBlock}
+                }
+
+                dependencies {
+                    resolutionRules files('$rulesJsonFile')
+                }
+            }
+        """.stripIndent()
+
+        def aDir = addSubproject('a', '''\
+            dependencies {
+                compile 'test.nebula:c:1.+'
+                testCompile project(':b')
+            }
+        '''.stripIndent())
+        def bDir = addSubproject('b', '''\
+            dependencies {
+                compile 'test.nebula:d:[1.0.0, 2.0.0)'
+                compile project(':a')
+            }
+        '''.stripIndent())
+
+        when:
+        def results = runTasksSuccessfully(':a:dependencies', ':b:dependencies', 'assemble')
+
+        then:
+        noExceptionThrown()
+    }
 }

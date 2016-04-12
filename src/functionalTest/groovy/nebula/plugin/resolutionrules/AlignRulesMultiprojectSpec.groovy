@@ -66,7 +66,7 @@ class AlignRulesMultiprojectSpec extends IntegrationSpec {
         // project b depends on a
         new File(bDir, 'build.gradle') << '''\
             dependencies {
-                project(':a')
+                compile project(':a')
             }
         '''.stripIndent()
 
@@ -92,6 +92,34 @@ class AlignRulesMultiprojectSpec extends IntegrationSpec {
 
         when:
         def results = runTasksSuccessfully(':b:dependencies', '--configuration', 'compile')
+
+        then:
+        noExceptionThrown()
+    }
+
+    def 'cycle like behavior'() {
+        rulesJsonFile << '''\
+            {
+                "deny": [], "reject": [], "substitute": [], "replace": [],
+                "align": [
+                ]
+            }
+        '''.stripIndent()
+
+        new File(aDir, 'build.gradle') << '''\
+            dependencies {
+                testCompile project(':b')
+            }
+        '''.stripIndent()
+
+        new File(bDir, 'build.gradle') << '''\
+            dependencies {
+                compile project(':a')
+            }
+        '''.stripIndent()
+
+        when:
+        def results = runTasksSuccessfully(':a:dependencies', ':b:dependencies', 'assemble')
 
         then:
         noExceptionThrown()
