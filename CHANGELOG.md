@@ -1,3 +1,8 @@
+1.2.1 / 2016/04/19
+==================
+- BUGFIX: Make sure resolutionRules configuration can be locked by nebula.dependency-lock
+- BUGFIX: Allow other changes to configurations.all and associated resolutionStrategy
+
 1.2.0 / 2016/04/11
 ==================
 - Allow opt out of rules for shared company wide rules that apply to your project, e.g. there is a common align rule for a:foo and a:bar and you produce them

@@ -710,4 +710,69 @@ class AlignRulesSpec extends IntegrationSpec {
         result.standardOutput.contains '+--- test.nebula:a:1.0.0\n'
         result.standardOutput.contains '\\--- test.nebula:b:0.15.0\n'
     }
+
+    def 'can add additional resolution rules outside of plugin'() {
+        def graph = new DependencyGraphBuilder()
+                .addModule('test.nebula:a:1.0.0')
+                .addModule('test.nebula:a:0.15.0')
+                .addModule('test.nebula:b:1.0.0')
+                .addModule('test.nebula:b:0.15.0')
+                .addModule('test.example:c:0.1.0')
+                .addModule('test.example:c:0.2.0')
+                .addModule('test:x:1.0.0')
+                .addModule('test:x:1.0.1')
+                .addModule('test:y:1.0.0')
+                .addModule('test:y:1.0.1')
+                .build()
+        File mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
+
+        rulesJsonFile << '''\
+            {
+                "deny": [], "reject": [], "substitute": [], "replace": [],
+                "align": [
+                    {
+                        "name": "testNebula",
+                        "group": "test.nebula",
+                        "reason": "Align test.nebula dependencies",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    }
+                ]
+            }
+        '''.stripIndent()
+
+        buildFile << """\
+            repositories {
+                maven { url '${mavenrepo.absolutePath}' }
+            }
+            configurations.all {
+                resolutionStrategy {
+                    force 'test.example:c:0.1.0'
+                    eachDependency { details ->
+                        if (details.requested.group == 'test') {
+                            details.useTarget group: details.requested.group, name: details.requested.name, version: '1.0.0'
+                        }
+                    }
+                }
+            }
+            dependencies {
+                compile 'test.nebula:a:1.0.0'
+                compile 'test.nebula:b:0.15.0'
+                compile 'test.example:c:latest.release'
+                compile 'test:x:1.+'
+                compile 'test:y:1.+'
+            }
+        """.stripIndent()
+
+        when:
+        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+
+        then:
+        result.standardOutput.contains '+--- test.nebula:a:1.0.0\n'
+        result.standardOutput.contains '+--- test.nebula:b:0.15.0 -> 1.0.0\n'
+        result.standardOutput.contains '+--- test.example:c:latest.release -> 0.1.0\n'
+        result.standardOutput.contains '+--- test:x:1.+ -> 1.0.0\n'
+        result.standardOutput.contains '\\--- test:y:1.+ -> 1.0.0\n'
+
+    }
 }
