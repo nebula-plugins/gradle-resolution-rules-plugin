@@ -27,7 +27,6 @@ buildscript {
 plugins {
     id 'com.gradle.plugin-publish' version '0.9.4'
     id 'nebula.plugin-plugin' version '4.1.0'
-    id 'nebula.facet' version '3.1.0'
 }
 
 dependencies {
