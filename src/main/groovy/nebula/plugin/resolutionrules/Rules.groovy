@@ -35,7 +35,11 @@ public class Rules {
     }
 
     public List<ConfigurationRule> configurationRules() {
-        return Arrays.asList(substitute, reject, deny).flatten()
+        return deny
+    }
+
+    public List<ResolutionRule> resolutionRules() {
+        return [substitute, reject].flatten()
     }
 
     public List<ProjectConfigurationRule> projectConfigurationRules() {
@@ -47,12 +51,16 @@ interface ProjectRule {
     public void apply(Project project)
 }
 
+interface ResolutionRule {
+    public void apply(ResolutionStrategy rs)
+}
+
 interface ConfigurationRule {
     public void apply(Configuration configuration)
 }
 
 interface ProjectConfigurationRule {
-    public void apply(Project project, Configuration configuration, NebulaResolutionRulesExtension extension)
+    public void apply(Project project, ResolutionStrategy rs, Configuration configuration, NebulaResolutionRulesExtension extension)
 }
 
 abstract class BaseRule {
@@ -87,7 +95,7 @@ class ReplaceRule extends BaseRule implements ProjectRule {
     }
 }
 
-class SubstituteRule extends BaseRule implements ConfigurationRule {
+class SubstituteRule extends BaseRule implements ResolutionRule {
     String module
     String with
 
@@ -97,8 +105,8 @@ class SubstituteRule extends BaseRule implements ConfigurationRule {
         with = map.with
     }
 
-    public void apply(Configuration configuration) {
-        ResolutionStrategy resolutionStrategy = configuration.resolutionStrategy
+    @Override
+    public void apply(ResolutionStrategy resolutionStrategy) {
         DependencySubstitutions substitution = resolutionStrategy.dependencySubstitution
         ComponentSelector selector = substitution.module(module)
         ModuleVersionIdentifier withModuleId = ModuleVersionIdentifier.valueOf(with)
@@ -117,7 +125,7 @@ class SubstituteRule extends BaseRule implements ConfigurationRule {
     }
 }
 
-class RejectRule extends BaseRule implements ConfigurationRule {
+class RejectRule extends BaseRule implements ResolutionRule {
     String module
 
     RejectRule(Map map) {
@@ -125,9 +133,10 @@ class RejectRule extends BaseRule implements ConfigurationRule {
         module = map.module
     }
 
-    public void apply(Configuration configuration) {
+    @Override
+    public void apply(ResolutionStrategy resolutionStrategy) {
         ModuleVersionIdentifier moduleId = ModuleVersionIdentifier.valueOf(module)
-        configuration.resolutionStrategy.componentSelection.all({ selection ->
+        resolutionStrategy.componentSelection.all({ selection ->
             ModuleComponentIdentifier candidate = selection.candidate
             if (candidate.group == moduleId.organization && candidate.module == moduleId.name) {
                 if (!moduleId.hasVersion() || candidate.version == moduleId.version) {
@@ -195,39 +204,37 @@ class AlignRules implements ProjectConfigurationRule {
     List<AlignRule> aligns
 
     @Override
-    void apply(Project project, Configuration configuration, NebulaResolutionRulesExtension extension) {
+    void apply(Project project, ResolutionStrategy resolutionStrategy, Configuration configuration, NebulaResolutionRulesExtension extension) {
         if (aligns.size() == 0) { // don't do extra resolves if there are no align rules
             return
         }
 
-        configuration.resolutionStrategy { ResolutionStrategy rs ->
-            def detached = configuration.copyRecursive()
-            def artifacts
-            if (detached.resolvedConfiguration.hasError()) {
-                project.logger.info('Cannot resolve all dependencies to align')
-                artifacts = detached.resolvedConfiguration.lenientConfiguration.getArtifacts()
-            } else {
-                artifacts = detached.resolvedConfiguration.resolvedArtifacts.collect { it.moduleVersion }
-            }
+        def detached = configuration.copyRecursive()
+        def artifacts
+        if (detached.resolvedConfiguration.hasError()) {
+            project.logger.info('Cannot resolve all dependencies to align')
+            artifacts = detached.resolvedConfiguration.lenientConfiguration.getArtifacts()
+        } else {
+            artifacts = detached.resolvedConfiguration.resolvedArtifacts.collect { it.moduleVersion }
+        }
 
-            def selectedVersion = [:]
-            aligns.each { AlignRule align ->
-                if (align.shouldNotBeSkipped(extension)) {
-                    def matches = artifacts.findAll { ResolvedModuleVersion dep -> align.resolvedMatches(dep) }
-                    def versions = matches.collect { ResolvedModuleVersion dep -> dep.id.version }.toUnique()
-                    def comparator = new DefaultVersionComparator().asStringComparator()
-                    def alignedVersion = versions.max { a, b -> comparator.compare(a, b) }
-                    if (alignedVersion) {
-                        selectedVersion[align] = alignedVersion
-                    }
+        def selectedVersion = [:]
+        aligns.each { AlignRule align ->
+            if (align.shouldNotBeSkipped(extension)) {
+                def matches = artifacts.findAll { ResolvedModuleVersion dep -> align.resolvedMatches(dep) }
+                def versions = matches.collect { ResolvedModuleVersion dep -> dep.id.version }.toUnique()
+                def comparator = new DefaultVersionComparator().asStringComparator()
+                def alignedVersion = versions.max { a, b -> comparator.compare(a, b) }
+                if (alignedVersion) {
+                    selectedVersion[align] = alignedVersion
                 }
             }
+        }
 
-            rs.eachDependency { DependencyResolveDetails details ->
-                def foundMatch = selectedVersion.find { AlignRule rule, String version -> rule.dependencyMatches(details) }
-                if (foundMatch) {
-                    details.useTarget group: details.requested.group, name: details.requested.name, version: foundMatch.value
-                }
+        resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+            def foundMatch = selectedVersion.find { AlignRule rule, String version -> rule.dependencyMatches(details) }
+            if (foundMatch) {
+                details.useTarget group: details.requested.group, name: details.requested.name, version: foundMatch.value
             }
         }
     }

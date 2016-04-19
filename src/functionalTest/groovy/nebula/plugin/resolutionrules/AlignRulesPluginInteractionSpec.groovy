@@ -14,12 +14,16 @@
  * limitations under the License.
  *
  */
-
 package nebula.plugin.resolutionrules
 
 import nebula.test.IntegrationSpec
 import nebula.test.dependencies.DependencyGraphBuilder
 import nebula.test.dependencies.GradleDependencyGenerator
+
+import java.util.jar.Attributes
+import java.util.jar.JarEntry
+import java.util.jar.JarOutputStream
+import java.util.jar.Manifest
 
 class AlignRulesPluginInteractionSpec extends IntegrationSpec {
     def 'alignment interaction with dependency-recommender'() {
@@ -301,7 +305,6 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
         result.standardOutput.contains '\\--- test.a:b: -> 1.2.1\n'
     }
 
-    @spock.lang.Ignore
     def 'cycle like behavior'() {
         def graph = new DependencyGraphBuilder()
                 .addModule('test.nebula:c:1.42.2')
@@ -322,11 +325,13 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
 
         buildFile << """\
             buildscript {
-                repositories { jcenter() }
+                repositories {
+                    jcenter()
+                }
 
                 dependencies {
                     classpath 'com.netflix.nebula:nebula-publishing-plugin:4.4.4'
-                    classpath 'com.netflix.nebula:gradle-extra-configurations-plugin:3.0.3'
+                    classpath 'com.netflix.nebula:gradle-extra-configurations-plugin:3.1.0'
                 }
             }
             subprojects {
@@ -365,5 +370,143 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
 
         then:
         noExceptionThrown()
+    }
+
+    def 'able to lock rules'() {
+        def graph = new DependencyGraphBuilder()
+                .addModule('test.nebula:a:1.41.5')
+                .addModule('test.nebula:a:1.42.2')
+                .addModule('test.nebula:b:1.41.5')
+                .addModule('test.nebula:b:1.42.2')
+                .build()
+        def mavenrepo = new GradleDependencyGenerator(graph, "$projectDir/testrepogen")
+        mavenrepo.generateTestMavenRepo()
+
+        def rulesFolder = new File(projectDir, 'rules')
+        rulesFolder.mkdirs()
+        def rulesJsonFile = new File(rulesFolder, 'rules.json')
+
+        rulesJsonFile << '''\
+            {
+                "deny": [], "reject": [], "substitute": [], "replace": [],
+                "align": [
+                    {
+                        "name": "testNebula",
+                        "group": "test.nebula",
+                        "reason": "Align test.nebula dependencies",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    }
+                ]
+            }
+        '''.stripIndent()
+
+        def mavenForRules = new File(projectDir, 'repo')
+        mavenForRules.mkdirs()
+        def locked = new File(mavenForRules, 'test/rules/resolution-rules/1.0.0')
+        locked.mkdirs()
+        createRulesJar([rulesFolder], projectDir, new File(locked, 'resolution-rules-1.0.0.jar'))
+        createPom('test.rules', 'resolution-rules', '1.0.0', locked)
+
+        rulesJsonFile.text = '''\
+            {
+                "deny": [], "reject": [], "substitute": [], "replace": [], "align": []
+            }
+        '''.stripIndent()
+        def newer = new File(mavenForRules, 'test/rules/resolution-rules/1.1.0')
+        newer.mkdirs()
+        createRulesJar([rulesFolder], projectDir, new File(newer, 'resolution-rules-1.1.0.jar'))
+        createPom('test.rules', 'resolution-rules', '1.1.0', newer)
+
+        def dependencyLock = new File(projectDir, 'dependencies.lock')
+
+        dependencyLock << '''\
+        {
+            "resolutionRules": {
+                "test.rules:resolution-rules": { "locked": "1.0.0" }
+            }
+        }
+        '''.stripIndent()
+
+        buildFile << """\
+            buildscript {
+                repositories { jcenter() }
+                dependencies {
+                    classpath 'com.netflix.nebula:gradle-dependency-lock-plugin:4.2.0'
+                }
+            }
+
+            ${applyPlugin(ResolutionRulesPlugin)}
+            apply plugin: 'nebula.dependency-lock'
+            apply plugin: 'java'
+
+            repositories {
+                ${mavenrepo.mavenRepositoryBlock}
+                maven { url '${mavenForRules.absolutePath}' }
+            }
+
+            dependencies {
+                resolutionRules 'test.rules:resolution-rules:1.+'
+                compile 'test.nebula:a:1.41.5'
+                compile 'test.nebula:b:1.42.2'
+            }
+        """.stripIndent()
+
+        when:
+        def results = runTasksSuccessfully('dependencies', '--configuration', 'resolutionRules')
+
+        then:
+        results.standardOutput.contains '\\--- test.rules:resolution-rules:1.+ -> 1.0.0\n'
+
+        when:
+        results = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+
+        then:
+        results.standardOutput.contains '+--- test.nebula:a:1.41.5 -> 1.42.2\n'
+        results.standardOutput.contains '\\--- test.nebula:b:1.42.2\n'
+    }
+
+    private createRulesJar(Collection<File> files, File unneededRoot, File destination) {
+        Manifest manifest = new Manifest()
+        manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, '1.0')
+        JarOutputStream target = new JarOutputStream(new FileOutputStream(destination), manifest)
+        files.each { add(it, unneededRoot, target) }
+        target.close()
+    }
+
+    private createPom(String group, String name, String version, File dir) {
+        def pom = new File(dir, "${name}-${version}.pom")
+        pom.text = """\
+            <?xml version="1.0" encoding="UTF-8"?>
+            <project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+              <modelVersion>4.0.0</modelVersion>
+              <groupId>${group}</groupId>
+              <artifactId>${name}</artifactId>
+              <version>${version}</version>
+            </project>
+        """.stripIndent()
+    }
+
+    private void add(File source, File unneededRoot, JarOutputStream target) throws IOException
+    {
+        def prefix = "${unneededRoot.path}/"
+        if (source.isDirectory()) {
+            String dirName = source.path - prefix
+            if (!dirName.endsWith('/')) {
+                dirName += '/'
+            }
+            def entry = new JarEntry(dirName)
+            target.putNextEntry(entry)
+            target.closeEntry()
+            source.listFiles().each { nested ->
+                add(nested, unneededRoot, target)
+            }
+        } else {
+            def entry = new JarEntry(source.path - prefix)
+            target.putNextEntry(entry)
+            target << source.bytes
+            target.closeEntry()
+        }
     }
 }

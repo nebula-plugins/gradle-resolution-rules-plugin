@@ -118,9 +118,9 @@ class PluginFunctionalTest extends IntegrationSpec {
 
     def 'warning logged when configuration has been resolved'() {
         given:
-        buildFile << """
-                     configurations.compile.resolvedConfiguration
-                     """.stripIndent()
+        buildFile << """\
+            configurations.compile.resolve()
+            """.stripIndent()
 
         when:
         def result = runTasksSuccessfully()

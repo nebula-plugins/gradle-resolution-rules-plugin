@@ -20,6 +20,7 @@ import groovy.json.JsonSlurper
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.artifacts.ResolutionStrategy
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -27,21 +28,53 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 
 class ResolutionRulesPlugin implements Plugin<Project> {
+    Project project
     Logger logger = LoggerFactory.getLogger(ResolutionRulesPlugin)
     String configurationName = "resolutionRules"
+    Rules rules
 
     public void apply(Project project) {
+        this.project = project
         Configuration configuration = project.configurations.create(configurationName)
         def extension = project.extensions.create('nebulaResolutionRules', NebulaResolutionRulesExtension)
-        project.afterEvaluate {
-            Rules rules = rulesFromConfiguration(configuration)
-            applyRules(rules, project, extension)
+
+        project.gradle.projectsEvaluated {
+            project.configurations.all{ Configuration config ->
+                if (config.name == configurationName) {
+                    return
+                }
+                if (config.state != Configuration.State.UNRESOLVED) {
+                    logger.warn("Configuration '{}' has been resolved. Dependency resolution rules will not be applied", config.name)
+                    return
+                }
+                config.resolutionStrategy { ResolutionStrategy rs ->
+                    getRules().configurationRules().each { ConfigurationRule rule ->
+                        rule.apply(config)
+                    }
+                    getRules().resolutionRules().each { ResolutionRule rule ->
+                        rule.apply(rs)
+                    }
+                    getRules().projectConfigurationRules().each { ProjectConfigurationRule rule ->
+                        rule.apply(project, rs, config, extension)
+                    }
+                }
+
+            }
+            getRules().projectRules().each { ProjectRule rule -> rule.apply(project) }
         }
+    }
+
+    Rules getRules() {
+        if (!rules) {
+            rules = rulesFromConfiguration(project.configurations.getByName(configurationName))
+        }
+
+        rules
     }
 
     private Rules rulesFromConfiguration(Configuration configuration) {
         List<Rules> rules = new ArrayList<Rules>();
-        Set<File> files = configuration.resolve()
+        Set<File> files = configuration.copyRecursive().resolve()
         if (files.isEmpty()) {
             logger.warn("No resolution rules have been added to the '{}' configuration", configuration.name)
         }
@@ -102,22 +135,5 @@ class ResolutionRulesPlugin implements Plugin<Project> {
         List<DenyRule> deny = rules.collectMany { it.deny }.flatten() as List<DenyRule>
         List<AlignRule> align = rules.collectMany { it.align }.flatten() as List<AlignRule>
         return new Rules(replace: replace, substitute: substitute, reject: reject, deny: deny, align: align)
-    }
-
-    private void applyRules(Rules rules, Project project, NebulaResolutionRulesExtension extension) {
-        rules.projectRules().each { it.apply(project) }
-        project.configurations.all({ configuration ->
-            if (configuration.name == configurationName) {
-                return
-            }
-            if (configuration.state != Configuration.State.UNRESOLVED) {
-                logger.warn("Configuration '{}' has been resolved. Dependency resolution rules will not be applied", configuration.name)
-                return
-            }
-            rules.configurationRules().each {
-                it.apply(configuration)
-            }
-            rules.projectConfigurationRules().each { it.apply(project, configuration, extension) }
-        })
     }
 }

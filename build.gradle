@@ -57,6 +57,11 @@ facets {
     }
 }
 
+tasks.withType(Test) {
+    maxHeapSize = '512m'
+    jvmArgs '-XX:MaxPermSize=128m'
+}
+
 apply from: 'gradle/idea.gradle'
 apply from: 'https://raw.githubusercontent.com/nebula-plugins/nebula-core/59c9e15f561372a8a72bbe13e4fbb114d0ef16f8/common.gradle'
 
