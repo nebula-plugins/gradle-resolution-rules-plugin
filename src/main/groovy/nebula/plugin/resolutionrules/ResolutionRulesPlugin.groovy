@@ -39,7 +39,7 @@ class ResolutionRulesPlugin implements Plugin<Project> {
         def extension = project.extensions.create('nebulaResolutionRules', NebulaResolutionRulesExtension)
 
         project.gradle.projectsEvaluated {
-            project.configurations.all{ Configuration config ->
+            project.configurations.all { Configuration config ->
                 if (config.name == configurationName) {
                     return
                 }
