@@ -210,6 +210,7 @@ class AlignRules implements ProjectConfigurationRule {
         }
 
         def detached = configuration.copyRecursive()
+        detached.exclude group: project.group, module: project.name
         def artifacts
         if (detached.resolvedConfiguration.hasError()) {
             project.logger.info('Cannot resolve all dependencies to align')
