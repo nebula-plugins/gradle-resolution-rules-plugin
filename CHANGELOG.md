@@ -1,3 +1,7 @@
+1.2.2 / 2016/04/25
+==================
+- BUGFIX: Handle circularish dependencies B depends on A for compile, A depends on B for testCompile
+
 1.2.1 / 2016/04/19
 ==================
 - BUGFIX: Make sure resolutionRules configuration can be locked by nebula.dependency-lock
