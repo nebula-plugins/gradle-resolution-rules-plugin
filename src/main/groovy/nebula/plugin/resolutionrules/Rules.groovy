@@ -20,6 +20,7 @@ import org.gradle.api.artifacts.*
 import org.gradle.api.artifacts.component.ComponentSelector
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.DefaultVersionComparator
+import org.gradle.api.specs.Specs
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 
@@ -209,20 +210,23 @@ class AlignRules implements ProjectConfigurationRule {
             return
         }
 
-        def detached = configuration.copyRecursive()
-        detached.exclude group: project.group, module: project.name
+        def copy = configuration.copyRecursive()
+        copy.exclude group: project.group, module: project.name
         def artifacts
-        if (detached.resolvedConfiguration.hasError()) {
-            project.logger.info('Cannot resolve all dependencies to align')
-            artifacts = detached.resolvedConfiguration.lenientConfiguration.getArtifacts()
+        def resolvedConfiguration = copy.resolvedConfiguration
+        if (resolvedConfiguration.hasError()) {
+            def lenientConfiguration = resolvedConfiguration.lenientConfiguration
+            project.logger.info("Cannot resolve all dependencies to align, configuration '${configuration.name}' should also fail to resolve")
+            artifacts = lenientConfiguration.getArtifacts(Specs.SATISFIES_ALL)
         } else {
-            artifacts = detached.resolvedConfiguration.resolvedArtifacts.collect { it.moduleVersion }
+            artifacts = resolvedConfiguration.resolvedArtifacts
         }
 
+        def moduleVersions = artifacts.collect { it.moduleVersion }
         def selectedVersion = [:]
         aligns.each { AlignRule align ->
             if (align.shouldNotBeSkipped(extension)) {
-                def matches = artifacts.findAll { ResolvedModuleVersion dep -> align.resolvedMatches(dep) }
+                def matches = moduleVersions.findAll { ResolvedModuleVersion dep -> align.resolvedMatches(dep) }
                 def versions = matches.collect { ResolvedModuleVersion dep -> dep.id.version }.toUnique()
                 def comparator = new DefaultVersionComparator().asStringComparator()
                 def alignedVersion = versions.max { a, b -> comparator.compare(a, b) }
