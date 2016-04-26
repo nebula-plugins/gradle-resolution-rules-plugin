@@ -660,10 +660,41 @@ class AlignRulesSpec extends IntegrationSpec {
         """
 
         when:
-        def results = runTasks('dependencies', '--configuration', 'compile')
+        runTasksSuccessfully('dependencies', '--configuration', 'compile')
 
         then:
         noExceptionThrown()
+    }
+
+    def 'unresolvable dependencies cause warnings to be output'() {
+        rulesJsonFile << '''\
+            {
+                "deny": [], "reject": [], "substitute": [], "replace": [],
+                "align": [
+                    {
+                        "name": "testNebula",
+                        "group": "com.google.guava",
+                        "reason": "Align guava",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    }
+                ]
+            }
+        '''.stripIndent()
+
+        buildFile << """\
+            repositories { jcenter() }
+            dependencies {
+                compile 'org.slf4j:slf4j-api:1.7.21'
+                compile 'com.google.guava:guava:oops'
+            }
+        """
+
+        when:
+        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+
+        then:
+        result.standardOutput.contains("Cannot resolve all dependencies to align, configuration 'compile' should also fail to resolve")
     }
 
     def 'allow skipping an align rule'() {
