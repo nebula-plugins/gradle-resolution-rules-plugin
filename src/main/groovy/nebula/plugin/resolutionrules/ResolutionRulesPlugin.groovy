@@ -101,7 +101,7 @@ class ResolutionRulesPlugin implements Plugin<Project> {
         if (filename.endsWith(".json")) {
             String nameWithoutExtension = filename.replace(".json", "")
             if (nameWithoutExtension.startsWith("optional-")) {
-                return extension.include.contains(nameWithoutExtension.replaceFirst("optional-", ""))
+                return extension.include.contains(nameWithoutExtension)
             } else {
                 return !extension.exclude.contains(nameWithoutExtension)
             }

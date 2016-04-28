@@ -243,7 +243,7 @@ class PluginFunctionalTest extends IntegrationSpec {
         given:
         buildFile << """
                      nebulaResolutionRules {
-                         include = ["${moduleName}"]
+                         include = ["optional-${moduleName}"]
                      }
 
                      dependencies {
