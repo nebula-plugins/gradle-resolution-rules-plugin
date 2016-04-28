@@ -108,11 +108,15 @@ class ResolutionRulesPlugin implements Plugin<Project> {
         return false
     }
 
-    private static Rules parseJsonFile(File file) {
+    static Rules parseJsonFile(File file) {
         rulesFromJson(new JsonSlurper().parse(file) as Map)
     }
 
-    private static Rules parseJsonStream(InputStream stream) {
+    static Rules parseJsonText(String json) {
+        rulesFromJson(new JsonSlurper().parseText(json) as Map)
+    }
+
+    static Rules parseJsonStream(InputStream stream) {
         rulesFromJson(new JsonSlurper().parse(stream) as Map)
     }
 
