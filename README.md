@@ -36,9 +36,15 @@ Or using the Gradle plugin portal:
     }
 ```
 
-# Rules
+We produce a rules for dependencies found in Maven Central, to use those rules in your project add:
 
-We produce a rules artifact for the plugin containing rules for dependencies found in Maven Central. See the [this project](https://github.com/nebula-plugins/gradle-resolution-rules) for details.
+```groovy
+    dependencies {
+        resolutionRules 'com.netflix.nebula:resolution-rules:latest.release'
+    }
+```
+
+See the [this project](https://github.com/nebula-plugins/gradle-resolution-rules) for details of the rules, and instructions on how to enable optional rule sets.
 
 # Dependency rules types
 
