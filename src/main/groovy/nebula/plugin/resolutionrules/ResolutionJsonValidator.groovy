@@ -47,11 +47,6 @@ class ResolutionJsonValidator {
     }
 
     static def validateJson(Object json) {
-        // ensure there are exactly 5 types
-        if (json.size() != 5) {
-            throw new InvalidRulesJsonException('There must be exactly 5 resolution rule types defined')
-        }
-
         // ensure all types are lists
         if (json.any { it.value.getClass() != ArrayList }) {
             throw new InvalidRulesJsonException('All resolution rule types must be lists')

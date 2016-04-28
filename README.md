@@ -164,7 +164,31 @@ Dependency rules are read from the `resolutionRules` configuration. Zip and jar 
         resolutionRules 'com.myorg:resolution-rules:latest.release'
     }
 ```
-    
+
+## Excluding rules
+
+Rules may be excluded by filename, omitting the `.json` extension:
+
+```groovy
+    nebulaResolutionRules {
+        exclude = ['local-rules']
+    }
+```
+
+## Including optional rules
+
+Optional rules files are prefixed with `optional-`, and must be included explicitly, omitting the `.json` extension from the filename:
+
+```groovy
+    dependencies {
+        resolutionRules files('optional-local-rules.json')
+    }
+
+    nebulaResolutionRules {
+        include = ['optional-local-rules']
+    }
+```
+
 # Producing rules
 
 The `nebula.resolution-rules-producer` plugin is provided to facilitate creation of rule files. This plugin can be used to validate and package rule files. To use, put your rules file in `src/resolutionRules/resolution-rules.json` and execute the packageRules task. If successful, a jar with the validated rules file will be placed in your build directory. For specifying more than one source file, see documentation below.
@@ -193,11 +217,9 @@ Or using the Gradle plugin portal:
     }
 ```
 
-
 Once configured, run the following:
 
     $ ./gradlew packageRules
-    
 
 ## Customizing rule file locations
 
@@ -206,6 +228,8 @@ Once configured, run the following:
         rules files('./alternative-rules.json', './src/rules/moreRules.json')
     }
 ```
+
+Prefix the rule filename with `optional-` to make a rules filename optional, and prevent it from being applied by default.
 
 # Example rules JSON
 

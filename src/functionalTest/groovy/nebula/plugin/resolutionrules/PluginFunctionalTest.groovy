@@ -24,10 +24,13 @@ import org.codehaus.groovy.runtime.StackTraceUtils
  * Functional test for {@link ResolutionRulesPlugin}.
  */
 class PluginFunctionalTest extends IntegrationSpec {
-    def rulesJsonFile
+    File rulesJsonFile
+    File optionalRulesJsonFile
 
     def setup() {
         rulesJsonFile = new File(projectDir, "${moduleName}.json")
+        optionalRulesJsonFile = new File(projectDir, "optional-${moduleName}.json")
+
         buildFile << """
                      apply plugin: 'java'
                      apply plugin: 'nebula.resolution-rules'
@@ -37,7 +40,7 @@ class PluginFunctionalTest extends IntegrationSpec {
                      }
 
                      dependencies {
-                         resolutionRules files("$rulesJsonFile")
+                         resolutionRules files("$rulesJsonFile", "$optionalRulesJsonFile")
                      }
                      """.stripIndent()
 
@@ -86,6 +89,28 @@ class PluginFunctionalTest extends IntegrationSpec {
                             "align": []
                         }
                         """.stripIndent()
+
+        optionalRulesJsonFile << """
+                                    {
+                                        "substitute" : [
+                                            {
+                                                "module" : "log4j:log4j",
+                                                "with" : "org.slf4j:log4j-over-slf4j:1.7.21",
+                                                "reason" : "SLF4J bridge replacement",
+                                                "author" : "Danny Thomas <dmthomas@gmail.com>",
+                                                "date" : "2015-10-07T20:21:20.368Z"
+                                            }
+                                        ],
+                                        "align": [
+                                            {
+                                                "group": "org.slf4j",
+                                                "reason": "Align SLF4J dependencies",
+                                                "author" : "Danny Thomas <dmthomas@gmail.com>",
+                                                "date" : "2015-10-07T20:21:20.368Z"
+                                            }
+                                        ]
+                                    }
+                                 """
     }
 
     def 'plugin applies'() {
@@ -198,12 +223,55 @@ class PluginFunctionalTest extends IntegrationSpec {
         result.standardOutput.contains('bouncycastle:bcprov-jdk15:140 -> org.bouncycastle:bcprov-jdk15:latest.release')
     }
 
+    def 'optional rules are not applied by default'() {
+        given:
+        buildFile << """
+                     dependencies {
+                         compile 'log4j:log4j:1.2.17'
+                     }
+                     """.stripIndent()
+
+
+        when:
+        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+
+        then:
+        result.standardOutput.contains('\\--- log4j:log4j:1.2.17\n')
+    }
+
+    def 'optional rules are applied when included'() {
+        given:
+        buildFile << """
+                     nebulaResolutionRules {
+                         include = ["optional-${moduleName}"]
+                     }
+
+                     dependencies {
+                         resolutionRules files("$optionalRulesJsonFile")
+
+                         compile 'log4j:log4j:1.2.17'
+                         compile 'org.slf4j:jcl-over-slf4j:1.7.0'
+                     }
+                     """.stripIndent()
+
+
+        when:
+        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+
+        then:
+        result.standardOutput.contains("""\
++--- log4j:log4j:1.2.17 -> org.slf4j:log4j-over-slf4j:1.7.21
+|    \\--- org.slf4j:slf4j-api:1.7.21
+\\--- org.slf4j:jcl-over-slf4j:1.7.0 -> 1.7.21
+     \\--- org.slf4j:slf4j-api:1.7.21
+""")
+    }
+
     def 'missing version in substitution rule'() {
         given:
         rulesJsonFile.delete()
         rulesJsonFile << """
                          {
-                             "replace" : [],
                              "substitute": [
                                  {
                                      "module" : "asm:asm",
@@ -212,10 +280,7 @@ class PluginFunctionalTest extends IntegrationSpec {
                                      "author" : "Danny Thomas <dmthomas@gmail.com>",
                                      "date" : "2015-10-07T20:21:20.368Z"
                                  }
-                             ],
-                             "reject": [],
-                             "deny": [],
-                             "align": []
+                             ]
                          }
                          """.stripIndent()
         when:
