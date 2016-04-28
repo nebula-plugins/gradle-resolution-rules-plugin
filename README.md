@@ -44,7 +44,7 @@ We produce a rules for dependencies found in Maven Central and other public repo
     }
 ```
 
-See the [this project](https://github.com/nebula-plugins/gradle-resolution-rules) for details of the rules, and instructions on how to enable optional rule sets.
+See the [resolution-rules project](https://github.com/nebula-plugins/gradle-resolution-rules) for details of the rules, and instructions on how to enable optional rule sets.
 
 # Dependency rules types
 
