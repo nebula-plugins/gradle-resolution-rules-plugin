@@ -38,7 +38,7 @@ We produce a rules for dependencies found in Maven Central and other public repo
 
 ```groovy
 dependencies {
-    resolutionRules 'com.netflix.nebula:resolution-rules:latest.release'
+    resolutionRules 'com.netflix.nebula:gradle-resolution-rules:latest.release'
 }
 ```
 
