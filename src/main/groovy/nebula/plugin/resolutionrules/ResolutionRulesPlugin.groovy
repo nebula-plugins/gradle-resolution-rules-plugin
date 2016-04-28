@@ -16,7 +16,6 @@
  */
 package nebula.plugin.resolutionrules
 
-import com.google.common.io.Files
 import groovy.json.JsonSlurper
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -40,7 +39,7 @@ class ResolutionRulesPlugin implements Plugin<Project> {
 
         project.gradle.projectsEvaluated {
             Rules rules = rulesFromConfiguration(configuration, extension)
-            project.configurations.all ( { Configuration config ->
+            project.configurations.all({ Configuration config ->
                 if (config.name == configurationName) {
                     return
                 }
@@ -59,7 +58,7 @@ class ResolutionRulesPlugin implements Plugin<Project> {
                         rule.apply(project, rs, config, extension)
                     }
                 }
-            } )
+            })
             rules.projectRules().each { ProjectRule rule -> rule.apply(project) }
         }
     }
@@ -121,13 +120,14 @@ class ResolutionRulesPlugin implements Plugin<Project> {
         rulesFromJson(new JsonSlurper().parse(stream) as Map)
     }
 
-    static Rules rulesFromJson(Map json) {
+    private static Rules rulesFromJson(Map json) {
         Rules rules = new Rules()
         rules.replace = json.replace.collect { new ReplaceRule(it) }
         rules.substitute = json.substitute.collect { new SubstituteRule(it) }
         rules.reject = json.reject.collect { new RejectRule(it) }
         rules.deny = json.deny.collect { new DenyRule(it) }
         rules.align = json.align.collect { new AlignRule(it) }
+        rules.exclude = json.exclude.collect { new ExcludeRule(it) }
 
         rules
     }
@@ -138,6 +138,8 @@ class ResolutionRulesPlugin implements Plugin<Project> {
         List<RejectRule> reject = rules.collectMany { it.reject }.flatten() as List<RejectRule>
         List<DenyRule> deny = rules.collectMany { it.deny }.flatten() as List<DenyRule>
         List<AlignRule> align = rules.collectMany { it.align }.flatten() as List<AlignRule>
-        return new Rules(replace: replace, substitute: substitute, reject: reject, deny: deny, align: align)
+        List<ExcludeRule> exclude = rules.collectMany { it.exclude }.flatten() as List<ExcludeRule>
+
+        new Rules(replace: replace, substitute: substitute, reject: reject, deny: deny, align: align, exclude: exclude)
     }
 }

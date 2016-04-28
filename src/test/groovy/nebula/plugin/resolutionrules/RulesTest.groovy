@@ -38,7 +38,8 @@ class RulesTest extends Specification {
                         "substitute": [],
                         "reject": [],
                         "deny": [],
-                        "align": []
+                        "align": [],
+                        "exclude": []
                       }"""
 
 
