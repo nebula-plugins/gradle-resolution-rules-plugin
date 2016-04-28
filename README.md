@@ -36,7 +36,7 @@ Or using the Gradle plugin portal:
     }
 ```
 
-We produce a rules for dependencies found in Maven Central, to use those rules in your project add:
+We produce a rules for dependencies found in Maven Central and other public repositories, to use those rules in your project add:
 
 ```groovy
     dependencies {
