@@ -13,33 +13,33 @@ Gradle resolution strategies and module metadata provide an effective way to med
 # Usage
 
 ```groovy
-    buildscript {
-        repositories {
-            jcenter()
-        }
-
-        dependencies {
-            classpath 'com.netflix.nebula:gradle-resolution-rules-plugin:1.3.0'
-        }
+buildscript {
+    repositories {
+        jcenter()
     }
 
-    apply plugin: 'nebula.resolution-rules'
+    dependencies {
+        classpath 'com.netflix.nebula:gradle-resolution-rules-plugin:1.3.0'
+    }
+}
+
+apply plugin: 'nebula.resolution-rules'
 ```
 
 Or using the Gradle plugin portal:
 
 ```groovy
-    plugins {
-        id 'nebula.resolution-rules' version '1.3.0'
-    }
+plugins {
+    id 'nebula.resolution-rules' version '1.3.0'
+}
 ```
 
 We produce a rules for dependencies found in Maven Central and other public repositories, to use those rules in your project add:
 
 ```groovy
-    dependencies {
-        resolutionRules 'com.netflix.nebula:resolution-rules:latest.release'
-    }
+dependencies {
+    resolutionRules 'com.netflix.nebula:resolution-rules:latest.release'
+}
 ```
 
 See the [resolution-rules project](https://github.com/nebula-plugins/gradle-resolution-rules) for details of the rules, and instructions on how to enable optional rule sets.
@@ -73,89 +73,89 @@ This rule has different options depending on your use case. `includes` and `excl
 ##### If you need to skip a rule, you can use this extension
 
 ```groovy
-    nebulaResolutionRules { // If you need to skip a rule 
-        skipAlignRules = ['<names>']
-    }    
+nebulaResolutionRules { // If you need to skip a rule 
+    skipAlignRules = ['<names>']
+}
 ```
 
 #### Lock only a few dependencies in a group
 
 ```json
-    {
-        "align": [
-            {
-                "group": "example.foo",
-                "includes": [ "bar", "baz" ]
-            }
-        ]
-    }
+{
+    "align": [
+        {
+            "group": "example.foo",
+            "includes": [ "bar", "baz" ]
+        }
+    ]
+}
 ```
 
 #### Lock most dependencies in a group, but exclude some
 
 ```json
-    {
-        "align": [
-            {
-                "name": "example",
-                "group": "example.bar",
-                "excludes": [ "qux", "thud" ]
-            }
-        ]
-    }
+{
+    "align": [
+        {
+            "name": "example",
+            "group": "example.bar",
+            "excludes": [ "qux", "thud" ]
+        }
+    ]
+}
 ```
 
 #### Lock all dependencies in a group matching a regular expression
 
 ```json
-    {
-        "align": [
-            {
-                "group": "example.foo.*",
-            }
-        ]
-    }
+{
+    "align": [
+        {
+            "group": "example.foo.*",
+        }
+    ]
+}
 ```
 
 #### Lock all dependencies, including those matching a regular expression
 
 ```json
-    {
-        "align": [
-            {
-                "group": "example.foo",
-                "includes": [ "(bar|baz)" ]
-            }
-        ]
-    }
+{
+    "align": [
+        {
+            "group": "example.foo",
+            "includes": [ "(bar|baz)" ]
+        }
+    ]
+}
 ```
 
 #### Align along the major version, instead of an exact
 
 ```json
-    {
-        "align": [
-            {
-                "name": "exampleMajor",
-                "group": "example.baz",
-                "along": "major"
-            }
-        ]
-    }
+{
+    "align": [
+        {
+            "name": "exampleMajor",
+            "group": "example.baz",
+            "along": "major"
+        }
+    ]
+}
 ```
 
 #### Align along the minor version, instead of an exact
 
 ```json
-    {
-        "align": [
-            {
-                "name": "exampleMinor",
-                "group": "example.baz",
-                "along": "minor"
-            }
-        ]
-    }
+{
+    "align": [
+        {
+            "name": "exampleMinor",
+            "group": "example.baz",
+            "along": "minor"
+        }
+    ]
+}
 ```
 
 ## Exclude
@@ -167,10 +167,10 @@ Exclude rules excludes a dependency completely, similar to deny, but does not su
 Dependency rules are read from the `resolutionRules` configuration. Zip and jar archives are supported, as are flat JSON files. JSON files within archives can at any directory level, and more than one json file can be provided.
 
 ```groovy
-    dependencies {
-        resolutionRules files('local-rules.json')
-        resolutionRules 'com.myorg:resolution-rules:latest.release'
-    }
+dependencies {
+    resolutionRules files('local-rules.json')
+    resolutionRules 'com.myorg:resolution-rules:latest.release'
+}
 ```
 
 ## Excluding rules
@@ -178,9 +178,9 @@ Dependency rules are read from the `resolutionRules` configuration. Zip and jar 
 Rules may be excluded by filename, omitting the `.json` extension:
 
 ```groovy
-    nebulaResolutionRules {
-        exclude = ['local-rules']
-    }
+nebulaResolutionRules {
+    exclude = ['local-rules']
+}
 ```
 
 ## Including optional rules
@@ -188,13 +188,13 @@ Rules may be excluded by filename, omitting the `.json` extension:
 Optional rules files are prefixed with `optional-`, and must be included explicitly, omitting the `.json` extension from the filename:
 
 ```groovy
-    dependencies {
-        resolutionRules files('optional-local-rules.json')
-    }
+dependencies {
+    resolutionRules files('optional-local-rules.json')
+}
 
-    nebulaResolutionRules {
-        include = ['optional-local-rules']
-    }
+nebulaResolutionRules {
+    include = ['optional-local-rules']
+}
 ```
 
 # Producing rules
@@ -204,25 +204,25 @@ The `nebula.resolution-rules-producer` plugin is provided to facilitate creation
 ## Usage
 
 ```groovy
-    buildscript {
-        repositories {
-            jcenter()
-        }
-
-        dependencies {
-            classpath 'com.netflix.nebula:gradle-resolution-rules-plugin:1.3.0'
-        }
+buildscript {
+    repositories {
+        jcenter()
     }
 
-    apply plugin: 'nebula.resolution-rules-producer'
-```    
+    dependencies {
+        classpath 'com.netflix.nebula:gradle-resolution-rules-plugin:1.3.0'
+    }
+}
+
+apply plugin: 'nebula.resolution-rules-producer'
+```
 
 Or using the Gradle plugin portal:
 
 ```groovy
-    plugins {
-        id 'nebula.resolution-rules-producer' version '1.3.0'
-    }
+plugins {
+    id 'nebula.resolution-rules-producer' version '1.3.0'
+}
 ```
 
 Once configured, run the following:
@@ -232,9 +232,9 @@ Once configured, run the following:
 ## Customizing rule file locations
 
 ```groovy
-    checkResolutionRulesSyntax {
-        rules files('./alternative-rules.json', './src/rules/moreRules.json')
-    }
+checkResolutionRulesSyntax {
+    rules files('./alternative-rules.json', './src/rules/moreRules.json')
+}
 ```
 
 Prefix the rule filename with `optional-` to make a rules filename optional, and prevent it from being applied by default.
@@ -242,63 +242,63 @@ Prefix the rule filename with `optional-` to make a rules filename optional, and
 # Example rules JSON
 
 ```json
-    {
-        "replace" : [
-            {
-                "module" : "asm:asm",
-                "with" : "org.ow2.asm:asm",
-                "reason" : "The asm group id changed for 4.0 and later",
-                "author" : "Example Person <person@example.org>",
-                "date" : "2015-10-07T20:21:20.368Z"
-            }
-        ],
-        "substitute": [
-            {
-                "module" : "bouncycastle:bcprov-jdk15",
-                "with" : "org.bouncycastle:bcprov-jdk15:latest.release",
-                "reason" : "The latest version of BC is required, using the new coordinate",
-                "author" : "Example Person <person@example.org>",
-                "date" : "2015-10-07T20:21:20.368Z"
-            }
-        ],
-        "deny": [
-            {
-                "module": "com.google.guava:guava:19.0-rc2",
-                "reason" : "Guava 19.0-rc2 is not permitted",
-                "author" : "Example Person <person@example.org>",
-                "date" : "2015-10-07T20:21:20.368Z"
-            },
-            {
-                "module": "com.sun.jersey:jersey-bundle",
-                "reason" : "jersey-bundle is a fat jar that includes non-relocated (shaded) third party classes, which can cause duplicated classes on the classpath. Please specify the jersey- libraries you need directly",
-                "author" : "Example Person <person@example.org>",
-                "date" : "2015-10-07T20:21:20.368Z"
-            }
-        ],
-        "reject": [
-            {
-                "module": "com.google.guava:guava:12.0",
-                "reason" : "Guava 12.0 significantly regressed LocalCache performance",
-                "author" : "Example Person <person@example.org>",
-                "date" : "2015-10-07T20:21:20.368Z"
-            }
-        ],
-        "align": [
-            {
-                "name": "alignJersey",
-                "group": "com.sun.jersey",
-                "reason": "Make sure jersey-core, jersey-server, etc. are aligned e.g. 1.19.1",
-                "author": "Example Person <person@example.org>",
-                "date": "2015-10-08T20:15:14.321Z"
-            }
-        ],
-        "exclude": [
-            {
-                "module": "io.netty:netty-all",
-                "reason": "Bundle dependencies are harmful, they do not conflict resolve with the non-bundle dependencies",
-                "author" : "Danny Thomas <dmthomas@gmail.com>",
-                "date" : "2015-10-07T20:21:20.368Z"
-            }
-        ]
-    }
+{
+    "replace" : [
+        {
+            "module" : "asm:asm",
+            "with" : "org.ow2.asm:asm",
+            "reason" : "The asm group id changed for 4.0 and later",
+            "author" : "Example Person <person@example.org>",
+            "date" : "2015-10-07T20:21:20.368Z"
+        }
+    ],
+    "substitute": [
+        {
+            "module" : "bouncycastle:bcprov-jdk15",
+            "with" : "org.bouncycastle:bcprov-jdk15:latest.release",
+            "reason" : "The latest version of BC is required, using the new coordinate",
+            "author" : "Example Person <person@example.org>",
+            "date" : "2015-10-07T20:21:20.368Z"
+        }
+    ],
+    "deny": [
+        {
+            "module": "com.google.guava:guava:19.0-rc2",
+            "reason" : "Guava 19.0-rc2 is not permitted",
+            "author" : "Example Person <person@example.org>",
+            "date" : "2015-10-07T20:21:20.368Z"
+        },
+        {
+            "module": "com.sun.jersey:jersey-bundle",
+            "reason" : "jersey-bundle is a fat jar that includes non-relocated (shaded) third party classes, which can cause duplicated classes on the classpath. Please specify the jersey- libraries you need directly",
+            "author" : "Example Person <person@example.org>",
+            "date" : "2015-10-07T20:21:20.368Z"
+        }
+    ],
+    "reject": [
+        {
+            "module": "com.google.guava:guava:12.0",
+            "reason" : "Guava 12.0 significantly regressed LocalCache performance",
+            "author" : "Example Person <person@example.org>",
+            "date" : "2015-10-07T20:21:20.368Z"
+        }
+    ],
+    "align": [
+        {
+            "name": "alignJersey",
+            "group": "com.sun.jersey",
+            "reason": "Make sure jersey-core, jersey-server, etc. are aligned e.g. 1.19.1",
+            "author": "Example Person <person@example.org>",
+            "date": "2015-10-08T20:15:14.321Z"
+        }
+    ],
+    "exclude": [
+        {
+            "module": "io.netty:netty-all",
+            "reason": "Bundle dependencies are harmful, they do not conflict resolve with the non-bundle dependencies",
+            "author" : "Danny Thomas <dmthomas@gmail.com>",
+            "date" : "2015-10-07T20:21:20.368Z"
+        }
+    ]
+}
 ```
