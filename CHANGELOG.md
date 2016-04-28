@@ -1,3 +1,9 @@
+1.3.0 / 2016/04/28
+==================
+- Rules files may now be optional, so optionated rules aren't applied without users opting in
+- Align rules support regular expressions in the group, includes and excludes
+- Empty rules types can be excluded from rules files (required for backwards compatibility with old rules files, but also makes working with them nicer)
+
 1.2.2 / 2016/04/25
 ==================
 - BUGFIX: Handle circularish dependencies B depends on A for compile, A depends on B for testCompile
