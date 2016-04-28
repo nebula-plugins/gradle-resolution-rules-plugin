@@ -86,7 +86,14 @@ class PluginFunctionalTest extends IntegrationSpec {
                                     "date" : "2015-10-07T20:21:20.368Z"
                                 }
                             ],
-                            "align": []
+                            "exclude": [
+                                {
+                                    "module": "io.netty:netty-all",
+                                    "reason": "Bundle dependencies are harmful, they do not conflict resolve",
+                                    "author" : "Danny Thomas <dmthomas@gmail.com>",
+                                    "date" : "2015-10-07T20:21:20.368Z"
+                                }
+                            ]
                         }
                         """.stripIndent()
 
@@ -221,6 +228,24 @@ class PluginFunctionalTest extends IntegrationSpec {
 
         then:
         result.standardOutput.contains('bouncycastle:bcprov-jdk15:140 -> org.bouncycastle:bcprov-jdk15:latest.release')
+    }
+
+    def 'exclude dependency'() {
+        given:
+        buildFile << """
+                     dependencies {
+                        compile 'io.netty:netty-all:5.0.0.Alpha2'
+                     }
+                     """.stripIndent()
+
+        when:
+        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+
+        then:
+        result.standardOutput.contains("""\
+compile - Dependencies for source set 'main'.
+No dependencies
+""")
     }
 
     def 'optional rules are not applied by default'() {

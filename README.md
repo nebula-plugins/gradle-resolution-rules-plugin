@@ -154,6 +154,10 @@ This rule has different options depending on your use case. `includes` and `excl
     }
 ```
 
+## Exclude
+
+Exclude rules excludes a dependency completely, similar to deny, but does not support a version and silently removes the dependency, rather than causing an error.
+
 # Consuming rules
 
 Dependency rules are read from the `resolutionRules` configuration. Zip and jar archives are supported, as are flat JSON files. JSON files within archives can at any directory level, and more than one json file can be provided.
@@ -282,6 +286,14 @@ Prefix the rule filename with `optional-` to make a rules filename optional, and
                 "reason": "Make sure jersey-core, jersey-server, etc. are aligned e.g. 1.19.1",
                 "author": "Example Person <person@example.org>",
                 "date": "2015-10-08T20:15:14.321Z"
+            }
+        ],
+        "exclude": [
+            {
+                "module": "io.netty:netty-all",
+                "reason": "Bundle dependencies are harmful, they do not conflict resolve with the non-bundle dependencies",
+                "author" : "Danny Thomas <dmthomas@gmail.com>",
+                "date" : "2015-10-07T20:21:20.368Z"
             }
         ]
     }

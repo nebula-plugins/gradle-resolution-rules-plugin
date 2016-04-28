@@ -30,13 +30,14 @@ public class Rules {
     List<RejectRule> reject
     List<DenyRule> deny
     List<AlignRule> align
+    List<ExcludeRule> exclude
 
     public List<ProjectRule> projectRules() {
         return replace
     }
 
     public List<ConfigurationRule> configurationRules() {
-        return deny
+        return [deny, exclude].flatten()
     }
 
     public List<ResolutionRule> resolutionRules() {
@@ -244,6 +245,20 @@ class AlignRules implements ProjectConfigurationRule {
                 details.useTarget group: details.requested.group, name: details.requested.name, version: foundMatch.value
             }
         }
+    }
+}
+
+class ExcludeRule extends BaseRule implements ConfigurationRule {
+    ModuleIdentifier moduleId
+
+    ExcludeRule(Map map) {
+        super(map)
+        moduleId = ModuleIdentifier.valueOf(map.module as String)
+    }
+
+    @Override
+    public void apply(Configuration configuration) {
+        configuration.exclude(group: moduleId.organization, module: moduleId.name)
     }
 }
 
