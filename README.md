@@ -130,34 +130,6 @@ nebulaResolutionRules { // If you need to skip a rule
 }
 ```
 
-#### Align along the major version, instead of an exact
-
-```json
-{
-    "align": [
-        {
-            "name": "exampleMajor",
-            "group": "example.baz",
-            "along": "major"
-        }
-    ]
-}
-```
-
-#### Align along the minor version, instead of an exact
-
-```json
-{
-    "align": [
-        {
-            "name": "exampleMinor",
-            "group": "example.baz",
-            "along": "minor"
-        }
-    ]
-}
-```
-
 ## Exclude
 
 Exclude rules excludes a dependency completely, similar to deny, but does not support a version and silently removes the dependency, rather than causing an error.
