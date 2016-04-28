@@ -52,12 +52,6 @@ class ResolutionJsonValidator {
             throw new InvalidRulesJsonException('There must be exactly 5 resolution rule types defined')
         }
 
-        // also ensure these 5 are the ones requires
-        def typesProvided = json.collect { it.key }
-        if (['replace', 'substitute', 'deny', 'reject', 'align'].intersect(typesProvided).size() != 5) {
-            throw new InvalidRulesJsonException('All resolution rule types must be specified (replace, substitute, deny, reject, align)')
-        }
-
         // ensure all types are lists
         if (json.any { it.value.getClass() != ArrayList }) {
             throw new InvalidRulesJsonException('All resolution rule types must be lists')

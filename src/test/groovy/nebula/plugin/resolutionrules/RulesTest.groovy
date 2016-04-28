@@ -17,7 +17,6 @@
 
 package nebula.plugin.resolutionrules
 
-import groovy.json.JsonSlurper
 import spock.lang.Specification
 
 /**
@@ -40,6 +39,28 @@ class RulesTest extends Specification {
                         "reject": [],
                         "deny": [],
                         "align": []
+                      }"""
+
+
+        Rules rules = ResolutionRulesPlugin.parseJsonText(json)
+
+        then:
+        !rules.replace.isEmpty()
+        rules.replace[0].class == ReplaceRule
+    }
+
+    def 'json deserialised with one category of rules'() {
+        when:
+        String json = """{
+                        "replace" : [
+                            {
+                                "module" : "asm:asm",
+                                "with" : "org.ow2.asm:asm",
+                                "reason" : "The asm group id changed for 4.0 and later",
+                                "author" : "Danny Thomas <dmthomas@gmail.com>",
+                                "date" : "2015-10-07T20:21:20.368Z"
+                            }
+                        ]
                       }"""
 
 
