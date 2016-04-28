@@ -15,6 +15,8 @@
  */
 package nebula.plugin.resolutionrules
 
+import nebula.plugin.resolutionrules.ModuleIdentifier
+import nebula.plugin.resolutionrules.ModuleVersionIdentifier
 import org.gradle.api.Project
 import org.gradle.api.artifacts.*
 import org.gradle.api.artifacts.component.ComponentSelector
@@ -191,9 +193,11 @@ class AlignRule extends BaseRule {
     }
 
     boolean ruleMatches(String inputGroup, String inputName) {
-        inputGroup == group &&
-                (includes.isEmpty() || includes.contains(inputName)) &&
-                (excludes.isEmpty() || !excludes.contains(inputName))
+        def matchedIncludes = includes.findAll { inputName.matches(it) }
+        def matchedExcludes = excludes.findAll { inputName.matches(it) }
+        inputGroup.matches(group) &&
+                (includes.isEmpty() || !matchedIncludes.isEmpty()) &&
+                (excludes.isEmpty() || matchedExcludes.isEmpty())
     }
 
     boolean shouldNotBeSkipped(NebulaResolutionRulesExtension extension) {

@@ -101,6 +101,31 @@ This rule has different options depending on your use case. `includes` and `excl
     }
 ```
 
+#### Lock all dependencies in a group matching a regular expression
+
+```json
+    {
+        "align": [
+            {
+                "group": "example.foo.*",
+            }
+        ]
+    }
+```
+
+#### Lock all dependencies, including those matching a regular expression
+
+```json
+    {
+        "align": [
+            {
+                "group": "example.foo",
+                "includes": [ "(bar|baz)" ]
+            }
+        ]
+    }
+```
+
 #### Align along the major version, instead of an exact
 
 ```json
