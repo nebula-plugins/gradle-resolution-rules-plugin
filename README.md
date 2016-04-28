@@ -1,4 +1,4 @@
-# Gradle resolution-rules Plugin
+# Gradle Resolution Rules Plugin
 
 ![Version](https://img.shields.io/maven-central/v/com.netflix.nebula/gradle-resolution-rules-plugin.svg)
 [![Build Status](https://travis-ci.org/nebula-plugins/gradle-resolution-rules-plugin.svg?branch=master)](https://travis-ci.org/nebula-plugins/gradle-resolution-rules-plugin)
@@ -8,9 +8,7 @@
 
 Gradle plugin for providing dependency resolution rules.
 
-Gradle resolution strategies and module metadata provide an effective way to mediate the dependency resolution process in your builds, however they don't adapt well to enterprises that need a curated and shared source for rules.
-
-The [Blacklist Plugin](https://github.com/nebula-plugins/gradle-blacklist-plugin) allows this problem to be solved with enterprise plugins for specific cases. This plugin provides general purpose rule types and supports artifact based configuration, allowing rules to be versioned and dependency locked.
+Gradle resolution strategies and module metadata provide an effective way to mediate the dependency resolution process in your builds, however they don't adapt well to enterprises that need a curated and shared source for rules. This plugin provides general purpose rule types and supports artifact based configuration, allowing rules to be versioned and dependency locked. The project also provides rules for commonly used, OSS libraries.
 
 # Usage
 
