@@ -38,7 +38,7 @@ Or using the Gradle plugin portal:
 
 # Rules
 
-We produce several rules artifacts for the plugin. See the [this project](https://github.com/nebula-plugins/gradle-resolution-rules) for details.
+We produce a rules artifact for the plugin containing rules for dependencies found in Maven Central. See the [this project](https://github.com/nebula-plugins/gradle-resolution-rules) for details.
 
 # Dependency rules types
 
