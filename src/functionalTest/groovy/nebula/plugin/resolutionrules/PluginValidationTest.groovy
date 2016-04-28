@@ -141,19 +141,6 @@ class PluginValidationTest extends IntegrationSpec {
         }
     }
 
-    def 'check that it fails when types are missing'() {
-        rulesJson.remove('replace')
-
-        rulesJsonFile.text = JsonOutput.toJson(rulesJson)
-
-        when:
-        def result = runTasks('checkResolutionRulesSyntax')
-
-        then:
-        def rootCause = extractRootCause(result.failure)
-        rootCause.message.contains('There must be exactly 5 resolution rule types defined')
-    }
-
     def 'check that validation task mandates lists for types'() {
         rulesJson.replace = 'What is a string doing here instead of a List?'
 

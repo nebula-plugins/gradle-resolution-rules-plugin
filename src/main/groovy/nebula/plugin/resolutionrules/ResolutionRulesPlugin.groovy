@@ -91,7 +91,7 @@ class ResolutionRulesPlugin implements Plugin<Project> {
                     jar.close()
                 }
             } else {
-                logger.error("Unsupported rules file extension for $file")
+                logger.debug("Unsupported rules file extension for $file")
             }
         }
         return flattenRules(rules)
