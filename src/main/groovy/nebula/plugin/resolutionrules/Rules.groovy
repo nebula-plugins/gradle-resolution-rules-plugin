@@ -19,6 +19,7 @@ import org.gradle.api.Project
 import org.gradle.api.artifacts.*
 import org.gradle.api.artifacts.component.ComponentSelector
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
+import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.DefaultVersionComparator
 import org.gradle.api.specs.Specs
 import org.joda.time.DateTime
@@ -215,7 +216,7 @@ class AlignRules implements ProjectConfigurationRule {
 
         def copy = configuration.copyRecursive()
         copy.exclude group: project.group, module: project.name
-        def artifacts
+        Set<ResolvedArtifact> artifacts
         def resolvedConfiguration = copy.resolvedConfiguration
         if (resolvedConfiguration.hasError()) {
             def lenientConfiguration = resolvedConfiguration.lenientConfiguration
@@ -225,7 +226,10 @@ class AlignRules implements ProjectConfigurationRule {
             artifacts = resolvedConfiguration.resolvedArtifacts
         }
 
-        def moduleVersions = artifacts.collect { it.moduleVersion }
+        def moduleVersions = artifacts.findAll {
+            // Exclude project artifacts from alignment
+            !(it.id.componentIdentifier instanceof ProjectComponentIdentifier)
+        }.collect { it.moduleVersion }
         def selectedVersion = [:]
         aligns.each { AlignRule align ->
             if (align.shouldNotBeSkipped(extension)) {

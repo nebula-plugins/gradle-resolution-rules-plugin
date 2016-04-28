@@ -1,5 +1,6 @@
 1.3.0 / 2016/04/28
 ==================
+- BUGFIX: Align rules attempt to align project dependencies, causing them to be resolved as remote artifacts
 - Rules files may now be optional, so optionated rules aren't applied without users opting in
 - Align rules support regular expressions in the group, includes and excludes
 - Empty rules types can be excluded from rules files (required for backwards compatibility with old rules files, but also makes working with them nicer)
