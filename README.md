@@ -193,17 +193,25 @@ Or using the Gradle plugin portal:
     }
 ```
 
-
 Once configured, run the following:
 
     $ ./gradlew packageRules
-    
 
 ## Customizing rule file locations
 
 ```groovy
     checkResolutionRulesSyntax {
         rules files('./alternative-rules.json', './src/rules/moreRules.json')
+    }
+```
+
+## Optional rules
+
+By default, all json files within the rules artifact are applied, however prefixing the filename with `optional-` makes the rule an optional. A rule file called `optional-slf4j.json` can be included using:
+
+```groovy
+    nebulaResolutionRules {
+        include = ['slf4j']
     }
 ```
 

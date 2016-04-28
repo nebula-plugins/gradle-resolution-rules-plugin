@@ -16,6 +16,7 @@
  */
 package nebula.plugin.resolutionrules
 
+import com.google.common.io.Files
 import groovy.json.JsonSlurper
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -31,7 +32,6 @@ class ResolutionRulesPlugin implements Plugin<Project> {
     Project project
     Logger logger = LoggerFactory.getLogger(ResolutionRulesPlugin)
     String configurationName = "resolutionRules"
-    Rules rules
 
     public void apply(Project project) {
         this.project = project
@@ -39,7 +39,8 @@ class ResolutionRulesPlugin implements Plugin<Project> {
         def extension = project.extensions.create('nebulaResolutionRules', NebulaResolutionRulesExtension)
 
         project.gradle.projectsEvaluated {
-            project.configurations.all { Configuration config ->
+            Rules rules = rulesFromConfiguration(configuration, extension)
+            project.configurations.all ( { Configuration config ->
                 if (config.name == configurationName) {
                     return
                 }
@@ -48,38 +49,29 @@ class ResolutionRulesPlugin implements Plugin<Project> {
                     return
                 }
                 config.resolutionStrategy { ResolutionStrategy rs ->
-                    getRules().configurationRules().each { ConfigurationRule rule ->
+                    rules.configurationRules().each { ConfigurationRule rule ->
                         rule.apply(config)
                     }
-                    getRules().resolutionRules().each { ResolutionRule rule ->
+                    rules.resolutionRules().each { ResolutionRule rule ->
                         rule.apply(rs)
                     }
-                    getRules().projectConfigurationRules().each { ProjectConfigurationRule rule ->
+                    rules.projectConfigurationRules().each { ProjectConfigurationRule rule ->
                         rule.apply(project, rs, config, extension)
                     }
                 }
-
-            }
-            getRules().projectRules().each { ProjectRule rule -> rule.apply(project) }
+            } )
+            rules.projectRules().each { ProjectRule rule -> rule.apply(project) }
         }
     }
 
-    Rules getRules() {
-        if (!rules) {
-            rules = rulesFromConfiguration(project.configurations.getByName(configurationName))
-        }
-
-        rules
-    }
-
-    private Rules rulesFromConfiguration(Configuration configuration) {
+    private Rules rulesFromConfiguration(Configuration configuration, NebulaResolutionRulesExtension extension) {
         List<Rules> rules = new ArrayList<Rules>();
         Set<File> files = configuration.copyRecursive().resolve()
         if (files.isEmpty()) {
             logger.warn("No resolution rules have been added to the '{}' configuration", configuration.name)
         }
         for (file in files) {
-            if (file.name.endsWith(".json")) {
+            if (isIncludedRuleFile(file.name, extension)) {
                 ResolutionJsonValidator.validateJsonFile(file)
                 logger.info("Using $file as a dependency rules source")
                 rules.add(parseJsonFile(file))
@@ -90,7 +82,7 @@ class ResolutionRulesPlugin implements Plugin<Project> {
                     Enumeration<? extends ZipEntry> entries = jar.entries()
                     while (entries.hasMoreElements()) {
                         ZipEntry entry = entries.nextElement()
-                        if (entry.name.endsWith(".json")) {
+                        if (isIncludedRuleFile(entry.name, extension)) {
                             ResolutionJsonValidator.validateJsonStream(jar.getInputStream(entry))
                             rules.add(parseJsonStream(jar.getInputStream(entry)))
                         }
@@ -105,16 +97,28 @@ class ResolutionRulesPlugin implements Plugin<Project> {
         return flattenRules(rules)
     }
 
+    private static boolean isIncludedRuleFile(String filename, NebulaResolutionRulesExtension extension) {
+        if (filename.endsWith(".json")) {
+            String nameWithoutExtension = filename.replace(".json", "")
+            if (nameWithoutExtension.startsWith("optional-")) {
+                return extension.include.contains(nameWithoutExtension.replaceFirst("optional-", ""))
+            } else {
+                return !extension.exclude.contains(nameWithoutExtension)
+            }
+        }
+        return false
+    }
+
     static Rules parseJsonFile(File file) {
-        rulesFromJson(new JsonSlurper().parse(file))
+        rulesFromJson(new JsonSlurper().parse(file) as Map)
     }
 
     static Rules parseJsonText(String json) {
-        rulesFromJson(new JsonSlurper().parseText(json))
+        rulesFromJson(new JsonSlurper().parseText(json) as Map)
     }
 
     static Rules parseJsonStream(InputStream stream) {
-        rulesFromJson(new JsonSlurper().parse(stream))
+        rulesFromJson(new JsonSlurper().parse(stream) as Map)
     }
 
     static Rules rulesFromJson(Map json) {

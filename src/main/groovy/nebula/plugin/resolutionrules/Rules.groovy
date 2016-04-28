@@ -15,8 +15,6 @@
  */
 package nebula.plugin.resolutionrules
 
-import nebula.plugin.resolutionrules.ModuleIdentifier
-import nebula.plugin.resolutionrules.ModuleVersionIdentifier
 import org.gradle.api.Project
 import org.gradle.api.artifacts.*
 import org.gradle.api.artifacts.component.ComponentSelector
