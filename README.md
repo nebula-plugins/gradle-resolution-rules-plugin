@@ -8,9 +8,19 @@
 
 Gradle plugin for providing dependency resolution rules.
 
-Gradle resolution strategies and module metadata provide an effective way to mediate the dependency resolution process in your builds, however they don't adapt well to enterprises that need a curated and shared source for rules. This plugin provides general purpose rule types and supports artifact based configuration, allowing rules to be versioned and dependency locked. The project also provides rules for commonly used, OSS libraries.
+Gradle resolution strategies and module metadata provide an effective way to solve the most common dependency issues, however sharing these rules between projects is cumbersome, and requires custom plugins or `apply from` calls. This plugin provides general purpose rule types, allowing rules to be published, versioned, shared between projects, and optionally [dependency locked](https://github.com/nebula-plugins/gradle-dependency-lock-plugin).
+
+These rule types solve the most common cause of dependency issues in projects, including:
+
+- Duplicate classes caused by changes to group or artifact ids, without renaming packages
+- Duplicate classes caused by bundle dependencies, which do not conflict resolve against the 'regular' dependencies for that library
+- Lack of version alignment between libraries, where version alignment is needed for compatibility
+
+We produce a rules for dependencies found in Maven Central and other public repositories. See [OSS rules](#oss-rules) below for more information.
 
 # Usage
+
+Apply the plugin using by adding it to the `buildscript` classpath:
 
 ```groovy
 buildscript {
@@ -26,13 +36,25 @@ buildscript {
 apply plugin: 'nebula.resolution-rules'
 ```
 
-Or using the Gradle plugin portal:
+Or alternatively, using the Gradle plugin portal:
 
 ```groovy
 plugins {
     id 'nebula.resolution-rules' version '1.3.0'
 }
 ```
+
+# Consuming rules
+
+Dependency rules are read from the `resolutionRules` configuration. Zip and jar archives are supported, as are flat JSON files. JSON files within archives can at any directory level, and more than one json file can be provided.
+
+```groovy
+dependencies {
+    resolutionRules files('local-rules.json')
+    resolutionRules 'com.myorg:resolution-rules:latest.release'
+}
+```
+## OSS rules
 
 We produce a rules for dependencies found in Maven Central and other public repositories, to use those rules in your project add:
 
@@ -43,6 +65,72 @@ dependencies {
 ```
 
 See the [resolution-rules project](https://github.com/nebula-plugins/gradle-resolution-rules) for details of the rules, and instructions on how to enable optional rule sets.
+
+## Excluding rules
+
+Rules may be excluded by filename, omitting the `.json` extension:
+
+```groovy
+nebulaResolutionRules {
+    exclude = ['local-rules']
+}
+```
+
+## Including optional rules
+
+Optional rules files are prefixed with `optional-`, and must be included explicitly, omitting the `.json` extension from the filename:
+
+```groovy
+dependencies {
+    resolutionRules files('optional-local-rules.json')
+}
+
+nebulaResolutionRules {
+    include = ['optional-local-rules']
+}
+```
+
+# Producing rules
+
+The `nebula.resolution-rules-producer` plugin is provided to facilitate creation of rule files. This plugin can be used to validate and package rule files. To use, put your rules file in `src/resolutionRules/resolution-rules.json` and execute the packageRules task. If successful, a jar with the validated rules file will be placed in your build directory. For specifying more than one source file, see documentation below.
+
+## Usage
+
+```groovy
+buildscript {
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'com.netflix.nebula:gradle-resolution-rules-plugin:1.3.0'
+    }
+}
+
+apply plugin: 'nebula.resolution-rules-producer'
+```
+
+Or using the Gradle plugin portal:
+
+```groovy
+plugins {
+    id 'nebula.resolution-rules-producer' version '1.3.0'
+}
+```
+
+Once configured, run the following:
+
+    $ ./gradlew packageRules
+
+## Customizing rule file locations
+
+```groovy
+checkResolutionRulesSyntax {
+    rules files('./alternative-rules.json', './src/rules/moreRules.json')
+}
+```
+
+Prefix the rule filename with `optional-` to make a rules filename optional, and prevent it from being applied by default.
 
 # Dependency rules types
 
@@ -133,83 +221,6 @@ nebulaResolutionRules { // If you need to skip a rule
 ## Exclude
 
 Exclude rules excludes a dependency completely, similar to deny, but does not support a version and silently removes the dependency, rather than causing an error.
-
-# Consuming rules
-
-Dependency rules are read from the `resolutionRules` configuration. Zip and jar archives are supported, as are flat JSON files. JSON files within archives can at any directory level, and more than one json file can be provided.
-
-```groovy
-dependencies {
-    resolutionRules files('local-rules.json')
-    resolutionRules 'com.myorg:resolution-rules:latest.release'
-}
-```
-
-## Excluding rules
-
-Rules may be excluded by filename, omitting the `.json` extension:
-
-```groovy
-nebulaResolutionRules {
-    exclude = ['local-rules']
-}
-```
-
-## Including optional rules
-
-Optional rules files are prefixed with `optional-`, and must be included explicitly, omitting the `.json` extension from the filename:
-
-```groovy
-dependencies {
-    resolutionRules files('optional-local-rules.json')
-}
-
-nebulaResolutionRules {
-    include = ['optional-local-rules']
-}
-```
-
-# Producing rules
-
-The `nebula.resolution-rules-producer` plugin is provided to facilitate creation of rule files. This plugin can be used to validate and package rule files. To use, put your rules file in `src/resolutionRules/resolution-rules.json` and execute the packageRules task. If successful, a jar with the validated rules file will be placed in your build directory. For specifying more than one source file, see documentation below.
-
-## Usage
-
-```groovy
-buildscript {
-    repositories {
-        jcenter()
-    }
-
-    dependencies {
-        classpath 'com.netflix.nebula:gradle-resolution-rules-plugin:1.3.0'
-    }
-}
-
-apply plugin: 'nebula.resolution-rules-producer'
-```
-
-Or using the Gradle plugin portal:
-
-```groovy
-plugins {
-    id 'nebula.resolution-rules-producer' version '1.3.0'
-}
-```
-
-Once configured, run the following:
-
-    $ ./gradlew packageRules
-
-## Customizing rule file locations
-
-```groovy
-checkResolutionRulesSyntax {
-    rules files('./alternative-rules.json', './src/rules/moreRules.json')
-}
-```
-
-Prefix the rule filename with `optional-` to make a rules filename optional, and prevent it from being applied by default.
 
 # Example rules JSON
 
