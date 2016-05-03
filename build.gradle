@@ -42,11 +42,6 @@ facets {
     }
 }
 
-tasks.withType(Test) {
-    maxHeapSize = '512m'
-    jvmArgs '-XX:MaxPermSize=128m'
-}
-
 apply from: 'gradle/idea.gradle'
 
 description 'Gradle resolution rules plugin'
