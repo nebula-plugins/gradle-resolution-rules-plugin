@@ -29,7 +29,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.netflix.nebula:gradle-resolution-rules-plugin:1.3.0'
+        classpath 'com.netflix.nebula:gradle-resolution-rules-plugin:1.4.0'
     }
 }
 
@@ -40,8 +40,19 @@ Or alternatively, using the Gradle plugin portal:
 
 ```groovy
 plugins {
-    id 'nebula.resolution-rules' version '1.3.0'
+    id 'nebula.resolution-rules' version '1.4.0'
 }
+```
+
+## Usage Note
+
+If using `nebula.resolution-rules` and [nebula.dependency-lock](https://github.com/nebula-plugins/gradle-dependency-lock-plugin) together you curently need to apply `nebula.dependency-lock` later than `nebula.resolution-rules`
+
+E.g.
+
+```groovy
+apply plugin: 'nebula.resolution-rules'
+apply plugin: 'nebula.dependency-lock'
 ```
 
 # Consuming rules
@@ -103,7 +114,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.netflix.nebula:gradle-resolution-rules-plugin:1.3.0'
+        classpath 'com.netflix.nebula:gradle-resolution-rules-plugin:1.4.0'
     }
 }
 
@@ -114,7 +125,7 @@ Or using the Gradle plugin portal:
 
 ```groovy
 plugins {
-    id 'nebula.resolution-rules-producer' version '1.3.0'
+    id 'nebula.resolution-rules-producer' version '1.4.0'
 }
 ```
 

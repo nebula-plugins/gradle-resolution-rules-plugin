@@ -137,7 +137,7 @@ class PluginFunctionalTest extends IntegrationSpec {
                      """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('help')
+        def result = runTasksSuccessfully('dependencies')
 
         then:
         result.standardOutput.contains("No resolution rules have been added to the 'resolutionRules' configuration")
@@ -150,9 +150,19 @@ class PluginFunctionalTest extends IntegrationSpec {
 
     def 'warning logged when configuration has been resolved'() {
         given:
-        buildFile << """\
-            configurations.compile.resolve()
-            """.stripIndent()
+        buildFile.text = """\
+             apply plugin: 'java'
+             configurations.compile.resolve()
+             apply plugin: 'nebula.resolution-rules'
+
+             repositories {
+                 jcenter()
+             }
+
+             dependencies {
+                 resolutionRules files("$rulesJsonFile", "$optionalRulesJsonFile")
+             }
+             """.stripIndent()
 
         when:
         def result = runTasksSuccessfully()
@@ -175,7 +185,7 @@ class PluginFunctionalTest extends IntegrationSpec {
                      """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully()
+        def result = runTasksSuccessfully('dependencies')
 
         then:
         [rulesJsonFile, rulesZipFile, rulesJarFile].each {
@@ -242,10 +252,7 @@ class PluginFunctionalTest extends IntegrationSpec {
         def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
 
         then:
-        result.standardOutput.contains("""\
-compile - Dependencies for source set 'main'.
-No dependencies
-""")
+        result.standardOutput.contains('No dependencies')
     }
 
     def 'optional rules are not applied by default'() {
