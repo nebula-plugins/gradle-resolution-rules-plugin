@@ -94,9 +94,7 @@ class AlignRulesMultiprojectSpec extends IntegrationSpec {
         def results = runTasksSuccessfully(':b:dependencies', '--configuration', 'compile')
 
         then:
-        results.standardOutput.contains("""compile - Dependencies for source set 'main'.
-\\--- project :a
-""")
+        results.standardOutput.contains('\\--- project :a\n')
     }
 
     def 'cycle like behavior'() {

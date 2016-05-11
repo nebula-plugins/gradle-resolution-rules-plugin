@@ -1,3 +1,7 @@
+1.4.0 / 2016/05/11
+==================
+- Make it so we are not eagerly resolving the different configurations. Will only resolve when gradle resolves the configuration.
+
 1.3.0 / 2016/04/28
 ==================
 - BUGFIX: Align rules attempt to align project dependencies, causing them to be resolved as remote artifacts

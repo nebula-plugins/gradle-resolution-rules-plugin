@@ -19,6 +19,7 @@ package nebula.plugin.resolutionrules
 import nebula.test.IntegrationSpec
 import nebula.test.dependencies.DependencyGraphBuilder
 import nebula.test.dependencies.GradleDependencyGenerator
+import spock.lang.Ignore
 
 import java.util.jar.Attributes
 import java.util.jar.JarEntry
@@ -432,7 +433,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
             buildscript {
                 repositories { jcenter() }
                 dependencies {
-                    classpath 'com.netflix.nebula:gradle-dependency-lock-plugin:4.2.0'
+                    classpath 'com.netflix.nebula:gradle-dependency-lock-plugin:4.3.0'
                 }
             }
 
@@ -463,6 +464,115 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
 
         then:
         results.standardOutput.contains '+--- test.nebula:a:1.41.5 -> 1.42.2\n'
+        results.standardOutput.contains '\\--- test.nebula:b:1.42.2\n'
+    }
+
+    def 'dependency-lock when applied after wins out over new alignment rules'() {
+        def (GradleDependencyGenerator mavenrepo, File rulesJsonFile) = dependencyLockAlignInteractionSetup()
+
+        buildFile << """\
+            buildscript {
+                repositories { jcenter() }
+                dependencies {
+                    classpath 'com.netflix.nebula:gradle-dependency-lock-plugin:4.3.0'
+                }
+            }
+
+            ${applyPlugin(ResolutionRulesPlugin)}
+            apply plugin: 'nebula.dependency-lock'
+            apply plugin: 'java'
+
+            repositories {
+                ${mavenrepo.mavenRepositoryBlock}
+            }
+
+            dependencies {
+                resolutionRules files('$rulesJsonFile')
+                compile 'test.nebula:a:1.41.5'
+                compile 'test.nebula:b:1.42.2'
+            }
+        """.stripIndent()
+
+        when:
+        def results = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+
+        then:
+        results.standardOutput.contains '+--- test.nebula:a:1.41.5\n'
+        results.standardOutput.contains '\\--- test.nebula:b:1.42.2\n'
+    }
+
+    private List dependencyLockAlignInteractionSetup() {
+        def graph = new DependencyGraphBuilder()
+                .addModule('test.nebula:a:1.41.5')
+                .addModule('test.nebula:a:1.42.2')
+                .addModule('test.nebula:b:1.41.5')
+                .addModule('test.nebula:b:1.42.2')
+                .build()
+        def mavenrepo = new GradleDependencyGenerator(graph, "$projectDir/testrepogen")
+        mavenrepo.generateTestMavenRepo()
+
+        def rulesJsonFile = new File(projectDir, 'rules.json')
+
+        rulesJsonFile << '''\
+            {
+                "deny": [], "reject": [], "substitute": [], "replace": [],
+                "align": [
+                    {
+                        "name": "testNebula",
+                        "group": "test.nebula",
+                        "reason": "Align test.nebula dependencies",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    }
+                ]
+            }
+        '''.stripIndent()
+
+        def dependencyLock = new File(projectDir, 'dependencies.lock')
+
+        dependencyLock << '''\
+        {
+            "compile": {
+                "test.nebula:a": { "locked": "1.41.5" },
+                "test.nebula:b": { "locked": "1.42.2" }
+            }
+        }
+        '''.stripIndent()
+        [mavenrepo, rulesJsonFile]
+    }
+
+    @Ignore
+    def 'dependency-lock when applied before wins out over new alignment rules'() {
+        def (GradleDependencyGenerator mavenrepo, File rulesJsonFile) = dependencyLockAlignInteractionSetup()
+
+        buildFile << """\
+            buildscript {
+                repositories { jcenter() }
+                dependencies {
+                    classpath 'com.netflix.nebula:gradle-dependency-lock-plugin:4.3.0'
+                }
+            }
+
+            apply plugin: 'nebula.dependency-lock'
+            ${applyPlugin(ResolutionRulesPlugin)}
+            apply plugin: 'java'
+
+            repositories {
+                ${mavenrepo.mavenRepositoryBlock}
+            }
+
+            dependencies {
+                resolutionRules files('$rulesJsonFile')
+                compile 'test.nebula:a:1.41.5'
+                compile 'test.nebula:b:1.42.2'
+            }
+        """.stripIndent()
+
+        when:
+        def results = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+
+        then:
+        results.standardOutput.contains '+--- test.nebula:a:1.41.5\n'
         results.standardOutput.contains '\\--- test.nebula:b:1.42.2\n'
     }
 
