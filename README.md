@@ -20,40 +20,11 @@ We produce a rules for dependencies found in Maven Central and other public repo
 
 # Usage
 
-Apply the plugin using by adding it to the `buildscript` classpath:
+Refer to the [Gradle Plugin Portal](https://plugins.gradle.org/plugin/nebula.resolution-rules) for usage instructions.
 
-```groovy
-buildscript {
-    repositories {
-        jcenter()
-    }
+## Dependency Lock Compatibility
 
-    dependencies {
-        classpath 'com.netflix.nebula:gradle-resolution-rules-plugin:1.4.0'
-    }
-}
-
-apply plugin: 'nebula.resolution-rules'
-```
-
-Or alternatively, using the Gradle plugin portal:
-
-```groovy
-plugins {
-    id 'nebula.resolution-rules' version '1.4.0'
-}
-```
-
-## Usage Note
-
-If using `nebula.resolution-rules` and [nebula.dependency-lock](https://github.com/nebula-plugins/gradle-dependency-lock-plugin) together you curently need to apply `nebula.dependency-lock` later than `nebula.resolution-rules`
-
-E.g.
-
-```groovy
-apply plugin: 'nebula.resolution-rules'
-apply plugin: 'nebula.dependency-lock'
-```
+To use [nebula.dependency-lock](https://github.com/nebula-plugins/gradle-dependency-lock-plugin) with this plugin, apply `nebula.dependency-lock` later than the resolution rules plugin.
 
 # Consuming rules
 
