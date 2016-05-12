@@ -186,6 +186,66 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
         noExceptionThrown()
     }
 
+    def 'spring-boot interaction'() {
+        def rulesFolder = new File(projectDir, 'rules')
+        rulesFolder.mkdirs()
+        def rulesJsonFile = new File(rulesFolder, 'rules.json')
+
+        rulesJsonFile << '''\
+            {
+                "deny": [], "reject": [], "substitute": [], "replace": [],
+                "align": [
+                    {
+                        "name": "testNebula",
+                        "group": "test.nebula",
+                        "reason": "Align test.nebula dependencies",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    }
+                ]
+            }
+        '''.stripIndent()
+
+        def mavenForRules = new File(projectDir, 'repo')
+        mavenForRules.mkdirs()
+        def locked = new File(mavenForRules, 'test/rules/resolution-rules/1.0.0')
+        locked.mkdirs()
+        createRulesJar([rulesFolder], projectDir, new File(locked, 'resolution-rules-1.0.0.jar'))
+        createPom('test.rules', 'resolution-rules', '1.0.0', locked)
+
+        buildFile << """\
+            buildscript {
+                repositories { jcenter() }
+                dependencies {
+                    classpath('org.springframework.boot:spring-boot-gradle-plugin:1.2.8.RELEASE')
+                }
+            }
+
+            apply plugin: 'spring-boot'
+            ${applyPlugin(ResolutionRulesPlugin)}
+
+            repositories {
+                jcenter()
+                maven { url '${mavenForRules.absolutePath}' }
+            }
+
+            dependencies {
+                resolutionRules 'test.rules:resolution-rules:1.+'
+                compile 'org.springframework.boot:spring-boot-starter-web'
+            }
+        """.stripIndent()
+
+        writeHelloWorld('example')
+
+        when:
+        def result = runTasksSuccessfully('compileJava', '--info')//'dependencies', '--configuration', 'compile')
+
+        then:
+        println result?.standardError
+        println result?.standardOutput
+        noExceptionThrown()
+    }
+
     def 'align rules work with extra-configurations and publishing'() {
         def graph = new DependencyGraphBuilder()
                 .addModule('test.a:a:1.42.2')
