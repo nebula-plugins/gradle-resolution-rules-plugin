@@ -290,6 +290,56 @@ class AlignRulesSpec extends IntegrationSpec {
         result.standardOutput.contains '          \\--- test.nebula:b:1.1.0\n'
     }
 
+    def 'align rules do not replace changes made by other rules'() {
+        def graph = new DependencyGraphBuilder()
+                .addModule('test.nebula:a:1.0.0')
+                .addModule('test.nebula:a:2.0.0')
+                .addModule(new ModuleBuilder('test.nebula:b:1.0.0').addDependency('test.nebula:a:1.0.0').build())
+                .addModule(new ModuleBuilder('test.nebula.ext:b:1.0.0').addDependency('test.nebula:a:1.0.0').build())
+                .addModule(new ModuleBuilder('test.nebula.ext:b:2.0.0').addDependency('test.nebula:a:2.0.0').build())
+                .addModule(new ModuleBuilder('test.other:c:1.0.0').addDependency('test.nebula:b:1.0.0').build())
+                .build()
+        File mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
+
+        rulesJsonFile << '''\
+            {
+                "substitute": [
+                    {
+                        "module": "test.nebula:b",
+                        "with": "test.nebula.ext:b:1.0.0",
+                        "reason": "Library was published with incorrect coordinates",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    }
+                ],
+                "align": [
+                    {
+                        "group": "(test.nebula|test.nebula.ext)",
+                        "reason": "Align test.nebula dependencies",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    }
+                ]
+            }
+        '''.stripIndent()
+
+        buildFile << """\
+            repositories {
+                maven { url '${mavenrepo.absolutePath}' }
+            }
+            dependencies {
+                compile 'test.other:c:1.0.0'
+                compile 'test.nebula:a:2.0.0'
+            }
+        """.stripIndent()
+
+        when:
+        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+
+        then:
+        result.standardOutput.contains '\\--- test.nebula:b:1.0.0 -> test.nebula.ext:b:2.0.0\n'
+    }
+
     def 'can align some dependencies in a group'() {
         def graph = new DependencyGraphBuilder()
                 .addModule('test.nebula:a:0.42.0')

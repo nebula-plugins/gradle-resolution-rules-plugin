@@ -28,24 +28,25 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 
 class ResolutionRulesPlugin implements Plugin<Project> {
-    Project project
-    Logger logger = LoggerFactory.getLogger(ResolutionRulesPlugin)
-    String configurationName = "resolutionRules"
-    Rules rules
-    Configuration configuration
-    NebulaResolutionRulesExtension extension
+    private static final Logger LOGGER = LoggerFactory.getLogger(ResolutionRulesPlugin)
+    private static final String CONFIGURATION_NAME = "resolutionRules"
+
+    private Project project
+    private Rules rules
+    private Configuration configuration
+    private NebulaResolutionRulesExtension extension
 
     public void apply(Project project) {
         this.project = project
-        configuration = project.configurations.create(configurationName)
+        configuration = project.configurations.create(CONFIGURATION_NAME)
         extension = project.extensions.create('nebulaResolutionRules', NebulaResolutionRulesExtension)
 
-        project.configurations.all { Configuration config ->
-            if (config.name == configurationName) {
+        project.configurations.all ( { Configuration config ->
+            if (config.name == CONFIGURATION_NAME) {
                 return
             }
             if (config.state != Configuration.State.UNRESOLVED) {
-                logger.warn("Configuration '{}' has been resolved. Dependency resolution rules will not be applied", config.name)
+                LOGGER.warn("Configuration '{}' has been resolved. Dependency resolution rules will not be applied", config.name)
                 return
             }
 
@@ -63,7 +64,7 @@ class ResolutionRulesPlugin implements Plugin<Project> {
                     }
                 }
             }
-        }
+        } )
     }
 
     Rules getRules() {
@@ -79,15 +80,15 @@ class ResolutionRulesPlugin implements Plugin<Project> {
         List<Rules> rules = new ArrayList<Rules>();
         Set<File> files = configuration.resolve()
         if (files.isEmpty()) {
-            logger.warn("No resolution rules have been added to the '{}' configuration", configuration.name)
+            LOGGER.warn("No resolution rules have been added to the '{}' configuration", configuration.name)
         }
         for (file in files) {
             if (isIncludedRuleFile(file.name, extension)) {
                 ResolutionJsonValidator.validateJsonFile(file)
-                logger.info("Using $file as a dependency rules source")
+                LOGGER.info("Using $file as a dependency rules source")
                 rules.add(parseJsonFile(file))
             } else if (file.name.endsWith(".jar") || file.name.endsWith(".zip")) {
-                logger.info("Using $file as a dependency rules source")
+                LOGGER.info("Using $file as a dependency rules source")
                 ZipFile jar = new ZipFile(file)
                 try {
                     Enumeration<? extends ZipEntry> entries = jar.entries()
@@ -102,7 +103,7 @@ class ResolutionRulesPlugin implements Plugin<Project> {
                     jar.close()
                 }
             } else {
-                logger.debug("Unsupported rules file extension for $file")
+                LOGGER.debug("Unsupported rules file extension for $file")
             }
         }
         return flattenRules(rules)

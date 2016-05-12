@@ -15,6 +15,7 @@
  */
 package nebula.plugin.resolutionrules
 
+import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.artifacts.*
 import org.gradle.api.artifacts.component.ComponentSelector
@@ -74,7 +75,7 @@ abstract class BaseRule {
     BaseRule(Map map) {
         reason = map.reason
         author = map.author
-        date = new DateTime(map.date).toDateTime(DateTimeZone.UTC)
+        date = new DateTime(map.date as String).toDateTime(DateTimeZone.UTC)
     }
 }
 
@@ -215,7 +216,8 @@ class AlignRules implements ProjectConfigurationRule {
         }
 
         def copy = configuration.copyRecursive()
-        copy.exclude group: project.group, module: project.name
+        // Hacky workaround to prevent Gradle from attempting to resolve a project dependency as an external dependency
+        copy.exclude group: project.group.toString(), module: project.name
         Set<ResolvedArtifact> artifacts
         def resolvedConfiguration = copy.resolvedConfiguration
         if (resolvedConfiguration.hasError()) {
@@ -230,7 +232,7 @@ class AlignRules implements ProjectConfigurationRule {
             // Exclude project artifacts from alignment
             !(it.id.componentIdentifier instanceof ProjectComponentIdentifier)
         }.collect { it.moduleVersion }
-        def selectedVersion = [:]
+        Map<AlignRule, String> selectedVersion = [:]
         aligns.each { AlignRule align ->
             if (align.shouldNotBeSkipped(extension)) {
                 def matches = moduleVersions.findAll { ResolvedModuleVersion dep -> align.resolvedMatches(dep) }
@@ -243,12 +245,15 @@ class AlignRules implements ProjectConfigurationRule {
             }
         }
 
-        resolutionStrategy.eachDependency { DependencyResolveDetails details ->
-            def foundMatch = selectedVersion.find { AlignRule rule, String version -> rule.dependencyMatches(details) }
-            if (foundMatch) {
-                details.useTarget group: details.requested.group, name: details.requested.name, version: foundMatch.value
+        resolutionStrategy.eachDependency(new Action<DependencyResolveDetails>() {
+            @Override
+            void execute(DependencyResolveDetails details) {
+                def foundMatch = selectedVersion.find { AlignRule rule, String version -> rule.dependencyMatches(details) }
+                if (foundMatch) {
+                    details.useVersion foundMatch.value
+                }
             }
-        }
+        })
     }
 }
 
