@@ -1,3 +1,11 @@
+1.5.1 / 2016/05/12
+==================
+- Protect against spring-boot plugin getting us into a stackoverflow situation
+
+1.5.0 / 2016/05/12
+==================
+- Align rules no longer replace changes made by other rule type (uses useVersion instead of useTarget).
+
 1.4.0 / 2016/05/11
 ==================
 - Make it so we are not eagerly resolving the different configurations. Will only resolve when gradle resolves the configuration.

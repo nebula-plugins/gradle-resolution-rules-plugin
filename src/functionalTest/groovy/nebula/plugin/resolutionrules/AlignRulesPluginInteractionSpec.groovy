@@ -20,6 +20,7 @@ import nebula.test.IntegrationSpec
 import nebula.test.dependencies.DependencyGraphBuilder
 import nebula.test.dependencies.GradleDependencyGenerator
 import spock.lang.Ignore
+import spock.lang.Unroll
 
 import java.util.jar.Attributes
 import java.util.jar.JarEntry
@@ -144,7 +145,8 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
         result.standardOutput.contains '\\--- test.a:a: -> 1.42.2\n'
     }
 
-    def 'align rules work with spring-boot'() {
+    @Unroll
+    def 'align rules work with spring-boot version #springVersion'() {
         def rulesJsonFile = new File(projectDir, 'rules.json')
         rulesJsonFile << '''\
             {
@@ -165,7 +167,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
             buildscript {
                 repositories { jcenter() }
                 dependencies {
-                    classpath('org.springframework.boot:spring-boot-gradle-plugin:1.3.3.RELEASE')
+                    classpath('org.springframework.boot:spring-boot-gradle-plugin:${springVersion}')
                 }
             }
             apply plugin: 'spring-boot'
@@ -184,9 +186,13 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
 
         then:
         noExceptionThrown()
+
+        where:
+        springVersion << ['1.1.12.RELEASE', '1.2.8.RELEASE', '1.3.5.RELEASE']
     }
 
-    def 'spring-boot interaction'() {
+    @Unroll
+    def 'spring-boot interaction for version #springVersion'() {
         def rulesFolder = new File(projectDir, 'rules')
         rulesFolder.mkdirs()
         def rulesJsonFile = new File(rulesFolder, 'rules.json')
@@ -217,7 +223,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
             buildscript {
                 repositories { jcenter() }
                 dependencies {
-                    classpath('org.springframework.boot:spring-boot-gradle-plugin:1.2.8.RELEASE')
+                    classpath('org.springframework.boot:spring-boot-gradle-plugin:${springVersion}')
                 }
             }
 
@@ -238,12 +244,13 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
         writeHelloWorld('example')
 
         when:
-        def result = runTasksSuccessfully('compileJava', '--info')//'dependencies', '--configuration', 'compile')
+        def result = runTasksSuccessfully('compileJava', '--info')
 
         then:
-        println result?.standardError
-        println result?.standardOutput
         noExceptionThrown()
+
+        where:
+        springVersion << ['1.1.12.RELEASE', '1.2.8.RELEASE', '1.3.5.RELEASE']
     }
 
     def 'align rules work with extra-configurations and publishing'() {
