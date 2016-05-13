@@ -42,7 +42,7 @@ class ResolutionRulesPlugin implements Plugin<Project> {
         extension = project.extensions.create('nebulaResolutionRules', NebulaResolutionRulesExtension)
 
         project.configurations.all ( { Configuration config ->
-            if (config.name == CONFIGURATION_NAME) {
+            if (config.name == CONFIGURATION_NAME || config.name == 'versionManagement') {
                 return
             }
             if (config.state != Configuration.State.UNRESOLVED) {

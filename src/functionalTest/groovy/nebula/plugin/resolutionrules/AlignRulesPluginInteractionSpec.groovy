@@ -20,6 +20,7 @@ import nebula.test.IntegrationSpec
 import nebula.test.dependencies.DependencyGraphBuilder
 import nebula.test.dependencies.GradleDependencyGenerator
 import spock.lang.Ignore
+import spock.lang.Unroll
 
 import java.util.jar.Attributes
 import java.util.jar.JarEntry
@@ -144,7 +145,8 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
         result.standardOutput.contains '\\--- test.a:a: -> 1.42.2\n'
     }
 
-    def 'align rules work with spring-boot'() {
+    @Unroll
+    def 'align rules work with spring-boot version #springVersion'() {
         def rulesJsonFile = new File(projectDir, 'rules.json')
         rulesJsonFile << '''\
             {
@@ -165,7 +167,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
             buildscript {
                 repositories { jcenter() }
                 dependencies {
-                    classpath('org.springframework.boot:spring-boot-gradle-plugin:1.3.3.RELEASE')
+                    classpath('org.springframework.boot:spring-boot-gradle-plugin:${springVersion}')
                 }
             }
             apply plugin: 'spring-boot'
@@ -184,6 +186,71 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
 
         then:
         noExceptionThrown()
+
+        where:
+        springVersion << ['1.1.12.RELEASE', '1.2.8.RELEASE', '1.3.5.RELEASE']
+    }
+
+    @Unroll
+    def 'spring-boot interaction for version #springVersion'() {
+        def rulesFolder = new File(projectDir, 'rules')
+        rulesFolder.mkdirs()
+        def rulesJsonFile = new File(rulesFolder, 'rules.json')
+
+        rulesJsonFile << '''\
+            {
+                "deny": [], "reject": [], "substitute": [], "replace": [],
+                "align": [
+                    {
+                        "name": "testNebula",
+                        "group": "test.nebula",
+                        "reason": "Align test.nebula dependencies",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    }
+                ]
+            }
+        '''.stripIndent()
+
+        def mavenForRules = new File(projectDir, 'repo')
+        mavenForRules.mkdirs()
+        def locked = new File(mavenForRules, 'test/rules/resolution-rules/1.0.0')
+        locked.mkdirs()
+        createRulesJar([rulesFolder], projectDir, new File(locked, 'resolution-rules-1.0.0.jar'))
+        createPom('test.rules', 'resolution-rules', '1.0.0', locked)
+
+        buildFile << """\
+            buildscript {
+                repositories { jcenter() }
+                dependencies {
+                    classpath('org.springframework.boot:spring-boot-gradle-plugin:${springVersion}')
+                }
+            }
+
+            apply plugin: 'spring-boot'
+            ${applyPlugin(ResolutionRulesPlugin)}
+
+            repositories {
+                jcenter()
+                maven { url '${mavenForRules.absolutePath}' }
+            }
+
+            dependencies {
+                resolutionRules 'test.rules:resolution-rules:1.+'
+                compile 'org.springframework.boot:spring-boot-starter-web'
+            }
+        """.stripIndent()
+
+        writeHelloWorld('example')
+
+        when:
+        def result = runTasksSuccessfully('compileJava', '--info')
+
+        then:
+        noExceptionThrown()
+
+        where:
+        springVersion << ['1.1.12.RELEASE', '1.2.8.RELEASE', '1.3.5.RELEASE']
     }
 
     def 'align rules work with extra-configurations and publishing'() {
