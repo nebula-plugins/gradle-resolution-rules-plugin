@@ -12,7 +12,7 @@ Gradle resolution strategies and module metadata provide an effective way to sol
 These rule types solve the most common cause of dependency issues in projects, including:
 
 - Duplicate classes caused by changes to group or artifact ids, without renaming packages
-- Duplicate classes caused by bundle dependencies, which do not conflict resolve against the 'regular' dependencies for that library
+- Duplicate classes caused by bundle dependencies, which do not conflict resolve against the normal dependencies for that library
 - Lack of version alignment between libraries, where version alignment is needed for compatibility
 
 # Quick Start
