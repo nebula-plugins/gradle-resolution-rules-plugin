@@ -991,4 +991,46 @@ class AlignRulesSpec extends IntegrationSpec {
         result.standardOutput.contains '+--- test.nebula:b:0.15.0\n'
         result.standardOutput.contains '\\--- test.nebula:c:0.15.0\n'
     }
+
+    def 'alignment does not apply to dependencies that already have the expected version'() {
+        def graph = new DependencyGraphBuilder()
+                .addModule('test.nebula:a:1.0.0')
+                .addModule('test.nebula:a:0.15.0')
+                .addModule('test.nebula:b:1.0.0')
+                .addModule('test.nebula:b:0.15.0')
+                .build()
+        File mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
+
+        rulesJsonFile << '''\
+            {
+                "deny": [], "reject": [], "substitute": [], "replace": [],
+                "align": [
+                    {
+                        "name": "testNebula",
+                        "group": "test.nebula",
+                        "reason": "Align test.nebula a and b dependencies",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    }
+                ]
+            }
+        '''.stripIndent()
+
+        buildFile << """\
+            repositories {
+                maven { url '${mavenrepo.absolutePath}' }
+            }
+            dependencies {
+                compile 'test.nebula:a:1.0.0'
+                compile 'test.nebula:b:0.15.0'
+            }
+        """.stripIndent()
+
+        when:
+        def result = runTasksSuccessfully('dependencyInsight', '--configuration', 'compile', '--dependency', 'test.nebula')
+
+        then:
+        result.standardOutput.contains 'test.nebula:a:1.0.0\n'
+        result.standardOutput.contains 'test.nebula:b:0.15.0 -> 1.0.0\n'
+    }
 }

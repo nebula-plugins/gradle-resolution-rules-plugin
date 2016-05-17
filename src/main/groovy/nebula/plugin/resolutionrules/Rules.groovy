@@ -249,7 +249,7 @@ class AlignRules implements ProjectConfigurationRule {
             @Override
             void execute(DependencyResolveDetails details) {
                 def foundMatch = selectedVersion.find { AlignRule rule, String version -> rule.dependencyMatches(details) }
-                if (foundMatch) {
+                if (foundMatch && foundMatch.value != details.requested.version) {
                     details.useVersion foundMatch.value
                 }
             }
