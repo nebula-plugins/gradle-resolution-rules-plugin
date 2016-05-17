@@ -30,4 +30,12 @@ class ModuleTest extends Specification {
         module.toString() == 'com.sun.jersey:jersey-bundle'
         !module.hasVersion()
     }
+
+    def 'invalid module identifier throws IAE'() {
+        when:
+        ModuleVersionIdentifier.valueOf('com.sun.jersey')
+
+        then:
+        thrown(IllegalArgumentException)
+    }
 }
