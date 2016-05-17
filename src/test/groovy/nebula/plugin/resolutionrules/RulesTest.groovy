@@ -74,6 +74,6 @@ class RulesTest extends Specification {
     }
 
     static Rules parseJsonText(String json) {
-        return ResolutionRulesPlugin.rulesFromJson(new JsonSlurper().parseText(json) as Map)
+        return ResolutionRulesPlugin.rulesFromJson("dummy", new JsonSlurper().parseText(json) as Map)
     }
 }
