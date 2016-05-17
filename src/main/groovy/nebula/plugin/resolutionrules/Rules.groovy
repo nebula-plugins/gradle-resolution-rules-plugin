@@ -22,9 +22,13 @@ import org.gradle.api.artifacts.component.ComponentSelector
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.DefaultVersionComparator
+import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.DefaultVersionSelectorScheme
+import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.VersionSelectorScheme
 import org.gradle.api.specs.Specs
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 public class Rules {
     List<ReplaceRule> replace
@@ -204,9 +208,15 @@ class AlignRule extends BaseRule {
     boolean shouldNotBeSkipped(NebulaResolutionRulesExtension extension) {
         !extension.skipAlignRules.contains(name)
     }
+
+    @Override
+    String toString() {
+        return "[group: $group, includes: $includes, excludes: $excludes]"
+    }
 }
 
 class AlignRules implements ProjectConfigurationRule {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AlignRules)
     List<AlignRule> aligns
 
     @Override
@@ -232,15 +242,16 @@ class AlignRules implements ProjectConfigurationRule {
             // Exclude project artifacts from alignment
             !(it.id.componentIdentifier instanceof ProjectComponentIdentifier)
         }.collect { it.moduleVersion }
+
+
+        def comparator = new DefaultVersionComparator()
+        def scheme = new DefaultVersionSelectorScheme(comparator)
         Map<AlignRule, String> selectedVersion = [:]
         aligns.each { AlignRule align ->
             if (align.shouldNotBeSkipped(extension)) {
                 def matches = moduleVersions.findAll { ResolvedModuleVersion dep -> align.resolvedMatches(dep) }
-                def versions = matches.collect { ResolvedModuleVersion dep -> dep.id.version }.toUnique()
-                def comparator = new DefaultVersionComparator().asStringComparator()
-                def alignedVersion = versions.max { a, b -> comparator.compare(a, b) }
-                if (alignedVersion) {
-                    selectedVersion[align] = alignedVersion
+                if (matches) {
+                    selectedVersion[align] = alignedVersion(align, matches, configuration, scheme, comparator.asStringComparator())
                 }
             }
         }
@@ -254,6 +265,33 @@ class AlignRules implements ProjectConfigurationRule {
                 }
             }
         })
+    }
+
+    private static String alignedVersion(AlignRule rule, List<ResolvedModuleVersion> moduleVersions, Configuration configuration,
+                                         VersionSelectorScheme scheme, Comparator<String> comparator) {
+        List<ModuleVersionSelector> forced = moduleVersions.findResults { moduleVersion ->
+            configuration.resolutionStrategy.forcedModules.find {
+                def id = moduleVersion.id
+                it.group == id.group && it.name == id.name
+            }
+        }
+        if (forced) {
+            def versions = forced.collect { it.version }.toUnique()
+            def (dynamicVersions, staticVersions) = versions.split { version ->
+                def selector = scheme.parseSelector(version)
+                selector.dynamic
+            }
+            if (!dynamicVersions.isEmpty()) {
+                LOGGER.warn("Align rule $rule is unable to honor forced versions $dynamicVersions. For a force to take precedence on an align rule, it must use a static version")
+            }
+            if (!staticVersions.isEmpty()) {
+                return staticVersions.min { String a, String b -> comparator.compare(a, b) }
+            } else {
+                LOGGER.warn("No static forces found for $rule. Falling back to default alignment logic")
+            }
+        }
+        def versions = moduleVersions.collect { ResolvedModuleVersion dep -> dep.id.version }.toUnique()
+        return versions.max { String a, String b -> comparator.compare(a, b) }
     }
 }
 
