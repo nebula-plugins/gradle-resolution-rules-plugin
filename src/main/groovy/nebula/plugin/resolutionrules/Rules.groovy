@@ -27,6 +27,8 @@ import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.VersionS
 import org.gradle.api.specs.Specs
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 public class Rules {
     List<ReplaceRule> replace
@@ -41,7 +43,7 @@ public class Rules {
     }
 
     public List<ConfigurationRule> configurationRules() {
-        return [deny].flatten()
+        return [deny, exclude].flatten()
     }
 
     public List<ResolutionRule> resolutionRules() {
@@ -49,7 +51,7 @@ public class Rules {
     }
 
     public List<ProjectConfigurationRule> projectConfigurationRules() {
-        return [new AlignRules(aligns: align), exclude]
+        return [new AlignRules(aligns: align)]
     }
 }
 
@@ -210,6 +212,8 @@ class AlignRule extends BaseRule {
 }
 
 class AlignRules implements ProjectConfigurationRule {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AlignRules)
+
     List<AlignRule> aligns
 
     @Override
@@ -218,7 +222,6 @@ class AlignRules implements ProjectConfigurationRule {
             return
         }
 
-        def logger = project.logger
         def copy = configuration.copyRecursive()
         // Hacky workaround to prevent Gradle from attempting to resolve a project dependency as an external dependency
         copy.exclude group: project.group.toString(), module: project.name
@@ -226,7 +229,7 @@ class AlignRules implements ProjectConfigurationRule {
         def resolvedConfiguration = copy.resolvedConfiguration
         if (resolvedConfiguration.hasError()) {
             def lenientConfiguration = resolvedConfiguration.lenientConfiguration
-            logger.info("Resolution rules could not resolve all dependencies to align in configuration '${configuration.name}' should also fail to resolve")
+            project.logger.info("Resolution rules could not resolve all dependencies to align in configuration '${configuration.name}' should also fail to resolve")
             artifacts = lenientConfiguration.getArtifacts(Specs.SATISFIES_ALL)
         } else {
             artifacts = resolvedConfiguration.resolvedArtifacts
@@ -244,7 +247,7 @@ class AlignRules implements ProjectConfigurationRule {
         aligns.each { AlignRule align ->
             def matches = moduleVersions.findAll { ResolvedModuleVersion dep -> align.resolvedMatches(dep) }
             if (matches) {
-                selectedVersion[align] = alignedVersion(project, align, matches, configuration, scheme, comparator.asStringComparator())
+                selectedVersion[align] = alignedVersion(align, matches, configuration, scheme, comparator.asStringComparator())
             }
         }
 
@@ -256,7 +259,7 @@ class AlignRules implements ProjectConfigurationRule {
                     def rule = foundMatch.key
                     def version = foundMatch.value
                     if (version != details.requested.version) {
-                        logger.info("Resolution rules ruleset ${rule.ruleSet} rule $rule aligning ${details.requested.group}:${details.requested.name} to $version")
+                        LOGGER.info("Resolution rules ruleset ${rule.ruleSet} rule $rule aligning ${details.requested.group}:${details.requested.name} to $version")
                         details.useVersion version
                     }
                 }
@@ -265,7 +268,7 @@ class AlignRules implements ProjectConfigurationRule {
     }
 
     private
-    static String alignedVersion(Project project, AlignRule rule, List<ResolvedModuleVersion> moduleVersions, Configuration configuration,
+    static String alignedVersion(AlignRule rule, List<ResolvedModuleVersion> moduleVersions, Configuration configuration,
                                  VersionSelectorScheme scheme, Comparator<String> comparator) {
         List<ModuleVersionSelector> forced = moduleVersions.findResults { moduleVersion ->
             configuration.resolutionStrategy.forcedModules.find {
@@ -279,14 +282,13 @@ class AlignRules implements ProjectConfigurationRule {
                 def selector = scheme.parseSelector(version)
                 selector.dynamic
             }
-            def logger = project.logger
             if (!dynamicVersions.isEmpty()) {
-                logger.warn("Resolution rules ruleset ${rule.ruleSet} align rule $rule is unable to honor forced versions $dynamicVersions. For a force to take precedence on an align rule, it must use a static version")
+                LOGGER.warn("Resolution rules ruleset ${rule.ruleSet} align rule $rule is unable to honor forced versions $dynamicVersions. For a force to take precedence on an align rule, it must use a static version")
             }
             if (!staticVersions.isEmpty()) {
                 return staticVersions.min { String a, String b -> comparator.compare(a, b) }
             } else {
-                logger.warn("No static forces found for ruleset ${rule.ruleSet} align rule $rule. Falling back to default alignment logic")
+                LOGGER.warn("No static forces found for ruleset ${rule.ruleSet} align rule $rule. Falling back to default alignment logic")
             }
         }
         def versions = moduleVersions.collect { ResolvedModuleVersion dep -> dep.id.version }.toUnique()
@@ -294,7 +296,9 @@ class AlignRules implements ProjectConfigurationRule {
     }
 }
 
-class ExcludeRule extends BaseRule implements ProjectConfigurationRule {
+class ExcludeRule extends BaseRule implements ConfigurationRule {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ExcludeRule)
+
     ModuleIdentifier moduleId
 
     ExcludeRule(String ruleSet, Map map) {
@@ -303,8 +307,8 @@ class ExcludeRule extends BaseRule implements ProjectConfigurationRule {
     }
 
     @Override
-    void apply(Project project, ResolutionStrategy rs, Configuration configuration, NebulaResolutionRulesExtension extension) {
-        project.logger.info("Resolution rule ruleset $ruleSet excluding ${moduleId.organization}:${moduleId.name}")
+    public void apply(Configuration configuration) {
+        LOGGER.info("Resolution rule ruleset $ruleSet excluding ${moduleId.organization}:${moduleId.name}")
         configuration.exclude(group: moduleId.organization, module: moduleId.name)
     }
 }

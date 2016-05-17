@@ -21,11 +21,14 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ResolutionStrategy
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 
 class ResolutionRulesPlugin implements Plugin<Project> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ResolutionRulesPlugin)
     private static final String CONFIGURATION_NAME = "resolutionRules"
     private static final String JSON_EXT = ".json"
     private static final String JAR_EXT = ".jar"
@@ -47,7 +50,7 @@ class ResolutionRulesPlugin implements Plugin<Project> {
                 return
             }
             if (config.state != Configuration.State.UNRESOLVED) {
-                project.logger.warn("Configuration '{}' has been resolved. Dependency resolution rules will not be applied", config.name)
+                LOGGER.warn("Configuration '{}' has been resolved. Dependency resolution rules will not be applied", config.name)
                 return
             }
 
@@ -77,20 +80,19 @@ class ResolutionRulesPlugin implements Plugin<Project> {
         return rules
     }
 
-    private Rules rulesFromConfiguration(Configuration configuration, NebulaResolutionRulesExtension extension) {
+    private static Rules rulesFromConfiguration(Configuration configuration, NebulaResolutionRulesExtension extension) {
         List<Rules> rules = new ArrayList<Rules>();
         Set<File> files = configuration.resolve()
-        def logger = project.logger
         if (files.isEmpty()) {
-            logger.warn("No resolution rules have been added to the '{}' configuration", configuration.name)
+            LOGGER.warn("No resolution rules have been added to the '{}' configuration", configuration.name)
         }
         for (file in files) {
             if (isIncludedRuleFile(file.name, extension)) {
                 ResolutionJsonValidator.validateJsonFile(file)
-                logger.info("Using $file as a dependency rules source")
+                LOGGER.info("Using $file as a dependency rules source")
                 rules.add(parseJsonFile(file))
             } else if (file.name.endsWith(JAR_EXT) || file.name.endsWith(ZIP_EXT)) {
-                logger.info("Using $file as a dependency rules source")
+                LOGGER.info("Using $file as a dependency rules source")
                 ZipFile zip = new ZipFile(file)
                 try {
                     Enumeration<? extends ZipEntry> entries = zip.entries()
@@ -105,7 +107,7 @@ class ResolutionRulesPlugin implements Plugin<Project> {
                     zip.close()
                 }
             } else {
-                logger.debug("Unsupported rules file extension for $file")
+                LOGGER.debug("Unsupported rules file extension for $file")
             }
         }
         return flattenRules(rules)
