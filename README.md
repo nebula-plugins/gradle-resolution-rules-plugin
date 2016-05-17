@@ -31,10 +31,6 @@ dependencies {
 
 See the [gradle-resolution-rules](https://github.com/nebula-plugins/gradle-resolution-rules) project for details of the rules, and instructions on how to enable optional rule sets.
 
-## Dependency Lock Compatibility
-
-To use [nebula.dependency-lock](https://github.com/nebula-plugins/gradle-dependency-lock-plugin) with this plugin, apply `nebula.dependency-lock` later than the resolution rules plugin.
-
 # Documentation
 
 The project wiki contains the [full documentation](https://github.com/nebula-plugins/gradle-resolution-rules-plugin/wiki) for the plugin.
