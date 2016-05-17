@@ -1,6 +1,6 @@
 # Gradle Resolution Rules Plugin
 
-![Support Status](https://img.shields.io/badge/Nebula-supported-brightgreen.svg)
+![Support Status](https://img.shields.io/badge/nebula-supported-brightgreen.svg)
 ![Version](https://img.shields.io/maven-central/v/com.netflix.nebula/gradle-resolution-rules-plugin.svg)
 [![Build Status](https://travis-ci.org/nebula-plugins/gradle-resolution-rules-plugin.svg?branch=master)](https://travis-ci.org/nebula-plugins/gradle-resolution-rules-plugin)
 [![Coverage Status](https://coveralls.io/repos/nebula-plugins/gradle-resolution-rules-plugin/badge.svg?branch=master&service=github)](https://coveralls.io/github/nebula-plugins/gradle-resolution-rules-plugin?branch=master)
