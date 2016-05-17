@@ -37,4 +37,4 @@ To use [nebula.dependency-lock](https://github.com/nebula-plugins/gradle-depende
 
 # Documentation
 
-The project wiki contains the [full documentation|https://github.com/nebula-plugins/gradle-resolution-rules-plugin/wiki] for the plugin.
+The project wiki contains the [full documentation](https://github.com/nebula-plugins/gradle-resolution-rules-plugin/wiki) for the plugin.
