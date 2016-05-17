@@ -747,51 +747,6 @@ class AlignRulesSpec extends IntegrationSpec {
         result.standardOutput.contains("Cannot resolve all dependencies to align, configuration 'compile' should also fail to resolve")
     }
 
-    def 'allow skipping an align rule'() {
-        def graph = new DependencyGraphBuilder()
-                .addModule('test.nebula:a:1.0.0')
-                .addModule('test.nebula:a:0.15.0')
-                .addModule('test.nebula:b:1.0.0')
-                .addModule('test.nebula:b:0.15.0')
-                .build()
-        File mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
-
-        rulesJsonFile << '''\
-            {
-                "deny": [], "reject": [], "substitute": [], "replace": [],
-                "align": [
-                    {
-                        "name": "testNebula",
-                        "group": "test.nebula",
-                        "reason": "Align test.nebula dependencies",
-                        "author": "Example Person <person@example.org>",
-                        "date": "2016-03-17T20:21:20.368Z"
-                    }
-                ]
-            }
-        '''.stripIndent()
-
-        buildFile << """\
-            repositories {
-                maven { url '${mavenrepo.absolutePath}' }
-            }
-            nebulaResolutionRules {
-                skipAlignRules = ['testNebula']
-            }
-            dependencies {
-                compile 'test.nebula:a:1.0.0'
-                compile 'test.nebula:b:0.15.0'
-            }
-        """.stripIndent()
-
-        when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
-
-        then:
-        result.standardOutput.contains '+--- test.nebula:a:1.0.0\n'
-        result.standardOutput.contains '\\--- test.nebula:b:0.15.0\n'
-    }
-
     def 'can add additional resolution rules outside of plugin'() {
         def graph = new DependencyGraphBuilder()
                 .addModule('test.nebula:a:1.0.0')

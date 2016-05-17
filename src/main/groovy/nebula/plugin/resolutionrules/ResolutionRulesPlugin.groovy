@@ -30,6 +30,8 @@ import java.util.zip.ZipFile
 class ResolutionRulesPlugin implements Plugin<Project> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ResolutionRulesPlugin)
     private static final String CONFIGURATION_NAME = "resolutionRules"
+    private static final String JSON_EXT = ".json"
+    private static final String OPTIONAL_PREFIX = "optional-"
 
     private Project project
     private Rules rules
@@ -76,7 +78,7 @@ class ResolutionRulesPlugin implements Plugin<Project> {
         return rules
     }
 
-    private Rules rulesFromConfiguration(Configuration configuration, NebulaResolutionRulesExtension extension) {
+    private static Rules rulesFromConfiguration(Configuration configuration, NebulaResolutionRulesExtension extension) {
         List<Rules> rules = new ArrayList<Rules>();
         Set<File> files = configuration.resolve()
         if (files.isEmpty()) {
@@ -110,9 +112,12 @@ class ResolutionRulesPlugin implements Plugin<Project> {
     }
 
     private static boolean isIncludedRuleFile(String filename, NebulaResolutionRulesExtension extension) {
-        if (filename.endsWith(".json")) {
-            String nameWithoutExtension = filename.replace(".json", "")
-            if (nameWithoutExtension.startsWith("optional-")) {
+        if (filename.endsWith(JSON_EXT)) {
+            String nameWithoutExtension = filename.substring(0, filename.lastIndexOf(JSON_EXT))
+            if (nameWithoutExtension.startsWith(OPTIONAL_PREFIX)) {
+                String nameWithoutPrefix = nameWithoutExtension.substring(OPTIONAL_PREFIX.length())
+                return extension.optional.contains(nameWithoutPrefix)
+            } else if (!extension.include.isEmpty()) {
                 return extension.include.contains(nameWithoutExtension)
             } else {
                 return !extension.exclude.contains(nameWithoutExtension)

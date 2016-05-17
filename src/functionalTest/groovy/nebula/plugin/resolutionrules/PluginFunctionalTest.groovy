@@ -271,11 +271,11 @@ class PluginFunctionalTest extends IntegrationSpec {
         result.standardOutput.contains('\\--- log4j:log4j:1.2.17\n')
     }
 
-    def 'optional rules are applied when included'() {
+    def 'optional rules are applied when specified'() {
         given:
         buildFile << """
                      nebulaResolutionRules {
-                         include = ["optional-${moduleName}"]
+                         optional = ["${moduleName}"]
                      }
 
                      dependencies {
@@ -297,6 +297,45 @@ class PluginFunctionalTest extends IntegrationSpec {
 \\--- org.slf4j:jcl-over-slf4j:1.7.0 -> 1.7.21
      \\--- org.slf4j:slf4j-api:1.7.21
 """)
+    }
+
+    def 'only included rules are applied'() {
+        given:
+        def otherRulesFile = new File(projectDir, "other-${moduleName}.json")
+        otherRulesFile << """
+                                    {
+                                        "substitute" : [
+                                            {
+                                                "module" : "log4j:log4j",
+                                                "with" : "org.slf4j:log4j-over-slf4j:1.7.21",
+                                                "reason" : "SLF4J bridge replacement",
+                                                "author" : "Danny Thomas <dmthomas@gmail.com>",
+                                                "date" : "2015-10-07T20:21:20.368Z"
+                                            }
+                                        ]
+                                    }
+                                 """
+        buildFile << """
+                     nebulaResolutionRules {
+                         include = ["other-${moduleName}"]
+                     }
+
+                     dependencies {
+                         resolutionRules files("$optionalRulesJsonFile", "$otherRulesFile")
+
+                         compile 'log4j:log4j:1.2.17'
+                         compile 'asm:asm:3.3.1'
+                         compile 'org.ow2.asm:asm:5.0.4'
+                     }
+                     """.stripIndent()
+
+
+        when:
+        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+
+        then:
+        result.standardOutput.contains('log4j:log4j:1.2.17 -> org.slf4j:log4j-over-slf4j:1.7.21')
+        !result.standardOutput.contains('asm:asm:3.3.1 -> org.ow2.asm:asm:5.0.4')
     }
 
     def 'missing version in substitution rule'() {

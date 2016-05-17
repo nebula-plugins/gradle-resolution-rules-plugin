@@ -18,5 +18,6 @@ package nebula.plugin.resolutionrules
 
 class NebulaResolutionRulesExtension {
     List<String> include = []
+    List<String> optional = []
     List<String> exclude = []
 }
