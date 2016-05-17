@@ -176,14 +176,12 @@ class DenyRule extends BaseRule implements ConfigurationRule {
 }
 
 class AlignRule extends BaseRule {
-    String name
     String group
     Collection<String> includes
     Collection<String> excludes
 
     AlignRule(Map map) {
         super(map)
-        name = map.name
         group = map.group
         includes = map.includes ?: []
         excludes = map.excludes ?: []
@@ -203,10 +201,6 @@ class AlignRule extends BaseRule {
         inputGroup.matches(group) &&
                 (includes.isEmpty() || !matchedIncludes.isEmpty()) &&
                 (excludes.isEmpty() || matchedExcludes.isEmpty())
-    }
-
-    boolean shouldNotBeSkipped(NebulaResolutionRulesExtension extension) {
-        !extension.skipAlignRules.contains(name)
     }
 
     @Override
@@ -248,11 +242,9 @@ class AlignRules implements ProjectConfigurationRule {
         def scheme = new DefaultVersionSelectorScheme(comparator)
         Map<AlignRule, String> selectedVersion = [:]
         aligns.each { AlignRule align ->
-            if (align.shouldNotBeSkipped(extension)) {
-                def matches = moduleVersions.findAll { ResolvedModuleVersion dep -> align.resolvedMatches(dep) }
-                if (matches) {
-                    selectedVersion[align] = alignedVersion(align, matches, configuration, scheme, comparator.asStringComparator())
-                }
+            def matches = moduleVersions.findAll { ResolvedModuleVersion dep -> align.resolvedMatches(dep) }
+            if (matches) {
+                selectedVersion[align] = alignedVersion(align, matches, configuration, scheme, comparator.asStringComparator())
             }
         }
 
@@ -267,8 +259,9 @@ class AlignRules implements ProjectConfigurationRule {
         })
     }
 
-    private static String alignedVersion(AlignRule rule, List<ResolvedModuleVersion> moduleVersions, Configuration configuration,
-                                         VersionSelectorScheme scheme, Comparator<String> comparator) {
+    private
+    static String alignedVersion(AlignRule rule, List<ResolvedModuleVersion> moduleVersions, Configuration configuration,
+                                 VersionSelectorScheme scheme, Comparator<String> comparator) {
         List<ModuleVersionSelector> forced = moduleVersions.findResults { moduleVersion ->
             configuration.resolutionStrategy.forcedModules.find {
                 def id = moduleVersion.id

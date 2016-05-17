@@ -19,5 +19,4 @@ package nebula.plugin.resolutionrules
 class NebulaResolutionRulesExtension {
     List<String> include = []
     List<String> exclude = []
-    Collection<String> skipAlignRules = []
 }
