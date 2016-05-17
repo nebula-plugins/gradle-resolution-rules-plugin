@@ -744,7 +744,7 @@ class AlignRulesSpec extends IntegrationSpec {
         def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
 
         then:
-        result.standardOutput.contains("Cannot resolve all dependencies to align, configuration 'compile' should also fail to resolve")
+        result.standardOutput.contains("Resolution rules could not resolve all dependencies to align in configuration 'compile' should also fail to resolve")
     }
 
     def 'can add additional resolution rules outside of plugin'() {
@@ -985,6 +985,7 @@ class AlignRulesSpec extends IntegrationSpec {
         def result = runTasksSuccessfully('dependencyInsight', '--configuration', 'compile', '--dependency', 'test.nebula')
 
         then:
+        result.standardOutput.contains 'Resolution rules ruleset alignment-does-not-apply-to-dependencies-that-already-have-the-expected-version rule [group: test.nebula, includes: [], excludes: []] aligning test.nebula:b to 1.0.0'
         result.standardOutput.contains 'test.nebula:a:1.0.0\n'
         result.standardOutput.contains 'test.nebula:b:0.15.0 -> 1.0.0\n'
     }
@@ -1144,7 +1145,7 @@ class AlignRulesSpec extends IntegrationSpec {
         def standardOutput = runTasksSuccessfully('dependencies', '--configuration', 'compile').standardOutput
 
         then:
-        standardOutput.contains('Align rule [group: test.nebula, includes: [], excludes: []] is unable to honor forced versions [latest.release, 1.+]. For a force to take precedence on an align rule, it must use a static version')
+        standardOutput.contains('Resolution rules ruleset alignment-outputs-warnings-and-honors-static-force-when-dynamic-forces-are-present align rule [group: test.nebula, includes: [], excludes: []] is unable to honor forced versions [latest.release, 1.+]. For a force to take precedence on an align rule, it must use a static version')
         standardOutput.contains '+--- test.nebula:a:2.0.0 -> 0.15.0\n'
         standardOutput.contains '+--- test.nebula:b:2.0.0 -> 0.15.0\n'
         standardOutput.contains '\\--- test.nebula:c:1.0.0 -> 0.15.0\n'
@@ -1199,8 +1200,8 @@ class AlignRulesSpec extends IntegrationSpec {
         def standardOutput = runTasksSuccessfully('dependencies', '--configuration', 'compile').standardOutput
 
         then:
-        standardOutput.contains('Align rule [group: test.nebula, includes: [], excludes: []] is unable to honor forced versions [latest.release, 1.+, 2.+]. For a force to take precedence on an align rule, it must use a static version')
-        standardOutput.contains('No static forces found for [group: test.nebula, includes: [], excludes: []]. Falling back to default alignment logic')
+        standardOutput.contains('Resolution rules ruleset alignment-outputs-warnings-and-falls-back-to-default-logic-when-only-dynamic-forces-are-present align rule [group: test.nebula, includes: [], excludes: []] is unable to honor forced versions [latest.release, 1.+, 2.+]. For a force to take precedence on an align rule, it must use a static version')
+        standardOutput.contains('No static forces found for ruleset alignment-outputs-warnings-and-falls-back-to-default-logic-when-only-dynamic-forces-are-present align rule [group: test.nebula, includes: [], excludes: []]. Falling back to default alignment logic')
         standardOutput.contains '+--- test.nebula:a:2.0.0\n'
         standardOutput.contains '+--- test.nebula:b:1.0.0 -> 2.0.0\n'
         standardOutput.contains '\\--- test.nebula:c:0.15.0 -> 2.0.0\n'

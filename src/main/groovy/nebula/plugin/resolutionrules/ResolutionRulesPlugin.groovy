@@ -31,6 +31,8 @@ class ResolutionRulesPlugin implements Plugin<Project> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ResolutionRulesPlugin)
     private static final String CONFIGURATION_NAME = "resolutionRules"
     private static final String JSON_EXT = ".json"
+    private static final String JAR_EXT = ".jar"
+    private static final String ZIP_EXT = ".zip"
     private static final String OPTIONAL_PREFIX = "optional-"
 
     private Project project
@@ -89,20 +91,20 @@ class ResolutionRulesPlugin implements Plugin<Project> {
                 ResolutionJsonValidator.validateJsonFile(file)
                 LOGGER.info("Using $file as a dependency rules source")
                 rules.add(parseJsonFile(file))
-            } else if (file.name.endsWith(".jar") || file.name.endsWith(".zip")) {
+            } else if (file.name.endsWith(JAR_EXT) || file.name.endsWith(ZIP_EXT)) {
                 LOGGER.info("Using $file as a dependency rules source")
-                ZipFile jar = new ZipFile(file)
+                ZipFile zip = new ZipFile(file)
                 try {
-                    Enumeration<? extends ZipEntry> entries = jar.entries()
+                    Enumeration<? extends ZipEntry> entries = zip.entries()
                     while (entries.hasMoreElements()) {
                         ZipEntry entry = entries.nextElement()
                         if (isIncludedRuleFile(entry.name, extension)) {
-                            ResolutionJsonValidator.validateJsonStream(jar.getInputStream(entry))
-                            rules.add(parseJsonStream(jar.getInputStream(entry)))
+                            ResolutionJsonValidator.validateJsonStream(zip.getInputStream(entry))
+                            rules.add(parseJsonStream(zip, entry))
                         }
                     }
                 } finally {
-                    jar.close()
+                    zip.close()
                 }
             } else {
                 LOGGER.debug("Unsupported rules file extension for $file")
@@ -113,39 +115,42 @@ class ResolutionRulesPlugin implements Plugin<Project> {
 
     private static boolean isIncludedRuleFile(String filename, NebulaResolutionRulesExtension extension) {
         if (filename.endsWith(JSON_EXT)) {
-            String nameWithoutExtension = filename.substring(0, filename.lastIndexOf(JSON_EXT))
-            if (nameWithoutExtension.startsWith(OPTIONAL_PREFIX)) {
-                String nameWithoutPrefix = nameWithoutExtension.substring(OPTIONAL_PREFIX.length())
-                return extension.optional.contains(nameWithoutPrefix)
+            String ruleSet = ruleSet(filename)
+            if (ruleSet.startsWith(OPTIONAL_PREFIX)) {
+                String ruleSetWithoutPrefix = ruleSet.substring(OPTIONAL_PREFIX.length())
+                return extension.optional.contains(ruleSetWithoutPrefix)
             } else if (!extension.include.isEmpty()) {
-                return extension.include.contains(nameWithoutExtension)
+                return extension.include.contains(ruleSet)
             } else {
-                return !extension.exclude.contains(nameWithoutExtension)
+                return !extension.exclude.contains(ruleSet)
             }
         }
         return false
     }
 
+    private static String ruleSet(String filename) {
+        return filename.substring(0, filename.lastIndexOf(JSON_EXT))
+    }
+
     static Rules parseJsonFile(File file) {
-        rulesFromJson(new JsonSlurper().parse(file) as Map)
+        def ruleSet = ruleSet(file.name)
+        rulesFromJson(ruleSet, new JsonSlurper().parse(file) as Map)
     }
 
-    static Rules parseJsonText(String json) {
-        rulesFromJson(new JsonSlurper().parseText(json) as Map)
+    static Rules parseJsonStream(ZipFile zip, ZipEntry entry) {
+        def stream = zip.getInputStream(entry)
+        def ruleSet = ruleSet(new File(entry.name).name)
+        rulesFromJson(ruleSet, new JsonSlurper().parse(stream) as Map)
     }
 
-    static Rules parseJsonStream(InputStream stream) {
-        rulesFromJson(new JsonSlurper().parse(stream) as Map)
-    }
-
-    private static Rules rulesFromJson(Map json) {
+    protected static Rules rulesFromJson(String ruleSet, Map json) {
         Rules rules = new Rules()
-        rules.replace = json.replace.collect { new ReplaceRule(it) }
-        rules.substitute = json.substitute.collect { new SubstituteRule(it) }
-        rules.reject = json.reject.collect { new RejectRule(it) }
-        rules.deny = json.deny.collect { new DenyRule(it) }
-        rules.align = json.align.collect { new AlignRule(it) }
-        rules.exclude = json.exclude.collect { new ExcludeRule(it) }
+        rules.replace = json.replace.collect { new ReplaceRule(ruleSet, it) }
+        rules.substitute = json.substitute.collect { new SubstituteRule(ruleSet, it) }
+        rules.reject = json.reject.collect { new RejectRule(ruleSet, it) }
+        rules.deny = json.deny.collect { new DenyRule(ruleSet, it) }
+        rules.align = json.align.collect { new AlignRule(ruleSet, it) }
+        rules.exclude = json.exclude.collect { new ExcludeRule(ruleSet, it) }
 
         rules
     }

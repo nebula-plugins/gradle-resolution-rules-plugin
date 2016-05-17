@@ -425,6 +425,6 @@ class PluginFunctionalTest extends IntegrationSpec {
         def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
 
         then:
-        result.standardOutput.contains("Selection of com.google.guava:guava:12.0 rejected by component selection rule: Guava 12.0 significantly regressed LocalCache performance")
+        result.standardOutput.contains("Selection of com.google.guava:guava:12.0 rejected by component selection rule: Rejected by resolution rule reject-dependency - Guava 12.0 significantly regressed LocalCache performance")
     }
 }

@@ -17,6 +17,7 @@
 
 package nebula.plugin.resolutionrules
 
+import groovy.json.JsonSlurper
 import spock.lang.Specification
 
 /**
@@ -43,7 +44,7 @@ class RulesTest extends Specification {
                       }"""
 
 
-        Rules rules = ResolutionRulesPlugin.parseJsonText(json)
+        Rules rules = parseJsonText(json)
 
         then:
         !rules.replace.isEmpty()
@@ -65,10 +66,14 @@ class RulesTest extends Specification {
                       }"""
 
 
-        Rules rules = ResolutionRulesPlugin.parseJsonText(json)
+        Rules rules = parseJsonText(json)
 
         then:
         !rules.replace.isEmpty()
         rules.replace[0].class == ReplaceRule
+    }
+
+    static Rules parseJsonText(String json) {
+        return ResolutionRulesPlugin.rulesFromJson(new JsonSlurper().parseText(json) as Map)
     }
 }

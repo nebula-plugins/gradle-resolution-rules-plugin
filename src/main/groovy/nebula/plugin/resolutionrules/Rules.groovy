@@ -72,11 +72,13 @@ interface ProjectConfigurationRule {
 }
 
 abstract class BaseRule {
+    String ruleSet
     String reason
     String author
     DateTime date
 
-    BaseRule(Map map) {
+    BaseRule(String ruleSet, Map map) {
+        this.ruleSet = ruleSet
         reason = map.reason
         author = map.author
         date = new DateTime(map.date as String).toDateTime(DateTimeZone.UTC)
@@ -87,8 +89,8 @@ class ReplaceRule extends BaseRule implements ProjectRule {
     String module
     String with
 
-    ReplaceRule(Map map) {
-        super(map)
+    ReplaceRule(String ruleSet, Map map) {
+        super(ruleSet, map)
         module = map.module
         with = map.with
     }
@@ -107,8 +109,8 @@ class SubstituteRule extends BaseRule implements ResolutionRule {
     String module
     String with
 
-    SubstituteRule(Map map) {
-        super(map)
+    SubstituteRule(String ruleSet, Map map) {
+        super(ruleSet, map)
         module = map.module
         with = map.with
     }
@@ -136,8 +138,8 @@ class SubstituteRule extends BaseRule implements ResolutionRule {
 class RejectRule extends BaseRule implements ResolutionRule {
     String module
 
-    RejectRule(Map map) {
-        super(map)
+    RejectRule(String ruleSet, Map map) {
+        super(ruleSet, map)
         module = map.module
     }
 
@@ -148,7 +150,7 @@ class RejectRule extends BaseRule implements ResolutionRule {
             ModuleComponentIdentifier candidate = selection.candidate
             if (candidate.group == moduleId.organization && candidate.module == moduleId.name) {
                 if (!moduleId.hasVersion() || candidate.version == moduleId.version) {
-                    selection.reject(reason)
+                    selection.reject("Rejected by resolution rule $ruleSet - $reason")
                 }
             }
         })
@@ -158,8 +160,8 @@ class RejectRule extends BaseRule implements ResolutionRule {
 class DenyRule extends BaseRule implements ConfigurationRule {
     String module
 
-    DenyRule(Map map) {
-        super(map)
+    DenyRule(String ruleSet, Map map) {
+        super(ruleSet, map)
         module = map.module
     }
 
@@ -180,8 +182,8 @@ class AlignRule extends BaseRule {
     Collection<String> includes
     Collection<String> excludes
 
-    AlignRule(Map map) {
-        super(map)
+    AlignRule(String ruleSet, Map map) {
+        super(ruleSet, map)
         group = map.group
         includes = map.includes ?: []
         excludes = map.excludes ?: []
@@ -211,6 +213,7 @@ class AlignRule extends BaseRule {
 
 class AlignRules implements ProjectConfigurationRule {
     private static final Logger LOGGER = LoggerFactory.getLogger(AlignRules)
+
     List<AlignRule> aligns
 
     @Override
@@ -226,7 +229,7 @@ class AlignRules implements ProjectConfigurationRule {
         def resolvedConfiguration = copy.resolvedConfiguration
         if (resolvedConfiguration.hasError()) {
             def lenientConfiguration = resolvedConfiguration.lenientConfiguration
-            project.logger.info("Cannot resolve all dependencies to align, configuration '${configuration.name}' should also fail to resolve")
+            project.logger.info("Resolution rules could not resolve all dependencies to align in configuration '${configuration.name}' should also fail to resolve")
             artifacts = lenientConfiguration.getArtifacts(Specs.SATISFIES_ALL)
         } else {
             artifacts = resolvedConfiguration.resolvedArtifacts
@@ -252,8 +255,13 @@ class AlignRules implements ProjectConfigurationRule {
             @Override
             void execute(DependencyResolveDetails details) {
                 def foundMatch = selectedVersion.find { AlignRule rule, String version -> rule.dependencyMatches(details) }
-                if (foundMatch && foundMatch.value != details.requested.version) {
-                    details.useVersion foundMatch.value
+                if (foundMatch) {
+                    def rule = foundMatch.key
+                    def version = foundMatch.value
+                    if (version != details.requested.version) {
+                        LOGGER.info("Resolution rules ruleset ${rule.ruleSet} rule $rule aligning ${details.requested.group}:${details.requested.name} to $version")
+                        details.useVersion version
+                    }
                 }
             }
         })
@@ -275,12 +283,12 @@ class AlignRules implements ProjectConfigurationRule {
                 selector.dynamic
             }
             if (!dynamicVersions.isEmpty()) {
-                LOGGER.warn("Align rule $rule is unable to honor forced versions $dynamicVersions. For a force to take precedence on an align rule, it must use a static version")
+                LOGGER.warn("Resolution rules ruleset ${rule.ruleSet} align rule $rule is unable to honor forced versions $dynamicVersions. For a force to take precedence on an align rule, it must use a static version")
             }
             if (!staticVersions.isEmpty()) {
                 return staticVersions.min { String a, String b -> comparator.compare(a, b) }
             } else {
-                LOGGER.warn("No static forces found for $rule. Falling back to default alignment logic")
+                LOGGER.warn("No static forces found for ruleset ${rule.ruleSet} align rule $rule. Falling back to default alignment logic")
             }
         }
         def versions = moduleVersions.collect { ResolvedModuleVersion dep -> dep.id.version }.toUnique()
@@ -289,15 +297,18 @@ class AlignRules implements ProjectConfigurationRule {
 }
 
 class ExcludeRule extends BaseRule implements ConfigurationRule {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ExcludeRule)
+
     ModuleIdentifier moduleId
 
-    ExcludeRule(Map map) {
-        super(map)
+    ExcludeRule(String ruleSet, Map map) {
+        super(ruleSet, map)
         moduleId = ModuleIdentifier.valueOf(map.module as String)
     }
 
     @Override
     public void apply(Configuration configuration) {
+        LOGGER.info("Resolution rule ruleset $ruleSet excluding ${moduleId.organization}:${moduleId.name}")
         configuration.exclude(group: moduleId.organization, module: moduleId.name)
     }
 }
