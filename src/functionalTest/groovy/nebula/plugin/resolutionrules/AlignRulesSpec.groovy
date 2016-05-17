@@ -1008,7 +1008,7 @@ class AlignRulesSpec extends IntegrationSpec {
                     {
                         "name": "testNebula",
                         "group": "test.nebula",
-                        "reason": "Align test.nebula a and b dependencies",
+                        "reason": "Align test.nebula dependencies",
                         "author": "Example Person <person@example.org>",
                         "date": "2016-03-17T20:21:20.368Z"
                     }
@@ -1032,5 +1032,161 @@ class AlignRulesSpec extends IntegrationSpec {
         then:
         result.standardOutput.contains 'test.nebula:a:1.0.0\n'
         result.standardOutput.contains 'test.nebula:b:0.15.0 -> 1.0.0\n'
+    }
+
+    def 'alignment uses forced version, rather than highest version, when a force is present'() {
+        def graph = new DependencyGraphBuilder()
+                .addModule('test.nebula:a:1.0.0')
+                .addModule('test.nebula:a:0.15.0')
+                .addModule('test.nebula:b:1.0.0')
+                .addModule('test.nebula:b:0.15.0')
+                .addModule('test.nebula:c:1.0.0')
+                .addModule('test.nebula:c:0.15.0')
+                .addModule('test.nebula.other:a:1.0.0')
+                .build()
+        File mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
+
+        rulesJsonFile << '''\
+            {
+                "deny": [], "reject": [], "substitute": [], "replace": [],
+                "align": [
+                    {
+                        "name": "testNebula",
+                        "group": "test.nebula",
+                        "reason": "Align test.nebula dependencies",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    }
+                ]
+            }
+        '''.stripIndent()
+
+        buildFile << """\
+            repositories {
+                maven { url '${mavenrepo.absolutePath}' }
+            }
+            dependencies {
+                compile 'test.nebula:a:1.0.0'
+                compile 'test.nebula:b:1.0.0'
+                compile 'test.nebula:c:0.15.0'
+                compile 'test.nebula.other:a:1.0.0'
+            }
+            configurations.compile.resolutionStrategy {
+                force 'test.nebula:a:0.15.0'
+            }
+        """.stripIndent()
+
+        when:
+        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+
+        then:
+        result.standardOutput.contains '+--- test.nebula:a:1.0.0 -> 0.15.0\n'
+        result.standardOutput.contains '+--- test.nebula:b:1.0.0 -> 0.15.0\n'
+        result.standardOutput.contains '+--- test.nebula:c:0.15.0\n'
+        result.standardOutput.contains '\\--- test.nebula.other:a:1.0.0\n'
+    }
+
+    def 'alignment uses dynamic forced version, rather than highest version, when a force is present'() {
+        def graph = new DependencyGraphBuilder()
+                .addModule('test.nebula:a:1.0.0')
+                .addModule('test.nebula:a:0.15.0')
+                .addModule('test.nebula:b:1.0.0')
+                .addModule('test.nebula:b:0.15.0')
+                .addModule('test.nebula:c:1.0.0')
+                .addModule('test.nebula:c:0.15.0')
+                .addModule('test.nebula.other:a:1.0.0')
+                .build()
+        File mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
+
+        rulesJsonFile << '''\
+            {
+                "deny": [], "reject": [], "substitute": [], "replace": [],
+                "align": [
+                    {
+                        "name": "testNebula",
+                        "group": "test.nebula",
+                        "reason": "Align test.nebula dependencies",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    }
+                ]
+            }
+        '''.stripIndent()
+
+        buildFile << """\
+            repositories {
+                maven { url '${mavenrepo.absolutePath}' }
+            }
+            dependencies {
+                compile 'test.nebula:a:1.0.0'
+                compile 'test.nebula:b:1.0.0'
+                compile 'test.nebula:c:0.15.0'
+                compile 'test.nebula.other:a:1.0.0'
+            }
+            configurations.compile.resolutionStrategy {
+                force 'test.nebula:a:0.+'
+            }
+        """.stripIndent()
+
+        when:
+        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+
+        then:
+        result.standardOutput.contains '+--- test.nebula:a:1.0.0 -> 0.15.0\n'
+        result.standardOutput.contains '+--- test.nebula:b:1.0.0 -> 0.15.0\n'
+        result.standardOutput.contains '+--- test.nebula:c:0.15.0\n'
+        result.standardOutput.contains '\\--- test.nebula.other:a:1.0.0\n'
+    }
+
+    def 'alignment uses latest version, rather than highest version, when a force is present'() {
+        def graph = new DependencyGraphBuilder()
+                .addModule('test.nebula:a:1.0.0')
+                .addModule('test.nebula:a:0.15.0')
+                .addModule('test.nebula:b:1.0.0')
+                .addModule('test.nebula:b:0.15.0')
+                .addModule('test.nebula:c:1.0.0')
+                .addModule('test.nebula:c:0.15.0')
+                .addModule('test.nebula.other:a:1.0.0')
+                .build()
+        File mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
+
+        rulesJsonFile << '''\
+            {
+                "deny": [], "reject": [], "substitute": [], "replace": [],
+                "align": [
+                    {
+                        "name": "testNebula",
+                        "group": "test.nebula",
+                        "reason": "Align test.nebula dependencies",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    }
+                ]
+            }
+        '''.stripIndent()
+
+        buildFile << """\
+            repositories {
+                maven { url '${mavenrepo.absolutePath}' }
+            }
+            dependencies {
+                compile 'test.nebula:a:1.0.0'
+                compile 'test.nebula:b:1.0.0'
+                compile 'test.nebula:c:0.15.0'
+                compile 'test.nebula.other:a:1.0.0'
+            }
+            configurations.compile.resolutionStrategy {
+                force 'test.nebula:a:latest.release'
+            }
+        """.stripIndent()
+
+        when:
+        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+
+        then:
+        result.standardOutput.contains '+--- test.nebula:a:1.0.0\n'
+        result.standardOutput.contains '+--- test.nebula:b:1.0.0\n'
+        result.standardOutput.contains '+--- test.nebula:c:0.15.0 -> 1.0.0\n'
+        result.standardOutput.contains '\\--- test.nebula.other:a:1.0.0\n'
     }
 }

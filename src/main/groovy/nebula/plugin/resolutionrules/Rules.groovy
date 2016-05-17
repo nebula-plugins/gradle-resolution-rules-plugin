@@ -236,11 +236,8 @@ class AlignRules implements ProjectConfigurationRule {
         aligns.each { AlignRule align ->
             if (align.shouldNotBeSkipped(extension)) {
                 def matches = moduleVersions.findAll { ResolvedModuleVersion dep -> align.resolvedMatches(dep) }
-                def versions = matches.collect { ResolvedModuleVersion dep -> dep.id.version }.toUnique()
-                def comparator = new DefaultVersionComparator().asStringComparator()
-                def alignedVersion = versions.max { a, b -> comparator.compare(a, b) }
-                if (alignedVersion) {
-                    selectedVersion[align] = alignedVersion
+                if (matches) {
+                    selectedVersion[align] = alignedVersion(matches, configuration)
                 }
             }
         }
@@ -254,6 +251,23 @@ class AlignRules implements ProjectConfigurationRule {
                 }
             }
         })
+    }
+
+    private static String alignedVersion(List<ResolvedModuleVersion> moduleVersions, Configuration configuration) {
+        def comparator = new DefaultVersionComparator().asStringComparator()
+        List<ModuleVersionSelector> forced = moduleVersions.findResults { moduleVersion ->
+            configuration.resolutionStrategy.forcedModules.find {
+                def id = moduleVersion.id
+                it.group == id.group && it.name == id.name
+            }
+        }
+        if (forced) {
+            def forcedVersions = forced.collect { it.version }.toUnique()
+            return forcedVersions.min { String a, String b -> comparator.compare(a, b) }
+        } else {
+            def versions = moduleVersions.collect { ResolvedModuleVersion dep -> dep.id.version }.toUnique()
+            return versions.max { String a, String b -> comparator.compare(a, b) }
+        }
     }
 }
 
