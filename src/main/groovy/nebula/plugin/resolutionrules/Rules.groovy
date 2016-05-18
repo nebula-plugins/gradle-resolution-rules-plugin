@@ -207,7 +207,15 @@ class AlignRule extends BaseRule {
 
     @Override
     String toString() {
-        return "[group: $group, includes: $includes, excludes: $excludes]"
+        if (includes.isEmpty() && excludes.isEmpty()) {
+            return "[group: $group]"
+        } else if (includes.isEmpty()) {
+            return "[group: $group, excludes: $excludes]"
+        } else if (excludes.isEmpty()) {
+            return "[group: $group, includes: $includes]"
+        } else {
+            return "[group: $group, includes: $includes, excludes: $excludes]"
+        }
     }
 }
 
@@ -276,9 +284,11 @@ class AlignRules implements ProjectConfigurationRule {
                 it.group == id.group && it.name == id.name
             }
         }
+        def versions = moduleVersions.collect { ResolvedModuleVersion dep -> dep.id.version }.toUnique()
+        def highestVersion = versions.max { String a, String b -> comparator.compare(a, b) }
         if (forced) {
-            def versions = forced.collect { it.version }.toUnique()
-            def (dynamicVersions, staticVersions) = versions.split { version ->
+            def forcedVersions = forced.collect { it.version }.toUnique()
+            def (dynamicVersions, staticVersions) = forcedVersions.split { version ->
                 def selector = scheme.parseSelector(version)
                 selector.dynamic
             }
@@ -286,13 +296,14 @@ class AlignRules implements ProjectConfigurationRule {
                 LOGGER.warn("Resolution rules ruleset ${rule.ruleSet} align rule $rule is unable to honor forced versions $dynamicVersions. For a force to take precedence on an align rule, it must use a static version")
             }
             if (!staticVersions.isEmpty()) {
-                return staticVersions.min { String a, String b -> comparator.compare(a, b) }
+                def forcedVersion = staticVersions.min { String a, String b -> comparator.compare(a, b) }
+                LOGGER.info("Found force(s) $forced that supersede resolution ruleset ${rule.ruleSet} align rule $rule. Will use $forcedVersion instead of $highestVersion")
+                return forcedVersion
             } else {
                 LOGGER.warn("No static forces found for ruleset ${rule.ruleSet} align rule $rule. Falling back to default alignment logic")
             }
         }
-        def versions = moduleVersions.collect { ResolvedModuleVersion dep -> dep.id.version }.toUnique()
-        return versions.max { String a, String b -> comparator.compare(a, b) }
+        return highestVersion
     }
 }
 
