@@ -121,7 +121,7 @@ class ResolutionJsonValidator {
         def alignErrors = json.align.collect({
             [
                     validateNonEmptyFields(it, 'align', ['group', 'reason', 'author']),
-                    validateValidFields(it, 'align', ['group', 'includes', 'excludes', 'match', 'reason', 'author', 'date'])
+                    validateValidFields(it, 'align', ['name', 'group', 'includes', 'excludes', 'match', 'reason', 'author', 'date'])
             ]
         })
 
