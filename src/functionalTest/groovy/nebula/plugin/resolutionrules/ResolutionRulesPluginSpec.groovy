@@ -188,9 +188,9 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
         def result = runTasksSuccessfully('dependencies')
 
         then:
-        [rulesJsonFile, rulesZipFile, rulesJarFile].each {
-            assert result.standardOutput.contains("Using ${it.absolutePath} as a dependency rules source")
-        }
+        result.standardOutput.contains 'Using all-rules-sources (all-rules-sources.json) a dependency rules source'
+        result.standardOutput.contains "Using all-rules-sources ($projectDir/rules.jar) a dependency rules source"
+        result.standardOutput.contains "Using all-rules-sources ($projectDir/rules.zip) a dependency rules source"
     }
 
     def 'replace module'() {

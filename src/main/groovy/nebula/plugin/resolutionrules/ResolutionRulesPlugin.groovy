@@ -89,10 +89,8 @@ class ResolutionRulesPlugin implements Plugin<Project> {
         for (file in files) {
             if (isIncludedRuleFile(file.name, extension)) {
                 ResolutionJsonValidator.validateJsonFile(file)
-                LOGGER.info("Using $file as a dependency rules source")
                 rules.add(parseJsonFile(file))
             } else if (file.name.endsWith(JAR_EXT) || file.name.endsWith(ZIP_EXT)) {
-                LOGGER.info("Using $file as a dependency rules source")
                 ZipFile zip = new ZipFile(file)
                 try {
                     Enumeration<? extends ZipEntry> entries = zip.entries()
@@ -128,18 +126,20 @@ class ResolutionRulesPlugin implements Plugin<Project> {
         return false
     }
 
-    private static String ruleSet(String filename) {
+    static String ruleSet(String filename) {
         return filename.substring(0, filename.lastIndexOf(JSON_EXT))
     }
 
     static Rules parseJsonFile(File file) {
         def ruleSet = ruleSet(file.name)
+        LOGGER.info("Using $ruleSet (${file.name}) a dependency rules source")
         rulesFromJson(ruleSet, new JsonSlurper().parse(file) as Map)
     }
 
     static Rules parseJsonStream(ZipFile zip, ZipEntry entry) {
         def stream = zip.getInputStream(entry)
         def ruleSet = ruleSet(new File(entry.name).name)
+        LOGGER.info("Using $ruleSet (${zip.name}) a dependency rules source")
         rulesFromJson(ruleSet, new JsonSlurper().parse(stream) as Map)
     }
 
