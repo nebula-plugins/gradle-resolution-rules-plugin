@@ -23,7 +23,7 @@ import org.codehaus.groovy.runtime.StackTraceUtils
 /**
  * Functional test for {@link ResolutionRulesPlugin}.
  */
-class PluginFunctionalTest extends IntegrationSpec {
+class ResolutionRulesPluginSpec extends IntegrationSpec {
     File rulesJsonFile
     File optionalRulesJsonFile
 

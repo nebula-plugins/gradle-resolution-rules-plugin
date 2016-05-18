@@ -30,6 +30,8 @@ import org.gradle.api.specs.Specs
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 
+import java.util.regex.Pattern
+
 public class Rules {
     List<ReplaceRule> replace
     List<SubstituteRule> substitute
@@ -181,12 +183,14 @@ class AlignRule extends BaseRule {
     String group
     Collection<String> includes
     Collection<String> excludes
+    String match
 
     AlignRule(String ruleSet, Map map) {
         super(ruleSet, map)
         group = map.group
         includes = map.includes ?: []
         excludes = map.excludes ?: []
+        match = map.match
     }
 
     boolean resolvedMatches(ResolvedModuleVersion dep) {
@@ -207,15 +211,18 @@ class AlignRule extends BaseRule {
 
     @Override
     String toString() {
-        if (includes.isEmpty() && excludes.isEmpty()) {
-            return "[group: $group]"
-        } else if (includes.isEmpty()) {
-            return "[group: $group, excludes: $excludes]"
-        } else if (excludes.isEmpty()) {
-            return "[group: $group, includes: $includes]"
-        } else {
-            return "[group: $group, includes: $includes, excludes: $excludes]"
+        StringBuilder sb = new StringBuilder("[group: $group")
+        if (!includes.isEmpty()) {
+            sb.append ", includes: $includes]"
         }
+        if (!excludes.isEmpty()) {
+            sb.append ", excludes: $excludes"
+        }
+        if (match) {
+            sb.append(", match: $match")
+        }
+        sb.append("]")
+        return sb.toString()
     }
 }
 
@@ -266,7 +273,7 @@ class AlignRules implements ProjectConfigurationRule {
                 if (foundMatch) {
                     def rule = foundMatch.key
                     def version = foundMatch.value
-                    if (version != details.requested.version) {
+                    if (version != matchedVersion(rule, details.requested.version)) {
                         LOGGER.info("Resolution rules ruleset ${rule.ruleSet} rule $rule aligning ${details.requested.group}:${details.requested.name} to $version")
                         details.useVersion version
                     }
@@ -278,14 +285,15 @@ class AlignRules implements ProjectConfigurationRule {
     private
     static String alignedVersion(AlignRule rule, List<ResolvedModuleVersion> moduleVersions, Configuration configuration,
                                  VersionSelectorScheme scheme, Comparator<String> comparator) {
+        def versions = moduleVersions.collect { matchedVersion(rule, it.id.version) }.toUnique()
+        def highestVersion = versions.max { String a, String b -> comparator.compare(a, b) }
+
         List<ModuleVersionSelector> forced = moduleVersions.findResults { moduleVersion ->
             configuration.resolutionStrategy.forcedModules.find {
                 def id = moduleVersion.id
                 it.group == id.group && it.name == id.name
             }
         }
-        def versions = moduleVersions.collect { ResolvedModuleVersion dep -> dep.id.version }.toUnique()
-        def highestVersion = versions.max { String a, String b -> comparator.compare(a, b) }
         if (forced) {
             def forcedVersions = forced.collect { it.version }.toUnique()
             def (dynamicVersions, staticVersions) = forcedVersions.split { version ->
@@ -304,6 +312,36 @@ class AlignRules implements ProjectConfigurationRule {
             }
         }
         return highestVersion
+    }
+
+    private static String matchedVersion(AlignRule rule, String version) {
+        def match = rule.match
+        if (match) {
+            def pattern = VersionMatcher.values().find {
+                it.name() == match
+            } ? VersionMatcher.valueOf(match).pattern() : match
+            def matcher = version =~ pattern
+            if (matcher) {
+                return matcher.group()
+            } else {
+                LOGGER.warn("Resolution rules ruleset ${rule.ruleSet} align rule $rule is unable to honor match. $match does not match $version. Will use $version")
+            }
+        }
+        return version
+    }
+
+    static enum VersionMatcher {
+        EXCLUDE_SUFFIXES("^(\\d+\\.)?(\\d+\\.)?(\\*|\\d+)")
+
+        private final pattern
+
+        private VersionMatcher(String regex) {
+            pattern = Pattern.compile(regex)
+        }
+
+        public Pattern pattern() {
+            return pattern
+        }
     }
 }
 
