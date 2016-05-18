@@ -21,14 +21,14 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ResolutionStrategy
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import org.gradle.api.logging.Logger
+import org.gradle.api.logging.Logging
 
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 
 class ResolutionRulesPlugin implements Plugin<Project> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ResolutionRulesPlugin)
+    private static final Logger LOGGER = Logging.getLogger(ResolutionRulesPlugin)
     private static final String CONFIGURATION_NAME = "resolutionRules"
     private static final String JSON_EXT = ".json"
     private static final String JAR_EXT = ".jar"

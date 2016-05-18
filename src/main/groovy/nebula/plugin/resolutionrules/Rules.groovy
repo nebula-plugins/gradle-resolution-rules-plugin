@@ -24,11 +24,11 @@ import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.DefaultVersionComparator
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.DefaultVersionSelectorScheme
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.VersionSelectorScheme
+import org.gradle.api.logging.Logger
+import org.gradle.api.logging.Logging
 import org.gradle.api.specs.Specs
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 public class Rules {
     List<ReplaceRule> replace
@@ -212,7 +212,7 @@ class AlignRule extends BaseRule {
 }
 
 class AlignRules implements ProjectConfigurationRule {
-    private static final Logger LOGGER = LoggerFactory.getLogger(AlignRules)
+    private static final Logger LOGGER = Logging.getLogger(AlignRules)
 
     List<AlignRule> aligns
 
@@ -297,7 +297,7 @@ class AlignRules implements ProjectConfigurationRule {
 }
 
 class ExcludeRule extends BaseRule implements ConfigurationRule {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ExcludeRule)
+    private static final Logger LOGGER = Logging.getLogger(ExcludeRule)
 
     ModuleIdentifier moduleId
 
