@@ -83,31 +83,45 @@ class ResolutionJsonValidator {
             return errors
         }
 
+        def validateValidFields = { entry, action, fields ->
+            def errors = []
+            entry.keySet().findAll { !fields.contains(it) }.each {
+                errors << "* ${action}: ${entry} has an known property '${it}'"
+            }
+            return errors
+        }
+
         def replaceErrors = json.replace.collect({
             [
                     validateModuleName(it, 'replace'), validateWith(it, 'replace'),
-                    validateNonEmptyFields(it, 'replace', ['reason', 'author'])
+                    validateNonEmptyFields(it, 'replace', ['reason', 'author']),
+                    validateValidFields(it, 'replace', ['module', 'with', 'reason', 'author', 'date'])
             ]
         })
         def substErrors = json.substitute.collect({
             [
                     validateModuleName(it, 'substitute'), validateWith(it, 'substitute'),
-                    validateNonEmptyFields(it, 'substitute', ['reason', 'author'])
+                    validateNonEmptyFields(it, 'substitute', ['reason', 'author']),
+                    validateValidFields(it, 'substitute', ['module', 'with', 'reason', 'author', 'date'])
             ]
         })
         def denyErrors = json.deny.collect({
             [
-                    validateModuleName(it, 'deny'), validateNonEmptyFields(it, 'deny', ['reason', 'author'])
+                    validateModuleName(it, 'deny'),
+                    validateNonEmptyFields(it, 'deny', ['reason', 'author']),
+                    validateValidFields(it, 'deny', ['module', 'reason', 'author', 'date'])
             ]
         })
         def rejectErrors = json.reject.collect({
             [
-                    validateModuleName(it, 'reject'), validateNonEmptyFields(it, 'reject', ['reason', 'author'])
+                    validateModuleName(it, 'reject'), validateNonEmptyFields(it, 'reject', ['reason', 'author']),
+                    validateValidFields(it, 'reject', ['module', 'reason', 'author', 'date'])
             ]
         })
         def alignErrors = json.align.collect({
             [
-                    validateNonEmptyFields(it, 'align', ['group', 'reason', 'author'])
+                    validateNonEmptyFields(it, 'align', ['group', 'reason', 'author']),
+                    validateValidFields(it, 'align', ['group', 'includes', 'excludes', 'match', 'reason', 'author', 'date'])
             ]
         })
 

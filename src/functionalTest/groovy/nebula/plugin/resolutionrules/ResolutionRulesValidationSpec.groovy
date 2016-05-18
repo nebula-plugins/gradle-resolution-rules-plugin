@@ -6,8 +6,7 @@ import nebula.test.IntegrationSpec
 
 import static org.codehaus.groovy.runtime.StackTraceUtils.extractRootCause
 
-class PluginValidationTest extends IntegrationSpec {
-
+class ResolutionRulesValidationSpec extends IntegrationSpec {
     def rulesJsonFile
     def rulesJson
     def rulesTemplate = """\
@@ -52,7 +51,15 @@ class PluginValidationTest extends IntegrationSpec {
                     "date" : "2015-10-07T20:21:20.368Z"
                 }
             ],
-            "align": []
+            "align": [
+                {
+                    "group": "org.slf4j",
+                    "reason": "Align SLF4J dependencies",
+                    "author" : "Danny Thomas <dmthomas@gmail.com>",
+                    "date" : "2015-10-07T20:21:20.368Z"
+                }
+            ]
+
         }
         """
 
