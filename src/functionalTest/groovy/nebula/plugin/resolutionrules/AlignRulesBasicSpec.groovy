@@ -597,7 +597,7 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
         def result = runTasksSuccessfully('dependencyInsight', '--configuration', 'compile', '--dependency', 'test.nebula')
 
         then:
-        result.standardOutput.contains 'Resolution rules ruleset alignment-does-not-apply-to-dependencies-that-already-have-the-expected-version rule [group: test.nebula] aligning test.nebula:b to 1.0.0'
+        result.standardOutput.contains 'Resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-does-not-apply-to-dependencies-that-already-have-the-expected-version, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z) aligning test.nebula:b to 1.0.0'
         result.standardOutput.contains 'test.nebula:a:1.0.0\n'
         result.standardOutput.contains 'test.nebula:b:0.15.0 -> 1.0.0\n'
     }

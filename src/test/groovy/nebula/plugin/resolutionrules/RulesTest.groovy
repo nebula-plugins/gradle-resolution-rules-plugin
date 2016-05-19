@@ -17,11 +17,10 @@
 
 package nebula.plugin.resolutionrules
 
-import groovy.json.JsonSlurper
 import spock.lang.Specification
 
 /**
- * Tests for {@link Rules}.
+ * Tests for {@link RuleSet}.
  */
 class RulesTest extends Specification {
     def 'json deserialised'() {
@@ -44,7 +43,7 @@ class RulesTest extends Specification {
                       }"""
 
 
-        Rules rules = parseJsonText(json)
+        RuleSet rules = parseJsonText(json)
 
         then:
         !rules.replace.isEmpty()
@@ -66,14 +65,15 @@ class RulesTest extends Specification {
                       }"""
 
 
-        Rules rules = parseJsonText(json)
+        RuleSet rules = parseJsonText(json)
 
         then:
         !rules.replace.isEmpty()
         rules.replace[0].class == ReplaceRule
     }
 
-    static Rules parseJsonText(String json) {
-        return ResolutionRulesPlugin.rulesFromJson("dummy", new JsonSlurper().parseText(json) as Map)
+    static RuleSet parseJsonText(String json) {
+        def ruleSet = JsonKt.objectMapper().readValue(json, RuleSet)
+        return RulesKt.withName(ruleSet, "dummy")
     }
 }
