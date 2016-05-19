@@ -20,6 +20,7 @@ package nebula.plugin.resolutionrules
 import nebula.test.IntegrationSpec
 import org.codehaus.groovy.runtime.StackTraceUtils
 import spock.lang.Issue
+import spock.lang.Unroll
 
 /**
  * Functional test for {@link ResolutionRulesPlugin}.
@@ -375,7 +376,8 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
         rootCause.message == "The dependency to be substituted (org.ow2.asm:asm) must have a version. Invalid rule: SubstituteRule(module=asm:asm, with=org.ow2.asm:asm, ruleSet=missing-version-in-substitution-rule, reason=The asm group id changed for 4.0 and later, author=Danny Thomas <dmthomas@gmail.com>, date=2015-10-07T20:21:20.368Z)"
     }
 
-    def 'deny dependency'() {
+    @Unroll
+    def "deny dependency (inherited: #inherited)"() {
         given:
         buildFile << """
                      dependencies {
@@ -384,15 +386,21 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
                      """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compile')
+        def result = runTasks('dependencies', '--configuration', configuration)
 
         then:
         def rootCause = StackTraceUtils.extractRootCause(result.failure)
         rootCause.class.simpleName == 'DependencyDeniedException'
         rootCause.message == "Dependency com.google.guava:guava:19.0-rc2 denied by dependency rule: Guava 19.0-rc2 is not permitted"
+
+        where:
+        configuration      | inherited
+        'compile'          | false
+        'compileClasspath' | true
     }
 
-    def 'deny dependency without version'() {
+    @Unroll
+    def "deny dependency without version (inherited: #inherited)"() {
         given:
         buildFile << """
                      dependencies {
@@ -401,12 +409,17 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
                      """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compile')
+        def result = runTasks('dependencies', '--configuration', configuration)
 
         then:
         def rootCause = StackTraceUtils.extractRootCause(result.failure)
         rootCause.class.simpleName == 'DependencyDeniedException'
         rootCause.message == "Dependency com.sun.jersey:jersey-bundle denied by dependency rule: jersey-bundle is a fat jar that includes non-relocated (shaded) third party classes, which can cause duplicated classes on the classpath. Please specify the jersey- libraries you need directly"
+
+        where:
+        configuration      | inherited
+        'compile'          | false
+        'compileClasspath' | true
     }
 
     def 'reject dependency'() {
