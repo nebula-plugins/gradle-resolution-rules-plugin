@@ -19,6 +19,7 @@ package nebula.plugin.resolutionrules
 
 import nebula.test.IntegrationSpec
 import org.codehaus.groovy.runtime.StackTraceUtils
+import spock.lang.Issue
 
 /**
  * Functional test for {@link ResolutionRulesPlugin}.
@@ -254,6 +255,17 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
         then:
         result.standardOutput.contains('No dependencies')
     }
+
+    @Issue('#33')
+    def 'excludes apply without configuration warnings'() {
+        when:
+        def result = runTasksSuccessfully('dependencies')
+
+        then:
+        !result.standardOutput.contains("Changed dependencies of configuration ':compileOnly' after it has been included in dependency resolution. This behaviour has been deprecated and is scheduled to be removed in Gradle 3.0. Use 'defaultDependencies' instead of 'befo reResolve' to specify default dependencies for a configuration.")
+        !result.standardOutput.contains("Changed dependencies of parent of configuration ':compileClasspath' after it has been resolved. This behaviour has been deprecated and is scheduled to be removed in Gradle 3.0')")
+    }
+
 
     def 'optional rules are not applied by default'() {
         given:

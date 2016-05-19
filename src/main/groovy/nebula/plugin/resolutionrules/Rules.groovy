@@ -37,40 +37,20 @@ public class Rules {
     List<SubstituteRule> substitute
     List<RejectRule> reject
     List<DenyRule> deny
-    List<AlignRule> align
     List<ExcludeRule> exclude
+    List<AlignRule> align
 
-    public List<ProjectRule> projectRules() {
-        return replace
+    public List<Rule> afterEvaluateRules() {
+        return [replace, substitute, reject, deny, exclude].flatten()
     }
 
-    public List<ConfigurationRule> configurationRules() {
-        return [deny, exclude].flatten()
-    }
-
-    public List<ResolutionRule> resolutionRules() {
-        return [substitute, reject].flatten()
-    }
-
-    public List<ProjectConfigurationRule> projectConfigurationRules() {
+    public List<Rule> beforeResolveRules() {
         return [new AlignRules(aligns: align)]
     }
 }
 
-interface ProjectRule {
-    public void apply(Project project)
-}
-
-interface ResolutionRule {
-    public void apply(ResolutionStrategy rs)
-}
-
-interface ConfigurationRule {
-    public void apply(Configuration configuration)
-}
-
-interface ProjectConfigurationRule {
-    public void apply(Project project, ResolutionStrategy rs, Configuration configuration, NebulaResolutionRulesExtension extension)
+interface Rule {
+    void apply(Project project, Configuration configuration, ResolutionStrategy resolutionStrategy, NebulaResolutionRulesExtension extension)
 }
 
 abstract class BaseRule {
@@ -87,7 +67,7 @@ abstract class BaseRule {
     }
 }
 
-class ReplaceRule extends BaseRule implements ProjectRule {
+class ReplaceRule extends BaseRule implements Rule {
     String module
     String with
 
@@ -97,7 +77,7 @@ class ReplaceRule extends BaseRule implements ProjectRule {
         with = map.with
     }
 
-    public void apply(Project project) {
+    public void apply(Project project, Configuration configuration, ResolutionStrategy resolutionStrategy, NebulaResolutionRulesExtension extension) {
         ModuleIdentifier moduleId = ModuleIdentifier.valueOf(module)
         ModuleIdentifier withModuleId = ModuleIdentifier.valueOf(with)
         project.dependencies.modules.module(moduleId.toString()) {
@@ -107,7 +87,7 @@ class ReplaceRule extends BaseRule implements ProjectRule {
     }
 }
 
-class SubstituteRule extends BaseRule implements ResolutionRule {
+class SubstituteRule extends BaseRule implements Rule {
     String module
     String with
 
@@ -118,7 +98,7 @@ class SubstituteRule extends BaseRule implements ResolutionRule {
     }
 
     @Override
-    public void apply(ResolutionStrategy resolutionStrategy) {
+    public void apply(Project project, Configuration configuration, ResolutionStrategy resolutionStrategy, NebulaResolutionRulesExtension extension) {
         DependencySubstitutions substitution = resolutionStrategy.dependencySubstitution
         ComponentSelector selector = substitution.module(module)
         ModuleVersionIdentifier withModuleId = ModuleVersionIdentifier.valueOf(with)
@@ -137,7 +117,7 @@ class SubstituteRule extends BaseRule implements ResolutionRule {
     }
 }
 
-class RejectRule extends BaseRule implements ResolutionRule {
+class RejectRule extends BaseRule implements Rule {
     String module
 
     RejectRule(String ruleSet, Map map) {
@@ -146,7 +126,7 @@ class RejectRule extends BaseRule implements ResolutionRule {
     }
 
     @Override
-    public void apply(ResolutionStrategy resolutionStrategy) {
+    public void apply(Project project, Configuration configuration, ResolutionStrategy resolutionStrategy, NebulaResolutionRulesExtension extension) {
         ModuleVersionIdentifier moduleId = ModuleVersionIdentifier.valueOf(module)
         resolutionStrategy.componentSelection.all({ selection ->
             ModuleComponentIdentifier candidate = selection.candidate
@@ -159,7 +139,7 @@ class RejectRule extends BaseRule implements ResolutionRule {
     }
 }
 
-class DenyRule extends BaseRule implements ConfigurationRule {
+class DenyRule extends BaseRule implements Rule {
     String module
 
     DenyRule(String ruleSet, Map map) {
@@ -168,7 +148,7 @@ class DenyRule extends BaseRule implements ConfigurationRule {
     }
 
     @Override
-    public void apply(Configuration configuration) {
+    public void apply(Project project, Configuration configuration, ResolutionStrategy resolutionStrategy, NebulaResolutionRulesExtension extension) {
         ModuleVersionIdentifier moduleId = ModuleVersionIdentifier.valueOf(module)
         Dependency match = configuration.dependencies.find {
             it instanceof ExternalModuleDependency && it.group == moduleId.organization && it.name == moduleId.name
@@ -226,13 +206,13 @@ class AlignRule extends BaseRule {
     }
 }
 
-class AlignRules implements ProjectConfigurationRule {
+class AlignRules implements Rule {
     private static final Logger LOGGER = Logging.getLogger(AlignRules)
 
     List<AlignRule> aligns
 
     @Override
-    void apply(Project project, ResolutionStrategy resolutionStrategy, Configuration configuration, NebulaResolutionRulesExtension extension) {
+    public void apply(Project project, Configuration configuration, ResolutionStrategy resolutionStrategy, NebulaResolutionRulesExtension extension) {
         if (aligns.size() == 0) { // don't do extra resolves if there are no align rules
             return
         }
@@ -345,7 +325,7 @@ class AlignRules implements ProjectConfigurationRule {
     }
 }
 
-class ExcludeRule extends BaseRule implements ConfigurationRule {
+class ExcludeRule extends BaseRule implements Rule {
     private static final Logger LOGGER = Logging.getLogger(ExcludeRule)
 
     ModuleIdentifier moduleId
@@ -356,7 +336,7 @@ class ExcludeRule extends BaseRule implements ConfigurationRule {
     }
 
     @Override
-    public void apply(Configuration configuration) {
+    public void apply(Project project, Configuration configuration, ResolutionStrategy resolutionStrategy, NebulaResolutionRulesExtension extension) {
         LOGGER.info("Resolution rule ruleset $ruleSet excluding ${moduleId.organization}:${moduleId.name}")
         configuration.exclude(group: moduleId.organization, module: moduleId.name)
     }

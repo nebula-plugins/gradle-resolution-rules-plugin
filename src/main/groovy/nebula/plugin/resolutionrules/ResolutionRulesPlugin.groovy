@@ -20,7 +20,6 @@ import groovy.json.JsonSlurper
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
-import org.gradle.api.artifacts.ResolutionStrategy
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 
@@ -29,52 +28,49 @@ import java.util.zip.ZipFile
 
 class ResolutionRulesPlugin implements Plugin<Project> {
     private static final Logger LOGGER = Logging.getLogger(ResolutionRulesPlugin)
-    private static final String CONFIGURATION_NAME = "resolutionRules"
-    private static final String JSON_EXT = ".json"
-    private static final String JAR_EXT = ".jar"
-    private static final String ZIP_EXT = ".zip"
-    private static final String OPTIONAL_PREFIX = "optional-"
+    private static final String RESOLUTION_RULES_CONFIG_NAME = 'resolutionRules'
+    private static final String SPRING_VERSION_MANAGEMENT_CONFIG_NAME = 'versionManagement'
+    private static final String JSON_EXT = '.json'
+    private static final String JAR_EXT = '.jar'
+    private static final String ZIP_EXT = '.zip'
+    private static final String OPTIONAL_PREFIX = 'optional-'
 
     private Project project
-    private Rules rules
     private Configuration configuration
     private NebulaResolutionRulesExtension extension
+    private Rules rules
 
     public void apply(Project project) {
         this.project = project
-        configuration = project.configurations.create(CONFIGURATION_NAME)
+        configuration = project.configurations.create(RESOLUTION_RULES_CONFIG_NAME)
         extension = project.extensions.create('nebulaResolutionRules', NebulaResolutionRulesExtension)
 
-        project.configurations.all ( { Configuration config ->
-            if (config.name == CONFIGURATION_NAME || config.name == 'versionManagement') {
+        project.configurations.all({ Configuration config ->
+            if (config.name == RESOLUTION_RULES_CONFIG_NAME || config.name == SPRING_VERSION_MANAGEMENT_CONFIG_NAME) {
                 return
             }
-            if (config.state != Configuration.State.UNRESOLVED) {
-                LOGGER.warn("Configuration '{}' has been resolved. Dependency resolution rules will not be applied", config.name)
-                return
+
+            project.afterEvaluate {
+                if (config.state != Configuration.State.UNRESOLVED) {
+                    LOGGER.warn("Configuration '{}' has been resolved. Dependency resolution rules will not be applied", config.name)
+                    return
+                }
+                getRules().afterEvaluateRules().each { Rule rule ->
+                    rule.apply(project, config, config.resolutionStrategy, extension)
+                }
             }
 
             config.incoming.beforeResolve {
-                config.resolutionStrategy { ResolutionStrategy rs ->
-                    def resolutionRules = getRules()
-                    resolutionRules.configurationRules().each { ConfigurationRule rule ->
-                        rule.apply(config)
-                    }
-                    resolutionRules.resolutionRules().each { ResolutionRule rule ->
-                        rule.apply(rs)
-                    }
-                    resolutionRules.projectConfigurationRules().each { ProjectConfigurationRule rule ->
-                        rule.apply(project, rs, config, extension)
-                    }
+                getRules().beforeResolveRules().each { Rule rule ->
+                    rule.apply(project, config, config.resolutionStrategy, extension)
                 }
             }
-        } )
+        })
     }
 
     Rules getRules() {
         if (rules == null) {
             rules = rulesFromConfiguration(configuration, extension)
-            rules.projectRules().each { ProjectRule rule -> rule.apply(project) }
         }
 
         return rules
@@ -131,14 +127,14 @@ class ResolutionRulesPlugin implements Plugin<Project> {
     }
 
     static Rules parseJsonFile(File file) {
-        def ruleSet = ruleSet(file.name)
+        String ruleSet = ruleSet(file.name)
         LOGGER.info("Using $ruleSet (${file.name}) a dependency rules source")
         rulesFromJson(ruleSet, new JsonSlurper().parse(file) as Map)
     }
 
     static Rules parseJsonStream(ZipFile zip, ZipEntry entry) {
-        def stream = zip.getInputStream(entry)
-        def ruleSet = ruleSet(new File(entry.name).name)
+        InputStream stream = zip.getInputStream(entry)
+        String ruleSet = ruleSet(new File(entry.name).name)
         LOGGER.info("Using $ruleSet (${zip.name}) a dependency rules source")
         rulesFromJson(ruleSet, new JsonSlurper().parse(stream) as Map)
     }
