@@ -117,7 +117,7 @@ data class RejectRule(override val module: String, override var ruleSet: String?
 data class DenyRule(override val module: String, override var ruleSet: String?, override val reason: String, override val author: String, override val date: String) : ModuleRule {
     override fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension) {
         val moduleId = ModuleVersionIdentifier.valueOf(module)
-        val match = configuration.dependencies.find {
+        val match = configuration.allDependencies.find {
             it is ExternalModuleDependency && it.group == moduleId.organization && it.name == moduleId.name
         }
         if (match != null && (!moduleId.hasVersion() || match.version == moduleId.version)) {
