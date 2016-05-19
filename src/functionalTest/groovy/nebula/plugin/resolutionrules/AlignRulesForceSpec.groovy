@@ -50,7 +50,7 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
         def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
 
         then:
-        result.standardOutput.contains 'Found force(s) [test.nebula:a:0.15.0] that supersede resolution ruleset alignment-uses-forced-version-rather-than-highest-version-when-a-force-is-present align rule [group: test.nebula]. Will use 0.15.0 instead of 1.0.0'
+        result.standardOutput.contains 'Found force(s) [test.nebula:a:0.15.0] that supersede resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-uses-forced-version-rather-than-highest-version-when-a-force-is-present, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z). Will use 0.15.0 instead of 1.0.0'
         result.standardOutput.contains '+--- test.nebula:a:1.0.0 -> 0.15.0\n'
         result.standardOutput.contains '+--- test.nebula:b:1.0.0 -> 0.15.0\n'
         result.standardOutput.contains '+--- test.nebula:c:0.15.0\n'
@@ -160,7 +160,7 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
         def standardOutput = runTasksSuccessfully('dependencies', '--configuration', 'compile').standardOutput
 
         then:
-        standardOutput.contains('Resolution rules ruleset alignment-outputs-warnings-and-honors-static-force-when-dynamic-forces-are-present align rule [group: test.nebula] is unable to honor forced versions [latest.release, 1.+]. For a force to take precedence on an align rule, it must use a static version')
+        standardOutput.contains('Resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-outputs-warnings-and-honors-static-force-when-dynamic-forces-are-present, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z) is unable to honor forced versions [latest.release, 1.+]. For a force to take precedence on an align rule, it must use a static version')
         standardOutput.contains '+--- test.nebula:a:2.0.0 -> 0.15.0\n'
         standardOutput.contains '+--- test.nebula:b:2.0.0 -> 0.15.0\n'
         standardOutput.contains '\\--- test.nebula:c:1.0.0 -> 0.15.0\n'
@@ -215,8 +215,8 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
         def standardOutput = runTasksSuccessfully('dependencies', '--configuration', 'compile').standardOutput
 
         then:
-        standardOutput.contains('Resolution rules ruleset alignment-outputs-warnings-and-falls-back-to-default-logic-when-only-dynamic-forces-are-present align rule [group: test.nebula] is unable to honor forced versions [latest.release, 1.+, 2.+]. For a force to take precedence on an align rule, it must use a static version')
-        standardOutput.contains('No static forces found for ruleset alignment-outputs-warnings-and-falls-back-to-default-logic-when-only-dynamic-forces-are-present align rule [group: test.nebula]. Falling back to default alignment logic')
+        standardOutput.contains 'Resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-outputs-warnings-and-falls-back-to-default-logic-when-only-dynamic-forces-are-present, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z) is unable to honor forced versions [latest.release, 1.+, 2.+]. For a force to take precedence on an align rule, it must use a static version'
+        standardOutput.contains 'No static forces found for rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-outputs-warnings-and-falls-back-to-default-logic-when-only-dynamic-forces-are-present, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z). Falling back to default alignment logic'
         standardOutput.contains '+--- test.nebula:a:2.0.0\n'
         standardOutput.contains '+--- test.nebula:b:1.0.0 -> 2.0.0\n'
         standardOutput.contains '\\--- test.nebula:c:0.15.0 -> 2.0.0\n'

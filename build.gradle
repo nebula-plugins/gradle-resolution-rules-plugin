@@ -20,19 +20,24 @@ buildscript {
     ext {
         versions = [:]
         libraries = [:]
+        versions.kotlin = '1.0.2'
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${versions.kotlin}"
     }
 }
 
-
 plugins {
     id 'com.gradle.plugin-publish' version '0.9.4'
-    id 'nebula.plugin-plugin' version '4.4.0'
+    id 'nebula.plugin-plugin' version '4.8.0'
 }
 
+apply plugin: 'kotlin'
+
 dependencies {
-    compile gradleApi()
-    compile localGroovy()
-    compile 'joda-time:joda-time:2.8.2'
+    compile "org.jetbrains.kotlin:kotlin-stdlib:${versions.kotlin}"
+    compile "org.jetbrains.kotlin:kotlin-reflect:${versions.kotlin}"
+    compile 'com.fasterxml.jackson.module:jackson-module-kotlin:2.7.4'
 }
 
 facets {
