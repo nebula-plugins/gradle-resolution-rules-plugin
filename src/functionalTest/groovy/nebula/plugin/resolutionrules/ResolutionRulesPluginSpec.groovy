@@ -377,7 +377,7 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
     }
 
     @Unroll
-    def "deny dependency (inherited: #inherited)"() {
+    def "deny dependency (from super: #inherited)"() {
         given:
         buildFile << """
                      dependencies {
@@ -400,7 +400,7 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
     }
 
     @Unroll
-    def "deny dependency without version (inherited: #inherited)"() {
+    def "deny dependency without version (from super: #inherited)"() {
         given:
         buildFile << """
                      dependencies {
