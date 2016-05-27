@@ -76,7 +76,7 @@ class ResolutionRulesPlugin : Plugin<Project> {
     }
 
     fun rulesFromConfiguration(configuration: Configuration, extension: NebulaResolutionRulesExtension): RuleSet {
-        val rules = ArrayList<RuleSet>();
+        val rules = ArrayList<RuleSet>()
         val files = configuration.resolve()
         if (files.isEmpty()) {
             logger.warn("No resolution rules have been added to the '{}' configuration", configuration.name)
