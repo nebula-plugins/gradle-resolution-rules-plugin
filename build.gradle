@@ -15,28 +15,17 @@
  *
  */
 
-buildscript {
-    repositories { jcenter() }
-    ext {
-        versions = [:]
-        libraries = [:]
-        versions.kotlin = '1.0.2'
-    }
-    dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${versions.kotlin}"
-    }
-}
-
 plugins {
     id 'com.gradle.plugin-publish' version '0.9.4'
     id 'nebula.plugin-plugin' version '4.15.0'
+    id 'nebula.kotlin' version '1.0.0'
 }
 
 apply plugin: 'kotlin'
 
 dependencies {
-    compile "org.jetbrains.kotlin:kotlin-stdlib:${versions.kotlin}"
-    compile "org.jetbrains.kotlin:kotlin-reflect:${versions.kotlin}"
+    compile "org.jetbrains.kotlin:kotlin-stdlib"
+    compile "org.jetbrains.kotlin:kotlin-reflect"
     compile 'com.fasterxml.jackson.module:jackson-module-kotlin:2.7.4'
 }
 
