@@ -18,14 +18,13 @@
 plugins {
     id 'com.gradle.plugin-publish' version '0.9.4'
     id 'nebula.plugin-plugin' version '4.15.0'
-    id 'nebula.kotlin' version '1.0.0'
+    id 'nebula.kotlin' version '1.0.2'
 }
 
 apply plugin: 'kotlin'
 
 dependencies {
-    compile "org.jetbrains.kotlin:kotlin-stdlib"
-    compile "org.jetbrains.kotlin:kotlin-reflect"
+    compile 'org.jetbrains.kotlin:kotlin-reflect'
     compile 'com.fasterxml.jackson.module:jackson-module-kotlin:2.7.4'
 }
 
