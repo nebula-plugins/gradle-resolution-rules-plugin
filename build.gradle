@@ -24,7 +24,7 @@ plugins {
 apply plugin: 'kotlin'
 
 dependencies {
-    compile 'org.jetbrains.kotlin:kotlin-reflect'
+    compile 'org.jetbrains.kotlin:kotlin-reflect:1.0.2'
     compile 'com.fasterxml.jackson.module:jackson-module-kotlin:2.7.4'
 }
 
