@@ -16,7 +16,6 @@
  */
 package nebula.plugin.resolutionrules
 
-import com.fasterxml.jackson.databind.JsonDeserializer
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.artifacts.*
@@ -59,7 +58,7 @@ data class RuleSet(
     fun beforeResolveRules() = listOf(AlignRules(align))
 }
 
-fun RuleSet.withName(ruleSetName: String) : RuleSet {
+fun RuleSet.withName(ruleSetName: String): RuleSet {
     name = ruleSetName
     listOf(replace, substitute, reject, deny, exclude, align).flatten().forEach { it.ruleSet = ruleSetName }
     return this
@@ -126,7 +125,11 @@ data class DenyRule(override val module: String, override var ruleSet: String?, 
     }
 }
 
-data class AlignRule(val name: String?, val group: String, val includes: List<String>, val excludes: List<String>, val match: String?, override var ruleSet: String?, override val reason: String, override val author: String, override val date: String) : BasicRule {
+data class AlignRule(val name: String?, val group: Regex, val includes: List<Regex>, val excludes: List<Regex>, val match: String?, override var ruleSet: String?, override val reason: String, override val author: String, override val date: String) : BasicRule {
+    val matchPattern by lazy {
+        if (VersionMatcher.values().filter { it.name == match }.isNotEmpty()) VersionMatcher.valueOf(match!!).pattern else Pattern.compile(match)
+    }
+
     override fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension) {
         throw UnsupportedOperationException("Align rules are not applied directly")
     }
@@ -136,9 +139,9 @@ data class AlignRule(val name: String?, val group: String, val includes: List<St
     fun dependencyMatches(details: DependencyResolveDetails) = ruleMatches(details.requested.group, details.requested.name)
 
     fun ruleMatches(inputGroup: String, inputName: String): Boolean {
-        val matchedIncludes = includes.filter { inputName.matches(it.toRegex()) }
-        val matchedExcludes = excludes.filter { inputName.matches(it.toRegex()) }
-        return inputGroup.matches(group.toRegex()) &&
+        val matchedIncludes = includes.filter { inputName.matches(it) }
+        val matchedExcludes = excludes.filter { inputName.matches(it) }
+        return inputGroup.matches(group) &&
                 (includes.isEmpty() || !matchedIncludes.isEmpty()) &&
                 (excludes.isEmpty() || matchedExcludes.isEmpty())
     }
@@ -226,7 +229,7 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
     fun matchedVersion(rule: AlignRule, version: String): String {
         val match = rule.match
         if (match != null) {
-            val pattern = if (VersionMatcher.values().filter { it.name == match }.isNotEmpty()) VersionMatcher.valueOf(match).pattern else Pattern.compile(match)
+            val pattern = rule.matchPattern
             val matcher = pattern.matcher(version)
             if (matcher.find()) {
                 return matcher.group()
@@ -236,12 +239,12 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
         }
         return version
     }
+}
 
-    enum class VersionMatcher(val regex: String) {
-        EXCLUDE_SUFFIXES("^(\\d+\\.)?(\\d+\\.)?(\\*|\\d+)");
+enum class VersionMatcher(regex: String) {
+    EXCLUDE_SUFFIXES("^(\\d+\\.)?(\\d+\\.)?(\\*|\\d+)");
 
-        val pattern = regex.toRegex().toPattern()
-    }
+    val pattern = regex.toRegex().toPattern()
 }
 
 data class ExcludeRule(override val module: String, override var ruleSet: String?, override val reason: String, override val author: String, override val date: String) : ModuleRule {
