@@ -63,7 +63,7 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
                 .addModule('test.nebula:a:1.0.0')
                 .addModule('test.nebula:a:0.15.0')
                 .addModule('test.nebula:b:2.0.0')
-                .addModule('test.nebula:b:1.00.0')
+                .addModule('test.nebula:b:1.0.0')
                 .addModule('test.nebula:b:0.15.0')
                 .addModule('test.nebula:c:2.0.0')
                 .addModule('test.nebula:c:1.0.0')

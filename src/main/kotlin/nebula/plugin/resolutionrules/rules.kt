@@ -158,20 +158,11 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
         val copy = configuration.copyRecursive()
         // Hacky workaround to prevent Gradle from attempting to resolve a project dependency as an external dependency
         copy.exclude(project.group.toString(), project.name)
-        val resolvedConfiguration = copy.resolvedConfiguration
-        val artifacts = if (resolvedConfiguration.hasError()) {
-            val lenientConfiguration = resolvedConfiguration.lenientConfiguration
-            logger.info("Resolution rules could not resolve all dependencies to align in configuration '${configuration.name}' should also fail to resolve")
-            lenientConfiguration.getArtifacts(Specs.SATISFIES_ALL)
-        } else {
-            resolvedConfiguration.resolvedArtifacts
-        }
-
+        val artifacts = copy.resolvedConfiguration.resolvedArtifacts
         val moduleVersions = artifacts.filter {
             // Exclude project artifacts from alignment
             it.id.componentIdentifier !is ProjectComponentIdentifier
         }.map { it.moduleVersion }
-
 
         val comparator = DefaultVersionComparator()
         val scheme = DefaultVersionSelectorScheme(comparator)

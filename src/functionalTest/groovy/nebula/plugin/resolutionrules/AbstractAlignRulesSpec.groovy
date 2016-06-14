@@ -2,7 +2,7 @@ package nebula.plugin.resolutionrules
 
 import nebula.test.IntegrationSpec
 
-class AbstractAlignRulesSpec extends IntegrationSpec {
+abstract class AbstractAlignRulesSpec extends IntegrationSpec {
     def rulesJsonFile
 
     def setup() {

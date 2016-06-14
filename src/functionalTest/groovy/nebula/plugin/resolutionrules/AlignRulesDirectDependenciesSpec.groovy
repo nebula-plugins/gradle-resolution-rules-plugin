@@ -2,6 +2,8 @@ package nebula.plugin.resolutionrules
 
 import nebula.test.dependencies.DependencyGraphBuilder
 import nebula.test.dependencies.GradleDependencyGenerator
+import org.gradle.internal.impldep.com.amazonaws.util.Throwables
+import org.gradle.internal.resolve.ModuleVersionNotFoundException
 
 class AlignRulesDirectDependenciesSpec extends AbstractAlignRulesSpec {
     def 'can align direct dependencies if necessary'() {
@@ -165,7 +167,7 @@ class AlignRulesDirectDependenciesSpec extends AbstractAlignRulesSpec {
         result.standardOutput.contains '\\--- test.nebula:a:[1.0.0, 2.0.0) -> 1.0.1\n'
     }
 
-    def 'unresolvable dependencies cause warnings to be output'() {
+    def 'unresolvable dependencies cause failure'() {
         rulesJsonFile << '''\
             {
                 "deny": [], "reject": [], "substitute": [], "replace": [],
@@ -190,9 +192,10 @@ class AlignRulesDirectDependenciesSpec extends AbstractAlignRulesSpec {
         """
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+        def result = runTasks('dependencies', '--configuration', 'compile')
 
         then:
-        result.standardOutput.contains("Resolution rules could not resolve all dependencies to align in configuration 'compile' should also fail to resolve")
+        def cause = Throwables.getRootCause(result.failure)
+        cause.message.startsWith("Could not find com.google.guava:guava:oops")
     }
 }
