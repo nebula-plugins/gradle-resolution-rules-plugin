@@ -20,12 +20,9 @@ import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.artifacts.*
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
-import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.DefaultVersionComparator
-import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.DefaultVersionSelectorScheme
-import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.VersionSelectorScheme
+import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.*
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
-import org.gradle.api.specs.Specs
 import java.util.*
 import java.util.regex.Pattern
 
@@ -204,23 +201,38 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
                 it.group == id.group && it.name == id.name
             }
         }
+
         if (forced.isNotEmpty()) {
-            val forcedVersions = forced.map { it.version }.distinct()
-            val (dynamicVersions, staticVersions) = forcedVersions.partition { version ->
-                val selector = scheme.parseSelector(version)!!
-                selector.isDynamic
-            }
-            if (!dynamicVersions.isEmpty()) {
-                logger.warn("Resolution rule $rule is unable to honor forced versions $dynamicVersions. For a force to take precedence on an align rule, it must use a static version")
-            }
-            if (!staticVersions.isEmpty()) {
+            val versionsBySelector = forced
+                    .map { it.version }
+                    .distinct()
+                    .associateBy { scheme.parseSelector(it)!! }
+            val static = versionsBySelector.filter { !it.key.isDynamic }
+            val dynamic = versionsBySelector.filter { it.key.isDynamic }
+            if (static.isNotEmpty()) {
+                val staticVersions = static.values
                 val forcedVersion = staticVersions.minWith(comparator)!!
-                logger.info("Found force(s) $forced that supersede resolution rule $rule. Will use $forcedVersion instead of $highestVersion")
+                logger.info("Found force(s) $forced that supersede resolution rule $rule. Will use lowest static version $forcedVersion instead of $highestVersion (ignoring dynamic versions)")
                 return forcedVersion
             } else {
-                logger.warn("No static forces found for rule $rule. Falling back to default alignment logic")
+                val selector = dynamic.keys.sortedBy {
+                    when (it.javaClass.kotlin) {
+                        LatestVersionSelector::class -> 2
+                        SubVersionSelector::class -> 1
+                        VersionRangeSelector::class -> 0
+                        else -> throw IllegalArgumentException("Unknown selector type $it")
+                    }
+                }.first()
+                val forcedVersion = if (selector is LatestVersionSelector) {
+                    highestVersion
+                } else {
+                    versions.filter { selector.accept(it) }.maxWith(comparator)!!
+                }
+                logger.info("Found force(s) $forced that supersede resolution rule $rule. Will use highest dynamic version $forcedVersion that matches most selective selector ${dynamic[selector]}")
+                return forcedVersion
             }
         }
+
         return highestVersion
     }
 
