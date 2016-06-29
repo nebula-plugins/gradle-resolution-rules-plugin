@@ -601,4 +601,42 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
         result.standardOutput.contains 'test.nebula:a:1.0.0\n'
         result.standardOutput.contains 'test.nebula:b:0.15.0 -> 1.0.0\n'
     }
+
+    def 'resolution strategies applied in beforeResolve apply'() {
+        rulesJsonFile << '''\
+            {
+                "deny": [], "reject": [], "substitute": [], "replace": [],
+                "align": [
+                    {
+                        "name": "testNebula",
+                        "group": "com.google.guava",
+                        "reason": "Align guava",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    }
+                ]
+            }
+        '''.stripIndent()
+
+        buildFile << """\
+            configurations.all {
+                incoming.beforeResolve {
+                    resolutionStrategy.eachDependency {
+                        it.useVersion '19.0'
+                    }
+                }
+            }
+
+            repositories { jcenter() }
+            dependencies {
+                compile 'com.google.guava:guava'
+            }
+        """
+
+        when:
+        runTasksSuccessfully('dependencies', '--configuration', 'compile')
+
+        then:
+        noExceptionThrown()
+    }
 }

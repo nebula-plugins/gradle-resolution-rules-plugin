@@ -156,8 +156,13 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
         }
 
         val copy = configuration.copyRecursive()
+
+        // Add the configuration to the configurations container to get add actions (configurations.all for instance)
+        project.configurations.add(copy)
+
         // Hacky workaround to prevent Gradle from attempting to resolve a project dependency as an external dependency
         copy.exclude(project.group.toString(), project.name)
+
         val artifacts = copy.resolvedConfiguration.resolvedArtifacts
         val moduleVersions = artifacts.filter {
             // Exclude project artifacts from alignment
@@ -184,6 +189,8 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
                 }
             }
         }
+
+        project.configurations.remove(copy)
     }
 
     fun alignedVersion(rule: AlignRule, moduleVersions: List<ResolvedModuleVersion>, configuration: Configuration,
