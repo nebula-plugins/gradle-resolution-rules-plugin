@@ -20,7 +20,9 @@ import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.artifacts.*
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
+import org.gradle.api.internal.artifacts.configurations.DefaultConfigurationContainer
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.*
+import org.gradle.api.internal.collections.CollectionEventRegister
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import java.util.*
@@ -152,13 +154,7 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
             return
         }
 
-        val copy = configuration.copyRecursive()
-
-        // Add the configuration to the configurations container to get add actions (configurations.all for instance)
-        project.configurations.add(copy)
-
-        // Hacky workaround to prevent Gradle from attempting to resolve a project dependency as an external dependency
-        copy.exclude(project.group.toString(), project.name)
+        val copy = project.copyConfiguration(configuration)
 
         val artifacts = copy.resolvedConfiguration.resolvedArtifacts
         val moduleVersions = artifacts.filter {
@@ -186,8 +182,22 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
                 }
             }
         }
+    }
 
-        project.configurations.remove(copy)
+    private fun Project.copyConfiguration(configuration: Configuration): Configuration {
+        val copy = configuration.copyRecursive()
+
+        // Apply container register actions, without risking concurrently modifying the configuration container
+        val container = configurations
+        val method = container.javaClass.getDeclaredMethod("getEventRegister")
+        @Suppress("UNCHECKED_CAST")
+        val eventRegister = method.invoke(container) as CollectionEventRegister<Configuration>
+        eventRegister.addAction.execute(copy)
+
+        // Hacky workaround to prevent Gradle from attempting to resolve a project dependency as an external dependency
+        copy.exclude(group.toString(), name)
+
+        return copy
     }
 
     fun alignedVersion(rule: AlignRule, moduleVersions: List<ResolvedModuleVersion>, configuration: Configuration,

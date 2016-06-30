@@ -639,4 +639,35 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
         then:
         noExceptionThrown()
     }
+
+    def 'can iterate and resolve configurations'() {
+        rulesJsonFile << '''\
+            {
+                "deny": [], "reject": [], "substitute": [], "replace": [],
+                "align": [
+                    {
+                        "name": "testNebula",
+                        "group": "com.google.guava",
+                        "reason": "Align guava",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    }
+                ]
+            }
+        '''.stripIndent()
+
+        buildFile << """\
+            repositories { jcenter() }
+
+            for (Configuration conf : configurations) {
+                conf.resolvedConfiguration.resolvedArtifacts
+            }
+        """
+
+        when:
+        runTasksSuccessfully('dependencies', '--configuration', 'compile')
+
+        then:
+        noExceptionThrown()
+    }
 }
