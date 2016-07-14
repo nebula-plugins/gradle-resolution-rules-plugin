@@ -176,7 +176,7 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
             val foundMatch = selectedVersion.filter { it.key.dependencyMatches(details) }
             if (foundMatch.isNotEmpty()) {
                 val (rule, version) = foundMatch.entries.first()
-                if (version != matchedVersion(rule, details.requested.version)) {
+                if (version != matchedVersion(rule, scheme, details.requested.version)) {
                     logger.info("Resolution rule $rule aligning ${details.requested.group}:${details.requested.name} to $version")
                     details.useVersion(version)
                 }
@@ -246,14 +246,14 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
         return highestVersion
     }
 
-    fun matchedVersion(rule: AlignRule, version: String): String {
+    fun matchedVersion(rule: AlignRule, scheme: VersionSelectorScheme, version: String): String {
         val match = rule.match
         if (match != null) {
             val pattern = rule.matchPattern
             val matcher = pattern.matcher(version)
             if (matcher.find()) {
                 return matcher.group()
-            } else {
+            } else if (!scheme.parseSelector(version).isDynamic) {
                 logger.warn("Resolution rule $rule is unable to honor match. $match does not match $version. Will use $version")
             }
         }
