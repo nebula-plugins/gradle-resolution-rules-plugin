@@ -202,7 +202,7 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
 
     fun alignedVersion(rule: AlignRule, moduleVersions: List<ResolvedModuleVersion>, configuration: Configuration,
                        scheme: VersionSelectorScheme, comparator: Comparator<String>): String {
-        val versions = moduleVersions.map { matchedVersion(rule, it.id.version) }.distinct()
+        val versions = moduleVersions.map { matchedVersion(rule, scheme, it.id.version) }.distinct()
         val highestVersion = versions.maxWith(comparator)!!
 
         val forced = moduleVersions.flatMap { moduleVersion ->
