@@ -227,20 +227,6 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
         !result.standardOutput.contains('asm:asm:3.3.1 -> org.ow2.asm:asm:5.0.4')
     }
 
-    def 'substitute dependency'() {
-        given:
-        buildFile << """
-                     dependencies {
-                        compile 'bouncycastle:bcprov-jdk15:140'
-                     }
-                     """.stripIndent()
-
-        when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
-
-        then:
-        result.standardOutput.contains('bouncycastle:bcprov-jdk15:140 -> org.bouncycastle:bcprov-jdk15:latest.release')
-    }
 
     def 'exclude dependency'() {
         given:
@@ -349,31 +335,6 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
         then:
         result.standardOutput.contains('log4j:log4j:1.2.17 -> org.slf4j:log4j-over-slf4j:1.7.21')
         !result.standardOutput.contains('asm:asm:3.3.1 -> org.ow2.asm:asm:5.0.4')
-    }
-
-    def 'missing version in substitution rule'() {
-        given:
-        rulesJsonFile.delete()
-        rulesJsonFile << """
-                         {
-                             "substitute": [
-                                 {
-                                     "module" : "asm:asm",
-                                     "with" : "org.ow2.asm:asm",
-                                     "reason" : "The asm group id changed for 4.0 and later",
-                                     "author" : "Danny Thomas <dmthomas@gmail.com>",
-                                     "date" : "2015-10-07T20:21:20.368Z"
-                                 }
-                             ]
-                         }
-                         """.stripIndent()
-        when:
-        def result = runTasks('dependencies', '--configuration', 'compile')
-
-        then:
-        def rootCause = StackTraceUtils.extractRootCause(result.failure)
-        rootCause.class.simpleName == 'SubstituteRuleMissingVersionException'
-        rootCause.message == "The dependency to be substituted (org.ow2.asm:asm) must have a version. Invalid rule: SubstituteRule(module=asm:asm, with=org.ow2.asm:asm, ruleSet=missing-version-in-substitution-rule, reason=The asm group id changed for 4.0 and later, author=Danny Thomas <dmthomas@gmail.com>, date=2015-10-07T20:21:20.368Z)"
     }
 
     @Unroll

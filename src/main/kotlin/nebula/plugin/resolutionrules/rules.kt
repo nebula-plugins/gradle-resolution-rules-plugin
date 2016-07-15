@@ -19,14 +19,17 @@ package nebula.plugin.resolutionrules
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.artifacts.*
+import org.gradle.api.artifacts.component.ModuleComponentSelector
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
-import org.gradle.api.internal.artifacts.configurations.DefaultConfigurationContainer
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.*
 import org.gradle.api.internal.collections.CollectionEventRegister
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import java.util.*
 import java.util.regex.Pattern
+
+val versionComparator = DefaultVersionComparator()
+val versionScheme = DefaultVersionSelectorScheme(versionComparator)
 
 interface Rule {
     fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension)
@@ -91,9 +94,23 @@ data class SubstituteRule(val module: String, val with: String, override var rul
         if (!withModuleId.hasVersion()) {
             throw SubstituteRuleMissingVersionException(withModuleId, this)
         }
-        val withSelector = substitution.module(withModuleId.toString())
-        resolutionStrategy.dependencySubstitution {
-            it.substitute(selector).with(withSelector)
+        val withSelector = substitution.module(withModuleId.toString()) as ModuleComponentSelector
+
+        if (selector is ModuleComponentSelector) {
+            resolutionStrategy.dependencySubstitution.all(action {
+                if (requested is ModuleComponentSelector) {
+                    val requestedSelector = requested as ModuleComponentSelector
+                    if (requestedSelector.group == selector.group && requestedSelector.module == selector.module) {
+                        if (versionScheme.parseSelector(selector.version).accept(requestedSelector.version)) {
+                            useTarget(withSelector)
+                        }
+                    }
+                }
+            })
+        } else {
+            resolutionStrategy.dependencySubstitution {
+                it.substitute(selector).with(withSelector)
+            }
         }
     }
 }
@@ -162,13 +179,11 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
             it.id.componentIdentifier !is ProjectComponentIdentifier
         }.map { it.moduleVersion }
 
-        val comparator = DefaultVersionComparator()
-        val scheme = DefaultVersionSelectorScheme(comparator)
         val selectedVersion = LinkedHashMap<AlignRule, String>()
         aligns.forEach { align ->
             val matches = moduleVersions.filter { dep: ResolvedModuleVersion -> align.resolvedMatches(dep) }
             if (matches.isNotEmpty()) {
-                selectedVersion[align] = alignedVersion(align, matches, configuration, scheme, comparator.asStringComparator())
+                selectedVersion[align] = alignedVersion(align, matches, configuration, versionScheme, versionComparator.asStringComparator())
             }
         }
 
@@ -176,7 +191,7 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
             val foundMatch = selectedVersion.filter { it.key.dependencyMatches(details) }
             if (foundMatch.isNotEmpty()) {
                 val (rule, version) = foundMatch.entries.first()
-                if (version != matchedVersion(rule, scheme, details.requested.version)) {
+                if (version != matchedVersion(rule, details.requested.version)) {
                     logger.info("Resolution rule $rule aligning ${details.requested.group}:${details.requested.name} to $version")
                     details.useVersion(version)
                 }
@@ -202,7 +217,7 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
 
     fun alignedVersion(rule: AlignRule, moduleVersions: List<ResolvedModuleVersion>, configuration: Configuration,
                        scheme: VersionSelectorScheme, comparator: Comparator<String>): String {
-        val versions = moduleVersions.map { matchedVersion(rule, scheme, it.id.version) }.distinct()
+        val versions = moduleVersions.map { matchedVersion(rule, it.id.version) }.distinct()
         val highestVersion = versions.maxWith(comparator)!!
 
         val forced = moduleVersions.flatMap { moduleVersion ->
@@ -246,14 +261,14 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
         return highestVersion
     }
 
-    fun matchedVersion(rule: AlignRule, scheme: VersionSelectorScheme, version: String): String {
+    fun matchedVersion(rule: AlignRule, version: String): String {
         val match = rule.match
         if (match != null) {
             val pattern = rule.matchPattern
             val matcher = pattern.matcher(version)
             if (matcher.find()) {
                 return matcher.group()
-            } else if (!scheme.parseSelector(version).isDynamic) {
+            } else if (!versionScheme.parseSelector(version).isDynamic) {
                 logger.warn("Resolution rule $rule is unable to honor match. $match does not match $version. Will use $version")
             }
         }
