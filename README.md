@@ -13,6 +13,7 @@ These rule types solve the most common cause of dependency issues in projects, i
 - Duplicate classes caused by changes to group or artifact ids, without renaming packages
 - Duplicate classes caused by bundle dependencies, which do not conflict resolve against the normal dependencies for that library
 - Lack of version alignment between libraries, where version alignment is needed for compatibility
+- Ensuring a minimum version of a library
 
 # Quick Start
 
