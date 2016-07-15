@@ -150,7 +150,7 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
     val logger: Logger = Logging.getLogger(AlignRules::class.java)
 
     override fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension) {
-        if (aligns.size == 0) { // don't do extra resolves if there are no align rules
+        if (aligns.size == 0 || configuration.name.endsWith("Copy")) { // don't do extra resolves if there are no align rules, and ignore copied configurations
             return
         }
 

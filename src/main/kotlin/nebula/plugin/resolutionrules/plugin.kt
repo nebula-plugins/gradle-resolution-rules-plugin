@@ -53,7 +53,7 @@ class ResolutionRulesPlugin : Plugin<Project> {
         mapper = objectMapper()
 
         project.configurations.all { config ->
-            if (config.name == RESOLUTION_RULES_CONFIG_NAME || config.name == SPRING_VERSION_MANAGEMENT_CONFIG_NAME || config.name.endsWith("Copy")) {
+            if (config.name == RESOLUTION_RULES_CONFIG_NAME || config.name == SPRING_VERSION_MANAGEMENT_CONFIG_NAME) {
                 return@all
             }
 
