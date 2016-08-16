@@ -602,6 +602,61 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
         result.standardOutput.contains 'test.nebula:b:0.15.0 -> 1.0.0\n'
     }
 
+    def 'alignment applies to versions affected by resolution strategies'() {
+        def graph = new DependencyGraphBuilder()
+                .addModule('test.nebula:a:1.0.0')
+                .addModule('test.nebula:a:0.15.0')
+                .addModule('test.nebula:b:1.0.0')
+                .addModule('test.nebula:b:0.15.0')
+                .addModule('test.nebula:c:1.0.0')
+                .addModule('test.nebula:c:0.15.0')
+                .build()
+        File mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
+
+        rulesJsonFile << '''\
+            {
+                "deny": [], "reject": [], "substitute": [], "replace": [],
+                "align": [
+                    {
+                        "name": "testNebula",
+                        "group": "test.nebula",
+                        "reason": "Align test.nebula dependencies",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    }
+                ]
+            }
+        '''.stripIndent()
+
+        buildFile << """\
+            repositories {
+                maven { url '${mavenrepo.absolutePath}' }
+            }
+            dependencies {
+                compile 'test.nebula:a:1.0.0'
+                compile 'test.nebula:b:0.15.0'
+                compile 'test.nebula:c:1.0.0'
+            }
+            configurations.compile.resolutionStrategy.eachDependency { details ->
+                if (details.requested.name == 'a') {
+                    details.useVersion '0.15.0'
+                }
+            }
+        """.stripIndent()
+
+        when:
+        def result = runTasksSuccessfully('dependencyInsight', '--configuration', 'compile', '--dependency', 'test.nebula')
+
+        then:
+        def output = result.standardOutput
+        output.contains 'Resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-applies-to-versions-affected-by-resolution-strategies, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z) aligning test.nebula:a to 1.0.0'
+        output.contains 'Resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-applies-to-versions-affected-by-resolution-strategies, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z) aligning test.nebula:b to 1.0.0'
+        output.contains 'test.nebula:a:1.0.0 (selected by rule)\n'
+        output.contains 'test.nebula:b:1.0.0 (selected by rule)\n'
+        output.contains 'test.nebula:b:0.15.0 -> 1.0.0\n'
+        output.contains 'test.nebula:c:1.0.0\n'
+    }
+
     def 'resolution strategies applied in beforeResolve apply'() {
         rulesJsonFile << '''\
             {

@@ -152,8 +152,6 @@ data class AlignRule(val name: String?, val group: Regex, val includes: List<Reg
 
     fun resolvedMatches(dep: ResolvedModuleVersion) = ruleMatches(dep.id.group, dep.id.name)
 
-    fun dependencyMatches(details: DependencyResolveDetails) = ruleMatches(details.requested.group, details.requested.name)
-
     fun ruleMatches(inputGroup: String, inputName: String): Boolean {
         val matchedIncludes = includes.filter { inputName.matches(it) }
         val matchedExcludes = excludes.filter { inputName.matches(it) }
@@ -188,10 +186,11 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
         }
 
         resolutionStrategy.eachDependency { details ->
-            val foundMatch = selectedVersion.filter { it.key.dependencyMatches(details) }
+            val target = details.target
+            val foundMatch = selectedVersion.filter { it.key.ruleMatches(target.group, target.name) }
             if (foundMatch.isNotEmpty()) {
                 val (rule, version) = foundMatch.entries.first()
-                if (version != matchedVersion(rule, details.requested.version)) {
+                if (version != matchedVersion(rule, details.target.version)) {
                     logger.info("Resolution rule $rule aligning ${details.requested.group}:${details.requested.name} to $version")
                     details.useVersion(version)
                 }
