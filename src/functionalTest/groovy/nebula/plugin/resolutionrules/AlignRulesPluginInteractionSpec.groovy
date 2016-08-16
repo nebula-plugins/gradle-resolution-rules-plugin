@@ -188,7 +188,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
         noExceptionThrown()
 
         where:
-        springVersion << ['1.1.12.RELEASE', '1.2.8.RELEASE', '1.3.5.RELEASE']
+        springVersion << ['1.4.0.RELEASE']
     }
 
     @Unroll
@@ -250,7 +250,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
         noExceptionThrown()
 
         where:
-        springVersion << ['1.1.12.RELEASE', '1.2.8.RELEASE', '1.3.5.RELEASE']
+        springVersion << ['1.4.0.RELEASE']
     }
 
     def 'align rules work with extra-configurations and publishing'() {
