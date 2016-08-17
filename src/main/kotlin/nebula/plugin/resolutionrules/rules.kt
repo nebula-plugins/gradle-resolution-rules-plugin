@@ -21,6 +21,7 @@ import org.gradle.api.Project
 import org.gradle.api.artifacts.*
 import org.gradle.api.artifacts.component.ModuleComponentSelector
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
+import org.gradle.api.internal.artifacts.DefaultModuleVersionSelector
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.*
 import org.gradle.api.internal.collections.CollectionEventRegister
 import org.gradle.api.logging.Logger
@@ -219,12 +220,23 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
         val versions = moduleVersions.map { matchedVersion(rule, it.id.version) }.distinct()
         val highestVersion = versions.maxWith(comparator)!!
 
-        val forced = moduleVersions.flatMap { moduleVersion ->
+        val forcedModules = moduleVersions.flatMap { moduleVersion ->
             configuration.resolutionStrategy.forcedModules.filter {
                 val id = moduleVersion.id
                 it.group == id.group && it.name == id.name
             }
         }
+
+        val forcedDependencies = moduleVersions.flatMap { moduleVersion ->
+            configuration.dependencies.filter {
+                val id = moduleVersion.id
+                it is ExternalDependency && it.isForce && it.group == id.group && it.name == id.name
+            }
+        }.map {
+            DefaultModuleVersionSelector(it.group, it.name, it.version)
+        }
+
+        val forced = forcedModules + forcedDependencies
 
         if (forced.isNotEmpty()) {
             val versionsBySelector = forced
@@ -236,7 +248,7 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
             if (static.isNotEmpty()) {
                 val staticVersions = static.values
                 val forcedVersion = staticVersions.minWith(comparator)!!
-                logger.info("Found force(s) $forced that supersede resolution rule $rule. Will use lowest static version $forcedVersion instead of $highestVersion (ignoring dynamic versions)")
+                logger.info("Found force(s) $forced that supersede resolution rule $rule. Will use $forcedVersion instead of $highestVersion")
                 return forcedVersion
             } else {
                 val selector = dynamic.keys.sortedBy {

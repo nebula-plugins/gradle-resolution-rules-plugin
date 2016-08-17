@@ -2,9 +2,11 @@ package nebula.plugin.resolutionrules
 
 import nebula.test.dependencies.DependencyGraphBuilder
 import nebula.test.dependencies.GradleDependencyGenerator
+import spock.lang.Unroll
 
 class AlignRulesForceSpec extends AbstractAlignRulesSpec {
-    def 'alignment uses forced version, rather than highest version, when a force is present'() {
+    @Unroll("alignment uses #name forced version")
+    def 'alignment uses forced version'() {
         def graph = new DependencyGraphBuilder()
                 .addModule('test.nebula:a:1.0.0')
                 .addModule('test.nebula:a:0.15.0')
@@ -41,20 +43,26 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
                 compile 'test.nebula:c:0.15.0'
                 compile 'test.nebula.other:a:1.0.0'
             }
-            configurations.compile.resolutionStrategy {
-                force 'test.nebula:a:0.15.0'
-            }
+            $force
         """.stripIndent()
 
         when:
         def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
 
         then:
-        result.standardOutput.contains 'Found force(s) [test.nebula:a:0.15.0] that supersede resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-uses-forced-version-rather-than-highest-version-when-a-force-is-present, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z). Will use lowest static version 0.15.0 instead of 1.0.0 (ignoring dynamic versions)'
+        result.standardOutput.contains 'Found force(s) [test.nebula:a:0.15.0] that supersede resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-uses-forced-version, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z). Will use 0.15.0 instead of 1.0.0'
         result.standardOutput.contains '+--- test.nebula:a:1.0.0 -> 0.15.0\n'
         result.standardOutput.contains '+--- test.nebula:b:1.0.0 -> 0.15.0\n'
         result.standardOutput.contains '+--- test.nebula:c:0.15.0\n'
-        result.standardOutput.contains '\\--- test.nebula.other:a:1.0.0\n'
+        result.standardOutput.contains '--- test.nebula.other:a:1.0.0\n'
+
+        where:
+        name << ["all", "configuration", "dependency"]
+        force << [
+                "configurations.all { resolutionStrategy { force 'test.nebula:a:0.15.0' } }",
+                "configurations.compile { resolutionStrategy { force 'test.nebula:a:0.15.0' } }",
+                "dependencies { compile ('test.nebula:a:0.15.0') { force = true } }"
+        ]
     }
 
     def 'alignment uses lowest forced version, when multiple forces are present'() {
