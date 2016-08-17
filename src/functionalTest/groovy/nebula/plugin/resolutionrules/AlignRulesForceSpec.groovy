@@ -168,7 +168,7 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
         def standardOutput = runTasksSuccessfully('dependencies', '--configuration', 'compile').standardOutput
 
         then:
-        standardOutput.contains('Found force(s) [test.nebula:a:latest.release, test.nebula:b:1.+, test.nebula:c:0.15.0] that supersede resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-outputs-warnings-and-honors-static-force-when-dynamic-forces-are-present, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z). Will use lowest static version 0.15.0 instead of 2.0.0 (ignoring dynamic versions)')
+        standardOutput.contains('Found force(s) [test.nebula:a:latest.release, test.nebula:b:1.+, test.nebula:c:0.15.0] that supersede resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-outputs-warnings-and-honors-static-force-when-dynamic-forces-are-present, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z). Will use 0.15.0 instead of 2.0.0')
         standardOutput.contains '+--- test.nebula:a:2.0.0 -> 0.15.0\n'
         standardOutput.contains '+--- test.nebula:b:2.0.0 -> 0.15.0\n'
         standardOutput.contains '\\--- test.nebula:c:1.0.0 -> 0.15.0\n'
