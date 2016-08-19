@@ -76,14 +76,14 @@ class ResolutionRulesPlugin : Plugin<Project> {
     }
 
     fun rulesFromConfiguration(configuration: Configuration, extension: NebulaResolutionRulesExtension): RuleSet {
-        val rules = ArrayList<RuleSet>()
+        val rules = LinkedHashMap<String, RuleSet>()
         val files = configuration.resolve()
         if (files.isEmpty()) {
             logger.warn("No resolution rules have been added to the '{}' configuration", configuration.name)
         }
         for (file in files) {
             if (isIncludedRuleFile(file.name, extension)) {
-                rules.add(parseJsonFile(file))
+                rules.putRules(parseJsonFile(file))
             } else if (file.name.endsWith(JAR_EXT) || file.name.endsWith(ZIP_EXT)) {
                 val zip = ZipFile(file)
                 try {
@@ -91,7 +91,7 @@ class ResolutionRulesPlugin : Plugin<Project> {
                     while (entries.hasMoreElements()) {
                         val entry = entries.nextElement()
                         if (isIncludedRuleFile(entry.name, extension)) {
-                            rules.add(parseJsonStream(zip, entry))
+                            rules.putRules(parseJsonStream(zip, entry))
                         }
                     }
                 } finally {
@@ -101,7 +101,13 @@ class ResolutionRulesPlugin : Plugin<Project> {
                 logger.debug("Unsupported rules file extension for $file")
             }
         }
-        return rules.flatten()
+        return rules.values.flatten()
+    }
+
+    fun MutableMap<String, RuleSet>.putRules(ruleSet: RuleSet) {
+        if (put(ruleSet.name!!, ruleSet) != null) {
+            logger.info("Found rules with the same name. Overriding existing ruleset ${ruleSet.name}")
+        }
     }
 
     fun isIncludedRuleFile(filename: String, extension: NebulaResolutionRulesExtension): Boolean {

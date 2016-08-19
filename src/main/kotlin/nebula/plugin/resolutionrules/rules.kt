@@ -68,7 +68,7 @@ fun RuleSet.withName(ruleSetName: String): RuleSet {
     return this
 }
 
-fun List<RuleSet>.flatten() = RuleSet(
+fun Collection<RuleSet>.flatten() = RuleSet(
         "flattened",
         flatMap { it.replace },
         flatMap { it.substitute },

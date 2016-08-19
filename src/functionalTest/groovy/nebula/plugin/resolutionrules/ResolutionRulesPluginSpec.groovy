@@ -173,7 +173,7 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
         result.standardOutput.contains("Configuration 'compile' has been resolved. Dependency resolution rules will not be applied")
     }
 
-    def 'all rules sources'() {
+    def 'duplicate rules sources'() {
         def ant = new AntBuilder()
         def rulesJarFile = new File(projectDir, 'rules.jar')
         ant.jar(destfile: rulesJarFile, basedir: rulesJsonFile.parentFile)
@@ -190,9 +190,11 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
         def result = runTasksSuccessfully('dependencies')
 
         then:
-        result.standardOutput.contains 'Using all-rules-sources (all-rules-sources.json) a dependency rules source'
-        result.standardOutput.contains "Using all-rules-sources ($projectDir/rules.jar) a dependency rules source"
-        result.standardOutput.contains "Using all-rules-sources ($projectDir/rules.zip) a dependency rules source"
+        def output = result.standardOutput
+        output.contains 'Using duplicate-rules-sources (duplicate-rules-sources.json) a dependency rules source'
+        output.contains 'Found rules with the same name. Overriding existing ruleset duplicate-rules-sources'
+        output.contains "Using duplicate-rules-sources ($projectDir/rules.jar) a dependency rules source"
+        output.contains "Using duplicate-rules-sources ($projectDir/rules.zip) a dependency rules source"
     }
 
     def 'replace module'() {
