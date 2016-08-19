@@ -26,6 +26,7 @@ import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.*
 import org.gradle.api.internal.collections.CollectionEventRegister
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
+import org.gradle.api.specs.Specs
 import java.util.*
 import java.util.regex.Pattern
 
@@ -143,7 +144,7 @@ data class DenyRule(override val module: String, override var ruleSet: String?, 
 }
 
 data class AlignRule(val name: String?, val group: Regex, val includes: List<Regex>, val excludes: List<Regex>, val match: String?, override var ruleSet: String?, override val reason: String, override val author: String, override val date: String) : BasicRule {
-    val matchPattern by lazy {
+    val matchPattern: Pattern by lazy {
         if (VersionMatcher.values().filter { it.name == match }.isNotEmpty()) VersionMatcher.valueOf(match!!).pattern else Pattern.compile(match)
     }
 
@@ -172,7 +173,17 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
 
         val copy = project.copyConfiguration(configuration)
 
-        val artifacts = copy.resolvedConfiguration.resolvedArtifacts
+        val resolvedConfiguration = copy.resolvedConfiguration
+        val artifacts = if (resolvedConfiguration.hasError()) {
+            val lenientConfiguration = resolvedConfiguration.lenientConfiguration
+            logger.warn("Resolution rules could not resolve all dependencies to align in configuration '${configuration.name}' should also fail to resolve (use --info to list unresolved dependencies)")
+            lenientConfiguration.unresolvedModuleDependencies.forEach {
+                logger.info("Resolution rules could not resolve ${it.selector}", it.problem)
+            }
+            lenientConfiguration.getArtifacts(Specs.SATISFIES_ALL)
+        } else {
+            resolvedConfiguration.resolvedArtifacts
+        }
         val moduleVersions = artifacts.filter {
             // Exclude project artifacts from alignment
             it.id.componentIdentifier !is ProjectComponentIdentifier
