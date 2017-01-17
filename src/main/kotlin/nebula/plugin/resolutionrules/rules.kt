@@ -207,7 +207,7 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
                 .partition { it is ResolvedDependencyResult }
         if (shouldLog && unresolved.isNotEmpty()) {
             logger.warn("Resolution rules could not resolve all dependencies to align in configuration '${sourceConfiguration.name}' should also fail to resolve (use --info to list unresolved dependencies)")
-            logger.info("Resolution rules could not resolve:\n ${unresolved.map { "- $it" }.joinToString("\n")}")
+            logger.info("Resolution rules could not resolve:\n ${unresolved.map { " - $it" }.joinToString("\n")}")
         }
         val moduleVersions = resolved
                 .map { it as ResolvedDependencyResult }
