@@ -198,18 +198,18 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
     }
 
     private fun CopiedConfiguration.resolvedSelectedVersions() = selectedVersions({
-        val moduleSelector = it.requested as ModuleComponentSelector
-        DefaultModuleVersionIdentifier(moduleSelector.group, moduleSelector.module, moduleSelector.version)
+        val selector = it.requested as ModuleComponentSelector
+        DefaultModuleVersionIdentifier(selector.group, selector.module, selector.version)
     })
 
     private fun CopiedConfiguration.selectedVersions(versionSelector: (ResolvedDependencyResult) -> GradleModuleVersionIdentifier, shouldLog: Boolean = false): Map<AlignRule, String> {
         val (resolved, unresolved) = incoming.resolutionResult.allDependencies
                 .partition { it is ResolvedDependencyResult }
         if (shouldLog && unresolved.isNotEmpty()) {
-            logger.warn("Resolution rules could not resolve all dependencies to align in configuration '${sourceConfiguration.name}' should also fail to resolve (use --info to list unresolved dependencies)")
+            logger.warn("Resolution rules could not resolve all dependencies to align in configuration '${source.name}' should also fail to resolve (use --info to list unresolved dependencies)")
             logger.info("Resolution rules could not resolve:\n ${unresolved.map { " - $it" }.joinToString("\n")}")
         }
-        val moduleVersions = resolved
+        val resolvedVersions = resolved
                 .map { it as ResolvedDependencyResult }
                 .filter { it.selected.id is ModuleComponentIdentifier }
                 .distinctBy { it.selected.moduleVersion.module }
@@ -217,7 +217,7 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
 
         val selectedVersions = LinkedHashMap<AlignRule, String>()
         aligns.forEach { align ->
-            val matches = moduleVersions.filter { dep: GradleModuleVersionIdentifier -> align.resolvedMatches(dep) }
+            val matches = resolvedVersions.filter { dep: GradleModuleVersionIdentifier -> align.resolvedMatches(dep) }
             if (matches.isNotEmpty()) {
                 selectedVersions[align] = alignedVersion(align, matches, this, versionScheme, versionComparator.asStringComparator())
             }
@@ -263,7 +263,7 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
         return CopiedConfiguration(configuration, this, copy)
     }
 
-    private class CopiedConfiguration(val sourceConfiguration: Configuration, val project: Project, copy: Configuration) : Configuration by copy
+    private class CopiedConfiguration(val source: Configuration, val project: Project, copy: Configuration) : Configuration by copy
 
     private fun alignedVersion(rule: AlignRule, moduleVersions: List<GradleModuleVersionIdentifier>, configuration: Configuration,
                                scheme: VersionSelectorScheme, comparator: Comparator<String>): String {
