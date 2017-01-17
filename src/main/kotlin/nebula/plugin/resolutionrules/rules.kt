@@ -185,15 +185,15 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
         configuration.applyAligns(resolvedVersions, true)
     }
 
-    private fun CopiedConfiguration.baseSelectedVersions() = selectedVersions({ it.selected.moduleVersion })
+    private fun CopiedConfiguration.baseSelectedVersions() = selectedVersions({ it.selected.moduleVersion }, true)
 
     tailrec private fun CopiedConfiguration.stableResolvedSelectedVersions(): Map<AlignRule, String> {
-        val initialResolvedVersions = resolvedSelectedVersions()
-        val copiedConfiguration = copyConfiguration().applyAligns(initialResolvedVersions)
-        if (initialResolvedVersions == copiedConfiguration.resolvedSelectedVersions()) {
-            return initialResolvedVersions
+        val resolvedVersions = resolvedSelectedVersions()
+        val copy = copyConfiguration().applyAligns(resolvedVersions)
+        if (resolvedVersions == copy.resolvedSelectedVersions()) {
+            return resolvedVersions
         } else {
-            return copiedConfiguration.stableResolvedSelectedVersions()
+            return copy.stableResolvedSelectedVersions()
         }
     }
 
@@ -202,10 +202,10 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
         DefaultModuleVersionIdentifier(moduleSelector.group, moduleSelector.module, moduleSelector.version)
     })
 
-    private fun CopiedConfiguration.selectedVersions(versionSelector: (ResolvedDependencyResult) -> GradleModuleVersionIdentifier): Map<AlignRule, String> {
+    private fun CopiedConfiguration.selectedVersions(versionSelector: (ResolvedDependencyResult) -> GradleModuleVersionIdentifier, shouldLog: Boolean = false): Map<AlignRule, String> {
         val (resolved, unresolved) = incoming.resolutionResult.allDependencies
                 .partition { it is ResolvedDependencyResult }
-        if (unresolved.isNotEmpty()) {
+        if (shouldLog && unresolved.isNotEmpty()) {
             logger.warn("Resolution rules could not resolve all dependencies to align in configuration '${sourceConfiguration.name}' should also fail to resolve (use --info to list unresolved dependencies)")
             logger.info("Resolution rules could not resolve:\n ${unresolved.map { "- $it" }.joinToString("\n")}")
         }
