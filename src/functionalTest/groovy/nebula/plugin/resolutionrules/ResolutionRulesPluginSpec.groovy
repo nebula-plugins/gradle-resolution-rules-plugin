@@ -19,6 +19,7 @@ package nebula.plugin.resolutionrules
 
 import nebula.test.IntegrationSpec
 import org.codehaus.groovy.runtime.StackTraceUtils
+import org.gradle.api.logging.LogLevel
 import spock.lang.Issue
 import spock.lang.Unroll
 
@@ -120,6 +121,8 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
                                         ]
                                     }
                                  """
+
+        logLevel = LogLevel.DEBUG
     }
 
     def 'plugin applies'() {
