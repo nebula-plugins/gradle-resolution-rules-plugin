@@ -236,11 +236,10 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
         def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
 
         then:
-        result.standardOutput.contains '''+--- test.nebula.a:a1:1.0.0 -> 2.0.0
-|    \\--- test.nebula.b:b1:2.0.0
-+--- test.nebula.a:a2:2.0.0
-\\--- test.nebula.b:b2:1.0.0 -> 2.0.0
-     \\--- test.nebula.a:a3:1.0.0 -> 2.0.0
-'''
+        result.standardOutput.contains '+--- test.nebula.a:a1:1.0.0 -> 2.0.0\n'
+        result.standardOutput.contains '|    \\--- test.nebula.b:b1:2.0.0\n'
+        result.standardOutput.contains '+--- test.nebula.a:a2:2.0.0\n'
+        result.standardOutput.contains '\\--- test.nebula.b:b2:1.0.0 -> 2.0.0\n'
+        result.standardOutput.contains '\\--- test.nebula.a:a3:1.0.0 -> 2.0.0\n'
     }
 }

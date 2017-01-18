@@ -295,12 +295,10 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
         def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
 
         then:
-        result.standardOutput.contains("""\
-+--- log4j:log4j:1.2.17 -> org.slf4j:log4j-over-slf4j:1.7.21
-|    \\--- org.slf4j:slf4j-api:1.7.21
-\\--- org.slf4j:jcl-over-slf4j:1.7.0 -> 1.7.21
-     \\--- org.slf4j:slf4j-api:1.7.21
-""")
+        result.standardOutput.contains '+--- log4j:log4j:1.2.17 -> org.slf4j:log4j-over-slf4j:1.7.21\n'
+        result.standardOutput.contains '|    \\--- org.slf4j:slf4j-api:1.7.21\n'
+        result.standardOutput.contains '\\--- org.slf4j:jcl-over-slf4j:1.7.0 -> 1.7.21\n'
+        result.standardOutput.contains '\\--- org.slf4j:slf4j-api:1.7.21\n'
     }
 
     def 'only included rules are applied'() {
