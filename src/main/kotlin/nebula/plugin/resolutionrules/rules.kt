@@ -244,7 +244,7 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
                 val (rule, version) = foundMatch.entries.first()
                 if (version != matchedVersion(rule, details.target.version)) {
                     if (shouldLog) {
-                        logger.info("Resolution rule $rule aligning ${details.requested.group}:${details.requested.name} to $version")
+                        logger.debug("Resolution rule $rule aligning ${details.requested.group}:${details.requested.name} to $version")
                     }
                     details.useVersion(version)
                 }
@@ -349,7 +349,7 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
             if (static.isNotEmpty()) {
                 val staticVersions = static.values
                 val forcedVersion = staticVersions.minWith(comparator)!!
-                logger.info("Found force(s) $forced that supersede resolution rule $rule. Will use $forcedVersion instead of $highestVersion")
+                logger.debug("Found force(s) $forced that supersede resolution rule $rule. Will use $forcedVersion instead of $highestVersion")
                 return forcedVersion
             } else {
                 val selector = dynamic.keys.sortedBy {
@@ -365,7 +365,7 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
                 } else {
                     versions.filter { selector.accept(it) }.maxWith(comparator)!!
                 }
-                logger.info("Found force(s) $forced that supersede resolution rule $rule. Will use highest dynamic version $forcedVersion that matches most selective selector ${dynamic[selector]}")
+                logger.debug("Found force(s) $forced that supersede resolution rule $rule. Will use highest dynamic version $forcedVersion that matches most selective selector ${dynamic[selector]}")
                 return forcedVersion
             }
         }
@@ -400,7 +400,7 @@ data class ExcludeRule(override val module: String, override var ruleSet: String
     @Override
     override fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension) {
         val moduleId = ModuleIdentifier.valueOf(module)
-        logger.info("Resolution rule $this excluding ${moduleId.organization}:${moduleId.name}")
+        logger.debug("Resolution rule $this excluding ${moduleId.organization}:${moduleId.name}")
         configuration.exclude(moduleId.organization, moduleId.name)
     }
 }

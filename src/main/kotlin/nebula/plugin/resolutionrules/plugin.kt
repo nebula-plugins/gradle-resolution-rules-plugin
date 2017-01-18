@@ -129,13 +129,13 @@ class ResolutionRulesPlugin : Plugin<Project> {
 
     fun parseJsonFile(file: File): RuleSet {
         val ruleSetName = ruleSetName(file.name)
-        logger.info("Using $ruleSetName (${file.name}) a dependency rules source")
+        logger.debug("Using $ruleSetName (${file.name}) a dependency rules source")
         return mapper.readValue<RuleSet>(file).withName(ruleSetName)
     }
 
     fun parseJsonStream(zip: ZipFile, entry: ZipEntry): RuleSet {
         val ruleSetName = ruleSetName(File(entry.name).name)
-        logger.info("Using $ruleSetName (${zip.name}) a dependency rules source")
+        logger.debug("Using $ruleSetName (${zip.name}) a dependency rules source")
         return mapper.readValue<RuleSet>(zip.getInputStream(entry)).withName(ruleSetName)
     }
 }
