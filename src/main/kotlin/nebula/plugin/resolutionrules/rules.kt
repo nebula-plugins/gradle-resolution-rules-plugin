@@ -294,12 +294,7 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
     }
 
     private fun Any.setField(name: String, value: Any) {
-        val instanceClass = javaClass
-        val field = if (instanceClass.name.endsWith("_Decorated")) {
-            javaClass.superclass.getDeclaredField(name)
-        } else {
-            javaClass.getDeclaredField(name)
-        }
+        val field = javaClass.findDeclaredField(name)
         field.isAccessible = true
 
         val modifiersField = Field::class.java.getDeclaredField("modifiers")
@@ -307,6 +302,18 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
         modifiersField.setInt(field, field.modifiers and Modifier.FINAL.inv())
 
         field.set(this, value)
+    }
+
+    private tailrec fun <T> Class<T>.findDeclaredField(name: String): Field {
+        val field = declaredFields
+                .filter { it.name == name }
+                .singleOrNull()
+        if (field != null) {
+            return field
+        } else if (superclass != null) {
+            return superclass.findDeclaredField(name)
+        }
+        throw IllegalArgumentException("Could not find field $name")
     }
 
     private class CopiedConfiguration(val source: Configuration, val project: Project, val baseName: String, copy: Configuration) : Configuration by copy
