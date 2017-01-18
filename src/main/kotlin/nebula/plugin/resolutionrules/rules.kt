@@ -19,16 +19,22 @@ package nebula.plugin.resolutionrules
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.artifacts.*
+import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ModuleComponentSelector
-import org.gradle.api.artifacts.component.ProjectComponentIdentifier
+import org.gradle.api.artifacts.result.ResolvedDependencyResult
+import org.gradle.api.internal.artifacts.DefaultModuleVersionIdentifier
 import org.gradle.api.internal.artifacts.DefaultModuleVersionSelector
+import org.gradle.api.internal.artifacts.configurations.ConfigurationInternal
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.*
 import org.gradle.api.internal.collections.CollectionEventRegister
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
-import org.gradle.api.specs.Specs
+import org.gradle.util.Path
+import java.lang.reflect.Field
+import java.lang.reflect.Modifier
 import java.util.*
 import java.util.regex.Pattern
+import org.gradle.api.artifacts.ModuleVersionIdentifier as GradleModuleVersionIdentifier
 
 val versionComparator = DefaultVersionComparator()
 val versionScheme = DefaultVersionSelectorScheme(versionComparator)
@@ -152,7 +158,7 @@ data class AlignRule(val name: String?, val group: Regex, val includes: List<Reg
         throw UnsupportedOperationException("Align rules are not applied directly")
     }
 
-    fun resolvedMatches(dep: ResolvedModuleVersion) = ruleMatches(dep.id.group, dep.id.name)
+    fun resolvedMatches(dep: GradleModuleVersionIdentifier) = ruleMatches(dep.group, dep.name)
 
     fun ruleMatches(inputGroup: String, inputName: String): Boolean {
         val matchedIncludes = includes.filter { inputName.matches(it) }
@@ -166,52 +172,100 @@ data class AlignRule(val name: String?, val group: Regex, val includes: List<Reg
 data class AlignRules(val aligns: List<AlignRule>) : Rule {
     val logger: Logger = Logging.getLogger(AlignRules::class.java)
 
+    companion object {
+        const val CONFIG_SUFFIX = "Align"
+    }
+
     override fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension) {
-        if (aligns.size == 0 || configuration.name.endsWith("Copy")) { // don't do extra resolves if there are no align rules, and ignore copied configurations
+        if (aligns.isEmpty() || configuration.name.endsWith(CONFIG_SUFFIX)) { // don't do extra resolves if there are no align rules, and ignore copied configurations
             return
         }
 
-        val copy = project.copyConfiguration(configuration)
+        val baseVersions = project
+                .copyConfiguration(configuration, configuration.name, "Baseline")
+                .baseSelectedVersions()
 
-        val resolvedConfiguration = copy.resolvedConfiguration
-        val artifacts = if (resolvedConfiguration.hasError()) {
-            val lenientConfiguration = resolvedConfiguration.lenientConfiguration
-            logger.warn("Resolution rules could not resolve all dependencies to align in configuration '${configuration.name}' should also fail to resolve (use --info to list unresolved dependencies)")
-            lenientConfiguration.unresolvedModuleDependencies.forEach {
-                logger.info("Resolution rules could not resolve ${it.selector}", it.problem)
-            }
-            lenientConfiguration.getArtifacts(Specs.SATISFIES_ALL)
+        val resolvedVersions = project
+                .copyConfiguration(configuration, configuration.name, "Resolved")
+                .applyAligns(baseVersions)
+                .stableResolvedSelectedVersions()
+
+        configuration.applyAligns(resolvedVersions, true)
+    }
+
+    private fun CopiedConfiguration.baseSelectedVersions() = selectedVersions({ it.selected.moduleVersion }, true)
+
+    tailrec private fun CopiedConfiguration.stableResolvedSelectedVersions(pass: Int = 1): Map<AlignRule, String> {
+        val resolvedVersions = resolvedSelectedVersions()
+        val copy = copyConfiguration("StabilityPass$pass").applyAligns(resolvedVersions)
+        if (resolvedVersions == copy.resolvedSelectedVersions()) {
+            return resolvedVersions
         } else {
-            resolvedConfiguration.resolvedArtifacts
+            return copy.stableResolvedSelectedVersions(pass.inc())
         }
-        val moduleVersions = artifacts.filter {
-            // Exclude project artifacts from alignment
-            it.id.componentIdentifier !is ProjectComponentIdentifier
-        }.map { it.moduleVersion }
+    }
 
-        val selectedVersion = LinkedHashMap<AlignRule, String>()
+    private fun CopiedConfiguration.resolvedSelectedVersions() = selectedVersions({
+        val selector = it.requested as ModuleComponentSelector
+        DefaultModuleVersionIdentifier(selector.group, selector.module, selector.version)
+    })
+
+    private fun CopiedConfiguration.selectedVersions(versionSelector: (ResolvedDependencyResult) -> GradleModuleVersionIdentifier, shouldLog: Boolean = false): Map<AlignRule, String> {
+        val (resolved, unresolved) = incoming.resolutionResult.allDependencies
+                .partition { it is ResolvedDependencyResult }
+        if (shouldLog && unresolved.isNotEmpty()) {
+            logger.warn("Resolution rules could not resolve all dependencies to align in configuration '${source.name}' should also fail to resolve (use --info to list unresolved dependencies)")
+            logger.info("Resolution rules could not resolve:\n ${unresolved.map { " - $it" }.joinToString("\n")}")
+        }
+        val resolvedVersions = resolved
+                .map { it as ResolvedDependencyResult }
+                .filter { it.selected.id is ModuleComponentIdentifier }
+                .distinctBy { it.selected.moduleVersion.module }
+                .map(versionSelector)
+
+        val selectedVersions = LinkedHashMap<AlignRule, String>()
         aligns.forEach { align ->
-            val matches = moduleVersions.filter { dep: ResolvedModuleVersion -> align.resolvedMatches(dep) }
+            val matches = resolvedVersions.filter { dep: GradleModuleVersionIdentifier -> align.resolvedMatches(dep) }
             if (matches.isNotEmpty()) {
-                selectedVersion[align] = alignedVersion(align, matches, configuration, versionScheme, versionComparator.asStringComparator())
+                selectedVersions[align] = alignedVersion(align, matches, this, versionScheme, versionComparator.asStringComparator())
             }
         }
+        return selectedVersions
+    }
 
+    private fun CopiedConfiguration.applyAligns(selectedVersions: Map<AlignRule, String>)
+            = (this as Configuration).applyAligns(selectedVersions) as CopiedConfiguration
+
+    private fun Configuration.applyAligns(selectedVersions: Map<AlignRule, String>, shouldLog: Boolean = false): Configuration {
         resolutionStrategy.eachDependency { details ->
             val target = details.target
-            val foundMatch = selectedVersion.filter { it.key.ruleMatches(target.group, target.name) }
+            val foundMatch = selectedVersions.filter { it.key.ruleMatches(target.group, target.name) }
             if (foundMatch.isNotEmpty()) {
                 val (rule, version) = foundMatch.entries.first()
                 if (version != matchedVersion(rule, details.target.version)) {
-                    logger.info("Resolution rule $rule aligning ${details.requested.group}:${details.requested.name} to $version")
+                    if (shouldLog) {
+                        logger.info("Resolution rule $rule aligning ${details.requested.group}:${details.requested.name} to $version")
+                    }
                     details.useVersion(version)
                 }
             }
         }
+        return this
     }
 
-    private fun Project.copyConfiguration(configuration: Configuration): Configuration {
+    /**
+     * Various reflection hackiness follows due to deficiencies in the Gradle configuration APIs:
+     *
+     * - We can't add the configuration to the configuration container to get the addAction handlers, because it causes ConcurrentModificationExceptions
+     * - We can't set the configuration name on copyRecursive, which makes for confusing logging output when we're resolving our configurations
+     */
+
+    private fun CopiedConfiguration.copyConfiguration(alignmentPhase: String) = project.copyConfiguration(this, baseName, alignmentPhase)
+
+    private fun Project.copyConfiguration(configuration: Configuration, baseName: String, alignmentPhase: String): CopiedConfiguration {
         val copy = configuration.copyRecursive()
+        val name = "$baseName$alignmentPhase$CONFIG_SUFFIX"
+        copy.setName(name)
 
         // Apply container register actions, without risking concurrently modifying the configuration container
         val container = configurations
@@ -223,25 +277,54 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
         // Hacky workaround to prevent Gradle from attempting to resolve a project dependency as an external dependency
         copy.exclude(group.toString(), name)
 
-        return copy
+        return CopiedConfiguration(configuration, this, baseName, copy)
     }
 
-    fun alignedVersion(rule: AlignRule, moduleVersions: List<ResolvedModuleVersion>, configuration: Configuration,
-                       scheme: VersionSelectorScheme, comparator: Comparator<String>): String {
-        val versions = moduleVersions.map { matchedVersion(rule, it.id.version) }.distinct()
+    private fun Configuration.setName(name: String) {
+        setField("name", name)
+        val internalConfig = this as ConfigurationInternal
+        val parentPath = Path.path(internalConfig.path).parent
+        try {
+            val path = parentPath.child(name)
+            setField("path", path)
+            setField("identityPath", path)
+        } catch (e: NoSuchMethodError) {
+            setField("path", "$parentPath:$name")
+        }
+    }
+
+    private fun Any.setField(name: String, value: Any) {
+        val instanceClass = javaClass
+        val field = if (instanceClass.name.endsWith("_Decorated")) {
+            javaClass.superclass.getDeclaredField(name)
+        } else {
+            javaClass.getDeclaredField(name)
+        }
+        field.isAccessible = true
+
+        val modifiersField = Field::class.java.getDeclaredField("modifiers")
+        modifiersField.isAccessible = true
+        modifiersField.setInt(field, field.modifiers and Modifier.FINAL.inv())
+
+        field.set(this, value)
+    }
+
+    private class CopiedConfiguration(val source: Configuration, val project: Project, val baseName: String, copy: Configuration) : Configuration by copy
+
+    private fun alignedVersion(rule: AlignRule, moduleVersions: List<GradleModuleVersionIdentifier>, configuration: Configuration,
+                               scheme: VersionSelectorScheme, comparator: Comparator<String>): String {
+        val versions = moduleVersions.map { matchedVersion(rule, it.version) }.distinct()
         val highestVersion = versions.maxWith(comparator)!!
 
         val forcedModules = moduleVersions.flatMap { moduleVersion ->
             configuration.resolutionStrategy.forcedModules.filter {
-                val id = moduleVersion.id
-                it.group == id.group && it.name == id.name
+                it.group == moduleVersion.group && it.name == moduleVersion.name
             }
         }
 
         val forcedDependencies = moduleVersions.flatMap { moduleVersion ->
             configuration.dependencies.filter {
-                val id = moduleVersion.id
-                it is ExternalDependency && it.isForce && it.group == id.group && it.name == id.name
+                it is ExternalDependency && it.isForce && it.group == moduleVersion.group && it.name == moduleVersion.name
             }
         }.map {
             DefaultModuleVersionSelector(it.group, it.name, it.version)
