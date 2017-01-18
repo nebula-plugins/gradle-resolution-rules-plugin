@@ -24,10 +24,14 @@ import org.gradle.api.artifacts.component.ModuleComponentSelector
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.internal.artifacts.DefaultModuleVersionIdentifier
 import org.gradle.api.internal.artifacts.DefaultModuleVersionSelector
+import org.gradle.api.internal.artifacts.configurations.ConfigurationInternal
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.*
 import org.gradle.api.internal.collections.CollectionEventRegister
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
+import org.gradle.util.Path
+import java.lang.reflect.Field
+import java.lang.reflect.Modifier
 import java.util.*
 import java.util.regex.Pattern
 import org.gradle.api.artifacts.ModuleVersionIdentifier as GradleModuleVersionIdentifier
@@ -168,17 +172,21 @@ data class AlignRule(val name: String?, val group: Regex, val includes: List<Reg
 data class AlignRules(val aligns: List<AlignRule>) : Rule {
     val logger: Logger = Logging.getLogger(AlignRules::class.java)
 
+    companion object {
+        const val CONFIG_SUFFIX = "Align"
+    }
+
     override fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension) {
-        if (aligns.isEmpty() || configuration.name.endsWith("Copy")) { // don't do extra resolves if there are no align rules, and ignore copied configurations
+        if (aligns.isEmpty() || configuration.name.endsWith(CONFIG_SUFFIX)) { // don't do extra resolves if there are no align rules, and ignore copied configurations
             return
         }
 
         val baseVersions = project
-                .copyConfiguration(configuration)
+                .copyConfiguration(configuration, configuration.name, "Baseline")
                 .baseSelectedVersions()
 
         val resolvedVersions = project
-                .copyConfiguration(configuration)
+                .copyConfiguration(configuration, configuration.name, "Resolved")
                 .applyAligns(baseVersions)
                 .stableResolvedSelectedVersions()
 
@@ -187,13 +195,13 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
 
     private fun CopiedConfiguration.baseSelectedVersions() = selectedVersions({ it.selected.moduleVersion }, true)
 
-    tailrec private fun CopiedConfiguration.stableResolvedSelectedVersions(): Map<AlignRule, String> {
+    tailrec private fun CopiedConfiguration.stableResolvedSelectedVersions(pass: Int = 1): Map<AlignRule, String> {
         val resolvedVersions = resolvedSelectedVersions()
-        val copy = copyConfiguration().applyAligns(resolvedVersions)
+        val copy = copyConfiguration("StabilityPass$pass").applyAligns(resolvedVersions)
         if (resolvedVersions == copy.resolvedSelectedVersions()) {
             return resolvedVersions
         } else {
-            return copy.stableResolvedSelectedVersions()
+            return copy.stableResolvedSelectedVersions(pass.inc())
         }
     }
 
@@ -245,10 +253,19 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
         return this
     }
 
-    private fun CopiedConfiguration.copyConfiguration() = project.copyConfiguration(this)
+    /**
+     * Various reflection hackiness follows due to deficiencies in the Gradle configuration APIs:
+     *
+     * - We can't add the configuration to the configuration container to get the addAction handlers, because it causes ConcurrentModificationExceptions
+     * - We can't set the configuration name on copyRecursive, which makes for confusing logging output when we're resolving our configurations
+     */
 
-    private fun Project.copyConfiguration(configuration: Configuration): CopiedConfiguration {
+    private fun CopiedConfiguration.copyConfiguration(alignmentPhase: String) = project.copyConfiguration(this, baseName, alignmentPhase)
+
+    private fun Project.copyConfiguration(configuration: Configuration, baseName: String, alignmentPhase: String): CopiedConfiguration {
         val copy = configuration.copyRecursive()
+        val name = "$baseName$alignmentPhase$CONFIG_SUFFIX"
+        copy.setName(name)
 
         // Apply container register actions, without risking concurrently modifying the configuration container
         val container = configurations
@@ -258,12 +275,41 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
         eventRegister.addAction.execute(copy)
 
         // Hacky workaround to prevent Gradle from attempting to resolve a project dependency as an external dependency
-        copy.exclude(group.toString(), name)
+        copy.exclude(this.group.toString(), this.name)
 
-        return CopiedConfiguration(configuration, this, copy)
+        return CopiedConfiguration(configuration, this, baseName, copy)
     }
 
-    private class CopiedConfiguration(val source: Configuration, val project: Project, copy: Configuration) : Configuration by copy
+    private fun Configuration.setName(name: String) {
+        setField("name", name)
+        val internalConfig = this as ConfigurationInternal
+        val parentPath = Path.path(internalConfig.path).parent
+        try {
+            val path = parentPath.child(name)
+            setField("path", path)
+            setField("identityPath", path)
+        } catch (e: NoSuchMethodError) {
+            setField("path", "$parentPath:$name")
+        }
+    }
+
+    private fun Any.setField(name: String, value: Any) {
+        val instanceClass = javaClass
+        val field = if (instanceClass.name.endsWith("_Decorated")) {
+            javaClass.superclass.getDeclaredField(name)
+        } else {
+            javaClass.getDeclaredField(name)
+        }
+        field.isAccessible = true
+
+        val modifiersField = Field::class.java.getDeclaredField("modifiers")
+        modifiersField.isAccessible = true
+        modifiersField.setInt(field, field.modifiers and Modifier.FINAL.inv())
+
+        field.set(this, value)
+    }
+
+    private class CopiedConfiguration(val source: Configuration, val project: Project, val baseName: String, copy: Configuration) : Configuration by copy
 
     private fun alignedVersion(rule: AlignRule, moduleVersions: List<GradleModuleVersionIdentifier>, configuration: Configuration,
                                scheme: VersionSelectorScheme, comparator: Comparator<String>): String {
