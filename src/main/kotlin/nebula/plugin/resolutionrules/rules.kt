@@ -177,13 +177,34 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
     }
 
     override fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension) {
-        if (aligns.isEmpty() || configuration.name.endsWith(CONFIG_SUFFIX)) { // don't do extra resolves if there are no align rules, and ignore copied configurations
+        if (configuration.name.endsWith(CONFIG_SUFFIX)) {
+            // Don't attempt to align an alignment configuration
+            return
+        }
+
+        if (aligns.isEmpty()) {
+            logger.debug("Skipping alignment for $configuration - No alignment rules are configured")
+            return
+        }
+
+        if (configuration.allDependencies.isEmpty()) {
+            logger.debug("Skipping alignment for $configuration - No dependencies are configured")
+            return
+        }
+
+        if (!configuration.isTransitive) {
+            logger.debug("Skipping alignment for $configuration - Configuration is not transitive")
             return
         }
 
         val baseVersions = project
                 .copyConfiguration(configuration, configuration.name, "Baseline")
                 .baseSelectedVersions()
+
+        if (baseVersions.isEmpty()) {
+            logger.debug("Short-circuiting alignment for $configuration - No align rules matched the configured configurations")
+            return
+        }
 
         val resolvedVersions = project
                 .copyConfiguration(configuration, configuration.name, "Resolved")
