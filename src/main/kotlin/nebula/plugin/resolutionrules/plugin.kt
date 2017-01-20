@@ -21,6 +21,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import java.io.File
 import java.util.*
@@ -28,13 +29,13 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 
 class ResolutionRulesPlugin : Plugin<Project> {
-    val logger = Logging.getLogger(ResolutionRulesPlugin::class.java)
+    val logger: Logger = Logging.getLogger(ResolutionRulesPlugin::class.java)
     lateinit var project: Project
-    lateinit var configuration: Configuration
+    lateinit var rulesConfiguration: Configuration
     lateinit var extension: NebulaResolutionRulesExtension
     lateinit var mapper: ObjectMapper
     val ruleSet: RuleSet by lazy {
-        rulesFromConfiguration(configuration, extension)
+        rulesFromConfiguration(rulesConfiguration, extension)
     }
 
     companion object Constants {
@@ -48,7 +49,7 @@ class ResolutionRulesPlugin : Plugin<Project> {
 
     override fun apply(project: Project) {
         this.project = project
-        configuration = project.configurations.create(RESOLUTION_RULES_CONFIG_NAME)
+        rulesConfiguration = project.configurations.create(RESOLUTION_RULES_CONFIG_NAME)
         extension = project.extensions.create("nebulaResolutionRules", NebulaResolutionRulesExtension::class.java)
         mapper = objectMapper()
 
@@ -60,6 +61,8 @@ class ResolutionRulesPlugin : Plugin<Project> {
             project.afterEvaluate {
                 if (config.state != Configuration.State.UNRESOLVED) {
                     logger.warn("Configuration '{}' has been resolved. Dependency resolution rules will not be applied", config.name)
+                } else if (config.allDependencies.isEmpty()) {
+                    logger.debug("Skipping afterEvaluate rules for $config - No dependencies are configured")
                 } else {
                     ruleSet.afterEvaluateRules().forEach { rule ->
                         rule.apply(project, config, config.resolutionStrategy, extension)
@@ -68,8 +71,12 @@ class ResolutionRulesPlugin : Plugin<Project> {
             }
 
             config.incoming.beforeResolve {
-                ruleSet.beforeResolveRules().forEach { rule ->
-                    rule.apply(project, config, config.resolutionStrategy, extension)
+                if (config.allDependencies.isEmpty()) {
+                    logger.debug("Skipping beforeResolve rules for $config - No dependencies are configured")
+                } else {
+                    ruleSet.beforeResolveRules().forEach { rule ->
+                        rule.apply(project, config, config.resolutionStrategy, extension)
+                    }
                 }
             }
         }
@@ -86,7 +93,7 @@ class ResolutionRulesPlugin : Plugin<Project> {
                 rules.putRules(parseJsonFile(file))
             } else if (file.name.endsWith(JAR_EXT) || file.name.endsWith(ZIP_EXT)) {
                 val zip = ZipFile(file)
-                try {
+                zip.use { zip ->
                     val entries = zip.entries()
                     while (entries.hasMoreElements()) {
                         val entry = entries.nextElement()
@@ -94,8 +101,6 @@ class ResolutionRulesPlugin : Plugin<Project> {
                             rules.putRules(parseJsonStream(zip, entry))
                         }
                     }
-                } finally {
-                    zip.close()
                 }
             } else {
                 logger.debug("Unsupported rules file extension for $file")

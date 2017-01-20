@@ -139,6 +139,10 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
         buildFile << """
                      apply plugin: 'java'
                      apply plugin: 'nebula.resolution-rules'
+                     
+                     dependencies {
+                        compile 'asm:asm:3.3.1'
+                     }
                      """.stripIndent()
 
         when:
@@ -186,6 +190,8 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
                      dependencies {
                          resolutionRules files("$rulesJarFile")
                          resolutionRules files("$rulesZipFile")
+
+                         compile 'asm:asm:3.3.1'
                      }
                      """.stripIndent()
 
@@ -399,5 +405,29 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
 
         then:
         result.standardOutput.contains("Selection of com.google.guava:guava:12.0 rejected by component selection rule: Rejected by resolution rule reject-dependency - Guava 12.0 significantly regressed LocalCache performance")
+    }
+
+    def 'configurations with no dependencies are skipped'() {
+        rulesJsonFile << '''\
+            {
+                "deny": [], "reject": [], "substitute": [], "replace": [],
+                "align": [
+                    {
+                        "name": "testNebula",
+                        "group": "test.nebula.b",
+                        "reason": "Align test.nebula dependencies",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    }
+                ]
+            }
+        '''.stripIndent()
+
+        when:
+        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+
+        then:
+        result.standardOutput.contains('Skipping afterEvaluate rules for configuration \':compile\' - No dependencies are configured')
+        result.standardOutput.contains('Skipping beforeResolve rules for configuration \':compile\' - No dependencies are configured')
     }
 }

@@ -127,6 +127,13 @@ class SubsituteRulesSpec extends IntegrationSpec {
                              ]
                          }
                          """.stripIndent()
+
+        buildFile << """
+                     dependencies {
+                        compile 'asm:asm:3.3.1'
+                     }
+                     """.stripIndent()
+
         when:
         def result = runTasks('dependencies', '--configuration', 'compile')
 

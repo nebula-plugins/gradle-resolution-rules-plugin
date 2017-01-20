@@ -800,27 +800,4 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
         then:
         result.standardOutput.contains('Skipping alignment for configuration \':compile\' - Configuration is not transitive')
     }
-
-    def 'configurations with no dependencies are skipped'() {
-        rulesJsonFile << '''\
-            {
-                "deny": [], "reject": [], "substitute": [], "replace": [],
-                "align": [
-                    {
-                        "name": "testNebula",
-                        "group": "test.nebula.b",
-                        "reason": "Align test.nebula dependencies",
-                        "author": "Example Person <person@example.org>",
-                        "date": "2016-03-17T20:21:20.368Z"
-                    }
-                ]
-            }
-        '''.stripIndent()
-
-        when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
-
-        then:
-        result.standardOutput.contains('Skipping alignment for configuration \':compile\' - No dependencies are configured')
-    }
 }

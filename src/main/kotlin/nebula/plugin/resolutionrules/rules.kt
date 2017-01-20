@@ -187,11 +187,6 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
             return
         }
 
-        if (configuration.allDependencies.isEmpty()) {
-            logger.debug("Skipping alignment for $configuration - No dependencies are configured")
-            return
-        }
-
         if (!configuration.isTransitive) {
             logger.debug("Skipping alignment for $configuration - Configuration is not transitive")
             return
