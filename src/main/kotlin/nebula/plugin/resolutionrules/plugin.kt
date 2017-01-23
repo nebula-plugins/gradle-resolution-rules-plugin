@@ -86,7 +86,7 @@ class ResolutionRulesPlugin : Plugin<Project> {
         val rules = LinkedHashMap<String, RuleSet>()
         val files = configuration.resolve()
         if (files.isEmpty()) {
-            logger.warn("No resolution rules have been added to the '{}' configuration", configuration.name)
+            logger.debug("No resolution rules have been added to the '{}' configuration", configuration.name)
         }
         for (file in files) {
             if (isIncludedRuleFile(file.name, extension)) {
