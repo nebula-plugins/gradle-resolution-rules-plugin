@@ -253,6 +253,67 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
         springVersion << ['1.4.0.RELEASE']
     }
 
+    def 'transitive aligns with spring dependency management'() {
+        def rulesJsonFile = new File(projectDir, 'rules.json')
+
+        rulesJsonFile << '''\
+            {
+                "deny": [], "reject": [], "substitute": [], "replace": [],
+                "align": [
+                    {
+                        "name": "align-aws-java-sdk",
+                        "group": "com.amazonaws",
+                        "includes": ["aws-java-sdk", "aws-java-sdk-.*"],
+                        "excludes": ["aws-java-sdk-(handwritten-samples|sample-extractor|samples-pom|generated-samples|samples|archetype|swf-libraries)"],
+                        "reason": "Align AWS Java SDK libraries",
+                        "author": "Danny Thomas <dannyt@netflix.com>",
+                        "date": "2016-04-28T22:31:14.321Z"
+                    }
+                ]
+            }
+        '''.stripIndent()
+
+
+        buildFile << """\
+            buildscript {
+                dependencies {
+                    classpath 'io.spring.gradle:dependency-management-plugin:0.6.1.RELEASE'
+                }
+                repositories {
+                    jcenter()
+                }
+            }
+
+            apply plugin: 'java'
+            ${applyPlugin(ResolutionRulesPlugin)}
+            apply plugin: 'io.spring.dependency-management'
+            
+            dependencyManagement {
+                imports {
+                    mavenBom 'org.springframework.boot:spring-boot-starter-parent:1.4.3.RELEASE'
+                    mavenBom 'org.springframework.cloud:spring-cloud-dependencies:Camden.SR3'
+                }
+            }
+            
+            repositories {
+                jcenter()
+            }
+            
+            dependencies {
+                resolutionRules files('$rulesJsonFile')
+
+                compile 'com.amazonaws:aws-java-sdk-s3'
+                compile 'com.netflix.servo:servo-aws:0.12.12'
+            }
+        """.stripIndent()
+
+        when:
+        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+
+        then:
+        result.standardOutput.contains('+--- com.amazonaws:aws-java-sdk-s3: -> 1.11.18')
+    }
+
     def 'align rules work with extra-configurations and publishing'() {
         def graph = new DependencyGraphBuilder()
                 .addModule('test.a:a:1.42.2')
