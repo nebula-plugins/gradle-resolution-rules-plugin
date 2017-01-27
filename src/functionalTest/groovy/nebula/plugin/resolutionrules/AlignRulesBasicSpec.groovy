@@ -714,9 +714,7 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
         buildFile << """\
             repositories { jcenter() }
 
-            for (Configuration conf : configurations) {
-                conf.resolvedConfiguration.resolvedArtifacts
-            }
+            configurations.findAll { it.isCanBeResolved() }.collect { it.resolvedConfiguration.resolvedArtifacts }
         """
 
         when:
