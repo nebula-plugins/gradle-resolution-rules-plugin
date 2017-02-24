@@ -220,7 +220,7 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
             setField("path", path)
             setField("identityPath", path)
         } catch (e: NoSuchMethodError) {
-            setField("path", "$parentPath:$name")
+            setField("path", "$parentPath:$name".replace("::", ":"))
         }
     }
 
