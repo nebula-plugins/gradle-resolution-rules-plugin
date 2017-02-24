@@ -196,6 +196,7 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
                 .addModule('test.nebula.b:b1:2.0.0')
                 .addModule(new ModuleBuilder('test.nebula.b:b2:1.0.0').addDependency('test.nebula.a:a3:1.0.0').build())
                 .addModule(new ModuleBuilder('test.nebula.b:b2:2.0.0').addDependency('test.nebula.a:a3:1.0.0').build())
+                .addModule('test.nebula.c:c1:1.0.0')
                 .build()
         File mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
 
@@ -225,10 +226,19 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
             repositories {
                 maven { url '${mavenrepo.absolutePath}' }
             }
+
+            // Make at least one of the dependencies a non-expected dependency
+            configurations.compile {
+                resolutionStrategy {
+                    force 'test.nebula.c:c1:1.0.0'
+                }
+            }
+
             dependencies {
                 compile 'test.nebula.a:a1:1.0.0'
                 compile 'test.nebula.a:a2:2.0.0'
                 compile 'test.nebula.b:b2:1.0.0'
+                compile 'test.nebula.c:c1:1.0.0'
             }
         """.stripIndent()
 
@@ -239,7 +249,8 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
         result.standardOutput.contains '+--- test.nebula.a:a1:1.0.0 -> 2.0.0\n'
         result.standardOutput.contains '|    \\--- test.nebula.b:b1:2.0.0\n'
         result.standardOutput.contains '+--- test.nebula.a:a2:2.0.0\n'
-        result.standardOutput.contains '\\--- test.nebula.b:b2:1.0.0 -> 2.0.0\n'
+        result.standardOutput.contains '+--- test.nebula.b:b2:1.0.0 -> 2.0.0\n'
         result.standardOutput.contains '\\--- test.nebula.a:a3:1.0.0 -> 2.0.0\n'
+        result.standardOutput.contains '\\--- test.nebula.c:c1:1.0.0'
     }
 }

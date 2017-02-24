@@ -33,7 +33,7 @@ data class AlignRule(val name: String?, val group: Regex, val includes: List<Reg
         throw UnsupportedOperationException("Align rules are not applied directly")
     }
 
-    fun resolvedMatches(dep: ModuleVersionIdentifier) = ruleMatches(dep.group, dep.name)
+    fun ruleMatches(dep: ModuleVersionIdentifier) = ruleMatches(dep.group, dep.name)
 
     fun ruleMatches(inputGroup: String, inputName: String): Boolean {
         val matchedIncludes = includes.filter { inputName.matches(it) }
@@ -99,11 +99,10 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
 
     private fun CopiedConfiguration.resolvedAligns(baselineAligns: List<AlignedVersion>) = selectedVersions({ dependency ->
         val selectedModuleVersion = dependency.selected.moduleVersion
-        val align = baselineAligns
-                .filter {
-                    it.resolvedMatches(selectedModuleVersion)
-                }.singleOrNull()
-        if (align != null && align.resolvedDependencies.all { it.selected.selectionReason.isExpected }) {
+        val alignedVersion = baselineAligns.singleOrNull {
+            it.ruleMatches(selectedModuleVersion)
+        }
+        if (alignedVersion.selectedVersionExpected(selectedModuleVersion)) {
             /**
              * If the selected version for an aligned dependency was expected in the baseline pass (i.e. unaffected by
              * resolutionStrategies etc), then we choose the requested version so we can reflect the requested
@@ -116,7 +115,17 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
         }
     })
 
-    private fun AlignedVersion.resolvedMatches(dep: ModuleVersionIdentifier) = rule.resolvedMatches(dep)
+    private fun AlignedVersion?.selectedVersionExpected(moduleVersion: ModuleVersionIdentifier): Boolean {
+        if (this == null) {
+            return false
+        }
+        val dependency = resolvedDependencies
+                .map { it.selected }
+                .singleOrNull { it.moduleVersion.module == moduleVersion.module }
+        return dependency == null || dependency.selectionReason.isExpected
+    }
+
+    private fun AlignedVersion.ruleMatches(dep: ModuleVersionIdentifier) = rule.ruleMatches(dep)
 
     private fun CopiedConfiguration.selectedVersions(versionSelector: (ResolvedDependencyResult) -> ModuleVersionIdentifier, shouldLog: Boolean = false): List<AlignedVersion> {
         val (resolved, unresolved) = incoming.resolutionResult.allDependencies
@@ -133,7 +142,7 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
 
         val selectedVersions = ArrayList<AlignedVersion>()
         aligns.forEach { align ->
-            val matches = resolvedVersions.filter { dep: ModuleVersionIdentifier -> align.resolvedMatches(dep) }
+            val matches = resolvedVersions.filter { dep: ModuleVersionIdentifier -> align.ruleMatches(dep) }
             if (matches.isNotEmpty()) {
                 val alignedVersion = alignedVersion(align, matches, this, versionScheme, versionComparator.asStringComparator())
                 selectedVersions += AlignedVersion(align, alignedVersion).addResolvedDependencies(resolvedDependencies)
@@ -148,7 +157,10 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
     }
 
     private fun AlignedVersion.addResolvedDependencies(resolvedDependencies: List<ResolvedDependencyResult>): AlignedVersion {
-        this.resolvedDependencies = resolvedDependencies
+        this.resolvedDependencies = resolvedDependencies.filter {
+            val moduleVersion = it.selected.moduleVersion
+            rule.ruleMatches(moduleVersion)
+        }
         return this
     }
 
