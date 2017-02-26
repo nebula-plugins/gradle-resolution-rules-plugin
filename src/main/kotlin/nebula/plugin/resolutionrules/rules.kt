@@ -129,7 +129,7 @@ data class RejectRule(override val module: String, override var ruleSet: String?
         resolutionStrategy.componentSelection.all(Action<ComponentSelection> { selection ->
             val candidate = selection.candidate
             if (candidate.group == moduleId.organization && candidate.module == moduleId.name) {
-                if (!moduleId.hasVersion() || candidate.version == moduleId.version) {
+                if (!moduleId.hasVersion() || versionScheme.parseSelector(moduleId.version).accept(candidate.version)) {
                     selection.reject("Rejected by resolution rule $ruleSet - $reason")
                 }
             }

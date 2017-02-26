@@ -407,22 +407,36 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
         result.standardOutput.contains("Selection of com.google.guava:guava:12.0 rejected by component selection rule: Rejected by resolution rule reject-dependency - Guava 12.0 significantly regressed LocalCache performance")
     }
 
-    def 'configurations with no dependencies are skipped'() {
+    def 'reject dependency with selector'() {
+        given:
+        rulesJsonFile.delete()
         rulesJsonFile << '''\
-            {
-                "deny": [], "reject": [], "substitute": [], "replace": [],
-                "align": [
-                    {
-                        "name": "testNebula",
-                        "group": "test.nebula.b",
-                        "reason": "Align test.nebula dependencies",
-                        "author": "Example Person <person@example.org>",
-                        "date": "2016-03-17T20:21:20.368Z"
-                    }
-                ]
-            }
-        '''.stripIndent()
+        {
+            "reject": [
+                {
+                    "module": "com.google.guava:guava:16.+",
+                    "reason" : "Just a Guava release that happens to have a patch release",
+                    "author" : "Danny Thomas <dmthomas@gmail.com>",
+                    "date" : "2015-10-07T20:21:20.368Z"
+                }
+            ]
+        }
+        '''
 
+        buildFile << """
+                     dependencies {
+                        compile 'com.google.guava:guava:16.0.1'
+                     }
+                     """.stripIndent()
+
+        when:
+        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+
+        then:
+        result.standardOutput.contains("Selection of com.google.guava:guava:16.0.1 rejected by component selection rule: Rejected by resolution rule reject-dependency-with-selector - Just a Guava release that happens to have a patch release")
+    }
+
+    def 'configurations with no dependencies are skipped'() {
         when:
         def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
 
