@@ -49,6 +49,15 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
 
         rulesJsonFile << """
                         {
+                            "align": [
+                                {
+                                    "name": "testNebula",
+                                    "group": "com.google.guava",
+                                    "reason": "Align guava",
+                                    "author": "Example Person <person@example.org>",
+                                    "date": "2016-03-17T20:21:20.368Z"
+                                }
+                            ],
                             "replace" : [
                                 {
                                     "module" : "asm:asm",
@@ -161,7 +170,6 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
         given:
         buildFile.text = """\
              apply plugin: 'java'
-             configurations.compile.resolve()
              apply plugin: 'nebula.resolution-rules'
 
              repositories {
@@ -170,14 +178,19 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
 
              dependencies {
                  resolutionRules files("$rulesJsonFile", "$optionalRulesJsonFile")
+                 
+                 compile 'com.google.guava:guava:19.0'
              }
+             
+             configurations.compile.resolve()
              """.stripIndent()
 
         when:
         def result = runTasksSuccessfully()
 
         then:
-        result.standardOutput.contains("Configuration 'compile' has been resolved. Dependency resolution rules will not be applied")
+        result.standardOutput.contains("Dependency resolution rules will not be applied to configuration ':compile', it was resolved before the project was evaluated")
+        result.standardOutput.contains("Skipping beforeResolve rules for configuration ':compile' - afterEvaluate rules have not been applied")
     }
 
     def 'duplicate rules sources'() {
