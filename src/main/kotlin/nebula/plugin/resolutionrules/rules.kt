@@ -19,21 +19,11 @@ package nebula.plugin.resolutionrules
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.artifacts.*
-import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ModuleComponentSelector
-import org.gradle.api.artifacts.result.ResolvedDependencyResult
-import org.gradle.api.internal.artifacts.DefaultModuleVersionIdentifier
-import org.gradle.api.internal.artifacts.DefaultModuleVersionSelector
-import org.gradle.api.internal.artifacts.configurations.ConfigurationInternal
-import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.*
-import org.gradle.api.internal.collections.CollectionEventRegister
+import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.DefaultVersionComparator
+import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.DefaultVersionSelectorScheme
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
-import org.gradle.util.Path
-import java.lang.reflect.Field
-import java.lang.reflect.Modifier
-import java.util.*
-import java.util.regex.Pattern
 import org.gradle.api.artifacts.ModuleVersionIdentifier as GradleModuleVersionIdentifier
 
 val versionComparator = DefaultVersionComparator()
@@ -63,7 +53,7 @@ data class RuleSet(
         val exclude: List<ExcludeRule>,
         val align: List<AlignRule>) {
 
-    fun afterEvaluateRules() = listOf(replace, substitute, reject, deny, exclude).flatten()
+    fun dependencyRules() = listOf(replace, substitute, reject, deny, exclude).flatten()
 
     fun beforeResolveRules() = listOf(AlignRules(align))
 }

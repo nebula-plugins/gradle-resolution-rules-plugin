@@ -166,33 +166,6 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
         runTasksSuccessfully()
     }
 
-    def 'warning logged when configuration has been resolved'() {
-        given:
-        buildFile.text = """\
-             apply plugin: 'java'
-             apply plugin: 'nebula.resolution-rules'
-
-             repositories {
-                 jcenter()
-             }
-
-             dependencies {
-                 resolutionRules files("$rulesJsonFile", "$optionalRulesJsonFile")
-                 
-                 compile 'com.google.guava:guava:19.0'
-             }
-             
-             configurations.compile.resolve()
-             """.stripIndent()
-
-        when:
-        def result = runTasksSuccessfully()
-
-        then:
-        result.standardOutput.contains("Dependency resolution rules will not be applied to configuration ':compile', it was resolved before the project was evaluated")
-        result.standardOutput.contains("Skipping beforeResolve rules for configuration ':compile' - afterEvaluate rules have not been applied")
-    }
-
     def 'duplicate rules sources'() {
         def ant = new AntBuilder()
         def rulesJarFile = new File(projectDir, 'rules.jar')
@@ -456,5 +429,24 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
         then:
         result.standardOutput.contains('Skipping afterEvaluate rules for configuration \':compile\' - No dependencies are configured')
         result.standardOutput.contains('Skipping beforeResolve rules for configuration \':compile\' - No dependencies are configured')
+    }
+
+    def 'rules apply to detached configurations that have been added to the configurations container'() {
+        given:
+        buildFile << """
+                     task testDetached {
+                        doFirst {
+                            def detachedConfiguration = configurations.detachedConfiguration(dependencies.create('asm:asm:3.3.1'), dependencies.create('org.ow2.asm:asm:5.0.4'))
+                            configurations.add(detachedConfiguration)
+                            println "FILES: \${detachedConfiguration.files.size()}"
+                        }
+                     }
+                     """
+
+        when:
+        def result = runTasksSuccessfully('testDetached')
+
+        then:
+        result.standardOutput.contains('FILES: 1')
     }
 }

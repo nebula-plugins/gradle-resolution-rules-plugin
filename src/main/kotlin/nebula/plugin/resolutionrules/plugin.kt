@@ -59,13 +59,13 @@ class ResolutionRulesPlugin : Plugin<Project> {
             }
 
             var afterEvaluateRulesApplied = false
-            project.afterEvaluate {
+            project.afterExecute {
                 if (config.state != Configuration.State.UNRESOLVED) {
                     logger.warn("Dependency resolution rules will not be applied to $config, it was resolved before the project was evaluated")
                 } else if (config.allDependencies.isEmpty()) {
                     logger.debug("Skipping afterEvaluate rules for $config - No dependencies are configured")
                 } else {
-                    ruleSet.afterEvaluateRules().forEach { rule ->
+                    ruleSet.dependencyRules().forEach { rule ->
                         rule.apply(project, config, config.resolutionStrategy, extension)
                     }
                     afterEvaluateRulesApplied = true
@@ -83,6 +83,14 @@ class ResolutionRulesPlugin : Plugin<Project> {
                     }
                 }
             }
+        }
+    }
+
+    fun Project.afterExecute(action: () -> Unit) {
+        if (state.executed) {
+            action()
+        } else {
+            afterEvaluate { action() }
         }
     }
 
