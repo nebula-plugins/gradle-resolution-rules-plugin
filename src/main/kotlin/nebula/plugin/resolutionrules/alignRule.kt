@@ -10,17 +10,12 @@ import org.gradle.api.artifacts.component.ModuleComponentSelector
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.internal.artifacts.DefaultModuleVersionIdentifier
 import org.gradle.api.internal.artifacts.DefaultModuleVersionSelector
-import org.gradle.api.internal.artifacts.configurations.ConfigurationInternal
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.LatestVersionSelector
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.SubVersionSelector
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.VersionRangeSelector
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.VersionSelectorScheme
-import org.gradle.api.internal.collections.CollectionEventRegister
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
-import org.gradle.util.Path
-import java.lang.reflect.Field
-import java.lang.reflect.Modifier
 import java.util.*
 import java.util.regex.Pattern
 
@@ -84,7 +79,33 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
         configuration.applyAligns(stableAligns, true)
     }
 
-    private fun CopiedConfiguration.baselineAligns() = selectedVersions({ it.selected.moduleVersion }, true)
+    private fun CopiedConfiguration.baselineAligns(): List<AlignedVersion> =
+            selectedVersions({ it.selectedModuleVersion }, true)
+                    .filter {
+                        val resolvedVersions = it.resolvedDependencies
+                                .map { it.selectedVersion }
+                                .distinct()
+                        resolvedVersions.size > 1 || resolvedVersions.single() != it.version
+                    }
+
+    private fun CopiedConfiguration.resolvedAligns(baselineAligns: List<AlignedVersion>) =
+            selectedVersions({ dependency ->
+                val selectedModuleVersion = dependency.selectedModuleVersion
+                val alignedVersion = baselineAligns.singleOrNull {
+                    it.ruleMatches(selectedModuleVersion)
+                }
+                if (alignedVersion.selectedVersionExpected(selectedModuleVersion)) {
+                    /**
+                     * If the selected version for an aligned dependency was expected in the baseline pass (i.e. unaffected by
+                     * resolutionStrategies etc), then we choose the requested version so we can reflect the requested
+                     * dependency pre-alignment.
+                     */
+                    val selector = dependency.requested as ModuleComponentSelector
+                    DefaultModuleVersionIdentifier(selector.group, selector.module, selector.version)
+                } else {
+                    selectedModuleVersion
+                }
+            })
 
     tailrec private fun CopiedConfiguration.stableResolvedAligns(baselineAligns: List<AlignedVersion>, pass: Int = 1): List<AlignedVersion> {
         val resolvedAligns = resolvedAligns(baselineAligns)
@@ -96,24 +117,6 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
             return copy.stableResolvedAligns(baselineAligns, pass.inc())
         }
     }
-
-    private fun CopiedConfiguration.resolvedAligns(baselineAligns: List<AlignedVersion>) = selectedVersions({ dependency ->
-        val selectedModuleVersion = dependency.selected.moduleVersion
-        val alignedVersion = baselineAligns.singleOrNull {
-            it.ruleMatches(selectedModuleVersion)
-        }
-        if (alignedVersion.selectedVersionExpected(selectedModuleVersion)) {
-            /**
-             * If the selected version for an aligned dependency was expected in the baseline pass (i.e. unaffected by
-             * resolutionStrategies etc), then we choose the requested version so we can reflect the requested
-             * dependency pre-alignment.
-             */
-            val selector = dependency.requested as ModuleComponentSelector
-            DefaultModuleVersionIdentifier(selector.group, selector.module, selector.version)
-        } else {
-            selectedModuleVersion
-        }
-    })
 
     private fun AlignedVersion?.selectedVersionExpected(moduleVersion: ModuleVersionIdentifier): Boolean {
         if (this == null) {
@@ -136,8 +139,8 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
         }
         val resolvedDependencies = resolved
                 .map { it as ResolvedDependencyResult }
-                .filter { it.selected.id is ModuleComponentIdentifier }
-                .distinctBy { it.selected.moduleVersion.module }
+                .filter { it.selectedId is ModuleComponentIdentifier }
+                .distinctBy { it.selectedModule }
         val resolvedVersions = resolvedDependencies.map(versionSelector)
 
         val selectedVersions = ArrayList<AlignedVersion>()
@@ -158,7 +161,7 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
 
     private fun AlignedVersion.addResolvedDependencies(resolvedDependencies: List<ResolvedDependencyResult>): AlignedVersion {
         this.resolvedDependencies = resolvedDependencies.filter {
-            val moduleVersion = it.selected.moduleVersion
+            val moduleVersion = it.selectedModuleVersion
             rule.ruleMatches(moduleVersion)
         }
         return this
@@ -183,71 +186,6 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
         }
         return this
     }
-
-    /**
-     * Various reflection hackiness follows due to deficiencies in the Gradle configuration APIs:
-     *
-     * - We can't add the configuration to the configuration container to get the addAction handlers, because it causes ConcurrentModificationExceptions
-     * - We can't set the configuration name on copyRecursive, which makes for confusing logging output when we're resolving our configurations
-     */
-
-    private fun CopiedConfiguration.copyConfiguration(alignmentPhase: String) = project.copyConfiguration(this, baseName, alignmentPhase)
-
-    private fun Project.copyConfiguration(configuration: Configuration, baseName: String, alignmentPhase: String): CopiedConfiguration {
-        val copy = configuration.copyRecursive()
-        val name = "$baseName$alignmentPhase$CONFIG_SUFFIX"
-        copy.setName(name)
-
-        // Apply container register actions, without risking concurrently modifying the configuration container
-        val container = configurations
-        val method = container.javaClass.getDeclaredMethod("getEventRegister")
-        @Suppress("UNCHECKED_CAST")
-        val eventRegister = method.invoke(container) as CollectionEventRegister<Configuration>
-        eventRegister.addAction.execute(copy)
-
-        // Hacky workaround to prevent Gradle from attempting to resolve a project dependency as an external dependency
-        copy.exclude(this.group.toString(), this.name)
-
-        return CopiedConfiguration(configuration, this, baseName, copy)
-    }
-
-    private fun Configuration.setName(name: String) {
-        setField("name", name)
-        val internalConfig = this as ConfigurationInternal
-        val parentPath = Path.path(internalConfig.path).parent
-        try {
-            val path = parentPath.child(name)
-            setField("path", path)
-            setField("identityPath", path)
-        } catch (e: NoSuchMethodError) {
-            setField("path", "$parentPath:$name".replace("::", ":"))
-        }
-    }
-
-    private fun Any.setField(name: String, value: Any) {
-        val field = javaClass.findDeclaredField(name)
-        field.isAccessible = true
-
-        val modifiersField = Field::class.java.getDeclaredField("modifiers")
-        modifiersField.isAccessible = true
-        modifiersField.setInt(field, field.modifiers and Modifier.FINAL.inv())
-
-        field.set(this, value)
-    }
-
-    private tailrec fun <T> Class<T>.findDeclaredField(name: String): Field {
-        val field = declaredFields
-                .filter { it.name == name }
-                .singleOrNull()
-        if (field != null) {
-            return field
-        } else if (superclass != null) {
-            return superclass.findDeclaredField(name)
-        }
-        throw IllegalArgumentException("Could not find field $name")
-    }
-
-    private class CopiedConfiguration(val source: Configuration, val project: Project, val baseName: String, copy: Configuration) : Configuration by copy
 
     private fun alignedVersion(rule: AlignRule, moduleVersions: List<ModuleVersionIdentifier>, configuration: Configuration,
                                scheme: VersionSelectorScheme, comparator: Comparator<String>): String {
