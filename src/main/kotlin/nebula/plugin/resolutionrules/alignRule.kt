@@ -131,8 +131,8 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
         val (resolved, unresolved) = incoming.resolutionResult.allDependencies
                 .partition { it is ResolvedDependencyResult }
         if (shouldLog && unresolved.isNotEmpty()) {
-            logger.warn("Resolution rules could not resolve all dependencies to align in configuration '${source.name}' should also fail to resolve (use --info to list unresolved dependencies)")
-            logger.info("Resolution rules could not resolve:\n ${unresolved.map { " - $it" }.joinToString("\n")}")
+            logger.warn("Resolution rules could not resolve all dependencies to align $source, those dependencies will not be used during alignment (use --info to list unresolved dependencies)")
+            logger.info("Could not resolve:\n ${unresolved.distinct().map { " - $it" }.joinToString("\n")}")
         }
         val resolvedDependencies = resolved
                 .map { it as ResolvedDependencyResult }

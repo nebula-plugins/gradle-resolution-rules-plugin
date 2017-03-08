@@ -258,7 +258,7 @@ class AlignRulesDirectDependenciesSpec extends AbstractAlignRulesSpec {
 
         then:
         noExceptionThrown()
-        result.standardOutput.contains("Resolution rules could not resolve all dependencies to align in configuration 'compile' should also fail to resolve")
+        result.standardOutput.contains("Resolution rules could not resolve all dependencies to align configuration ':compile', those dependencies will not be used during alignment (use --info to list unresolved dependencies)")
 
         where:
         tasks | _
