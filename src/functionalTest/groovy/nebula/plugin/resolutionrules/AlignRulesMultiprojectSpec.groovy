@@ -17,6 +17,9 @@
 package nebula.plugin.resolutionrules
 
 import nebula.test.IntegrationSpec
+import nebula.test.dependencies.DependencyGraphBuilder
+import nebula.test.dependencies.GradleDependencyGenerator
+import nebula.test.dependencies.ModuleBuilder
 
 class AlignRulesMultiprojectSpec extends IntegrationSpec {
     def rulesJsonFile
@@ -130,5 +133,65 @@ class AlignRulesMultiprojectSpec extends IntegrationSpec {
 
         then:
         noExceptionThrown()
+    }
+
+    def 'can align project dependencies'() {
+        def graph = new DependencyGraphBuilder()
+                .addModule('other.nebula:a:0.42.0')
+                .addModule('other.nebula:a:1.0.0')
+                .addModule('other.nebula:a:1.1.0')
+                .addModule('other.nebula:b:0.42.0')
+                .addModule('other.nebula:b:1.0.0')
+                .addModule('other.nebula:b:1.1.0')
+                .addModule('other.nebula:c:0.42.0')
+                .addModule('other.nebula:c:1.0.0')
+                .addModule('other.nebula:c:1.1.0')
+                .build()
+        File mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
+
+        rulesJsonFile << '''\
+            {
+                "deny": [], "reject": [], "substitute": [], "replace": [],
+                "align": [
+                    {
+                        "group": "other.nebula",
+                        "includes": [ "a", "b" ],
+                        "reason": "Align test.nebula dependencies",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    }
+                ]
+            }
+        '''.stripIndent()
+
+        buildFile << """\
+            subprojects {
+                repositories {
+                    maven { url '${mavenrepo.absolutePath}' }
+                }
+            }
+
+            project(':a') {
+                dependencies {
+                   compile project(':b')
+                }
+            }
+
+            project(':b') {
+                dependencies {
+                    compile 'other.nebula:a:1.0.0'
+                    compile 'other.nebula:b:1.1.0'
+                    compile 'other.nebula:c:0.42.0'
+                }
+            }
+        """.stripIndent()
+
+        when:
+        def result = runTasksSuccessfully(':a:dependencies', '--configuration', 'compile')
+
+        then:
+        result.standardOutput.contains '+--- other.nebula:a:1.0.0 -> 1.1.0'
+        result.standardOutput.contains '+--- other.nebula:b:1.1.0'
+        result.standardOutput.contains '\\--- other.nebula:c:0.42.0'
     }
 }
