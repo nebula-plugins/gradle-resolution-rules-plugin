@@ -54,10 +54,10 @@ fun Project.copyConfiguration(configuration: Configuration, baseName: String, al
 
     // Apply container register actions, without risking concurrently modifying the configuration container
     val container = configurations
-    val method = container.javaClass.getDeclaredMethod("getEventRegister")
+    val eventRegister = container.javaClass.getDeclaredMethod("getEventRegister").invoke(container)
     @Suppress("UNCHECKED_CAST")
-    val eventRegister = method.invoke(container) as CollectionEventRegister<Configuration>
-    eventRegister.addAction.execute(copy)
+    val addAction = eventRegister.javaClass.getDeclaredMethod("getAddAction").invoke(eventRegister) as Action<Configuration>
+    addAction.execute(configuration)
 
     // Hacky workaround to prevent Gradle from attempting to resolve a project dependency as an external dependency
     copy.exclude(this.group.toString(), this.name)
