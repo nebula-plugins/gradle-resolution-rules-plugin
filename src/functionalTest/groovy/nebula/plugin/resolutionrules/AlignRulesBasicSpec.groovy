@@ -120,6 +120,73 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
         result.standardOutput.contains '\\--- test.nebula:c:0.42.0'
     }
 
+    def 'dependencyInsightEnhanced adds extra info for alignment'() {
+        def graph = new DependencyGraphBuilder()
+                .addModule('test.nebula:a:0.42.0')
+                .addModule('test.nebula:a:1.0.0')
+                .addModule('test.nebula:a:1.1.0')
+                .addModule('test.nebula:b:0.42.0')
+                .addModule('test.nebula:b:1.0.0')
+                .addModule('test.nebula:b:1.1.0')
+                .addModule('test.nebula:c:0.42.0')
+                .addModule('test.nebula:c:1.0.0')
+                .addModule('test.nebula:c:1.1.0')
+                .build()
+        File mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
+
+        rulesJsonFile << '''\
+            {
+                "deny": [], "reject": [], "substitute": [], "replace": [],
+                "align": [
+                    {
+                        "name": "testNebula",
+                        "group": "test.nebula",
+                        "reason": "Align test.nebula dependencies",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    }
+                ]
+            }
+        '''.stripIndent()
+
+        buildFile << """\
+            repositories {
+                maven { url '${mavenrepo.absolutePath}' }
+            }
+            dependencies {
+                compile 'test.nebula:a:1.0.0'
+                compile 'test.nebula:b:1.1.0'
+                compile 'test.nebula:c:0.42.0'
+            }
+        """.stripIndent()
+
+        when:
+        def aResult = runTasksSuccessfully('dependencyInsightEnhanced', '--configuration', 'compile', '--dependency', 'a')
+
+        then:
+        aResult.standardOutput.contains 'test.nebula:a:1.1.0 (aligned to 1.1.0 by testNebula)'
+        aResult.standardOutput.contains 'nebula.resolution-rules uses: dependencyInsightEnhanced-adds-extra-info-for-alignment.json'
+
+        when:
+        def aResultCompileClasspath = runTasksSuccessfully('dependencyInsightEnhanced', '--configuration', 'compileClasspath', '--dependency', 'a')
+
+        then:
+        aResultCompileClasspath.standardOutput.contains 'test.nebula:a:1.1.0 (aligned to 1.1.0 by testNebula)'
+
+        when:
+        def bResult = runTasksSuccessfully('dependencyInsightEnhanced', '--configuration', 'compile', '--dependency', 'b')
+
+        then:
+        !bResult.standardOutput.contains('test.nebula:b:1.1.0 (')
+
+        when:
+        def cResult = runTasksSuccessfully('dependencyInsightEnhanced', '--configuration', 'compile', '--dependency', 'c')
+
+        then:
+        cResult.standardOutput.contains 'test.nebula:c:1.1.0 (aligned to 1.1.0 by testNebula)'
+
+    }
+
     def 'skip aligning some dependencies in a group'() {
         def graph = new DependencyGraphBuilder()
                 .addModule('test.nebula:a:0.42.0')

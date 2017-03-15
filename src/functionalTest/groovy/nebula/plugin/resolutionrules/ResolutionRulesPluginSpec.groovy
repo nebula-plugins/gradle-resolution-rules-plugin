@@ -208,6 +208,22 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
         result.standardOutput.contains('asm:asm:3.3.1 -> org.ow2.asm:asm:5.0.4')
     }
 
+    def 'replace module dependencyInsightEnhanced'() {
+        given:
+        buildFile << """
+                     dependencies {
+                        compile 'asm:asm:3.3.1'
+                        compile 'org.ow2.asm:asm:5.0.4'
+                     }
+                     """.stripIndent()
+
+        when:
+        def result = runTasksSuccessfully('dependencyInsightEnhanced', '--configuration', 'compile', '--dependency', 'asm')
+
+        then:
+        result.standardOutput.contains('org.ow2.asm:asm:5.0.4 (replacement asm:asm -> org.ow2.asm:asm)')
+    }
+
     def "module is not replaced if the replacement isn't in the configuration"() {
         given:
         buildFile << """

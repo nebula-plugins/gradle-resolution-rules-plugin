@@ -80,6 +80,7 @@ data class ReplaceRule(override val module: String, val with: String, override v
         project.dependencies.modules.module(moduleId.toString()) {
             val details = it as ComponentModuleMetadataDetails
             details.replacedBy(withModuleId.toString())
+            ResolutionRulesPlugin.insight.addReason(configuration.name, "${withModuleId.organization}:${withModuleId.name}", "replacement ${details.id.group}:${details.id.name} -> ${withModuleId.organization}:${withModuleId.name}", "nebula.resolution-rules")
         }
     }
 }
@@ -100,6 +101,7 @@ data class SubstituteRule(val module: String, val with: String, override var rul
                     val requestedSelector = requested as ModuleComponentSelector
                     if (requestedSelector.group == selector.group && requestedSelector.module == selector.module) {
                         if (versionScheme.parseSelector(selector.version).accept(requestedSelector.version)) {
+                            ResolutionRulesPlugin.insight.addReason(configuration.name, "${withSelector.group}:${withSelector.module}", "substitution because $reason", "nebula.resolution-rules")
                             useTarget(withSelector)
                         }
                     }
@@ -107,6 +109,7 @@ data class SubstituteRule(val module: String, val with: String, override var rul
             })
         } else {
             resolutionStrategy.dependencySubstitution {
+                ResolutionRulesPlugin.insight.addReason(configuration.name, "${withSelector.group}:${withSelector.module}", "substitution because $reason", "nebula.resolution-rules")
                 it.substitute(selector).with(withSelector)
             }
         }

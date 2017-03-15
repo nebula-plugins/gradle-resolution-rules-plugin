@@ -1,3 +1,47 @@
+2.5.0 / 2017/03/15
+==================
+- Use `nebula.dependency-base` to add `dependencyInsightEnhanced` task to grant more insight into resolution rule choices
+
+2.4.4 / 2017/03/10
+==================
+- Use reflection when getting the event register to avoid an upcoming internal API change from a class -> interface causing `IncompatibleClassChangeError`
+
+2.4.3 / 2017/03/08
+==================
+- Improve performance of alignment by short-circuiting when all dependencies in a configuration have already been aligned either naturally, or via other plugins such as dependency lock
+
+2.4.2 / 2017/02/28
+==================
+- Fixed an issue that prevented rules from being applied to configurations created after the project was evaluated, causing global dependency locks not to be affected by rules.
+
+2.4.1 / 2017/02/26
+==================
+- Prevent beforeResolve rules from applying unless afterEvaluate rules have already been applied. Prevents 'already resolved' warnings for alignment configurations
+
+2.4.0 / 2017/02/26
+==================
+- Support version selectors (dynamic, range, latest.*) for reject rules
+
+2.3.3 / 2017/02/24
+==================
+- Fix multi-pass alignment where any unexpected resolved version would cause the second pass to be ineffective for all dependencies
+- Fix duplicate path separators in root project configuration names
+
+2.3.2 / 2017/01/24
+==================
+- Improve version selection for multi-pass alignment to ensure that it doesn't affect dependencies that were selected for reasons other than conflict resolution
+
+2.3.1 / 2017/01/20
+==================
+- No longer applies any rules to configurations with no dependencies, rather than just optimizing align rules
+
+2.3.0 / 2017/01/19
+==================
+- Improve performance by avoiding alignment where possible:
+  - Skips configurations with no dependencies
+  - Skips non-transitive configurations
+  - Stops alignment after the baseline resolve, if there are no aligned dependencies
+
 1.5.1 / 2016/05/12
 ==================
 - Protect against spring-boot plugin getting us into a stackoverflow situation

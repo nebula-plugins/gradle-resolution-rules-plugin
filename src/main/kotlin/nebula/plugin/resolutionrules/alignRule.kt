@@ -1,5 +1,6 @@
 package nebula.plugin.resolutionrules
 
+import com.netflix.nebula.dependencybase.DependencyManagement
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ExternalDependency
@@ -181,6 +182,7 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
                         logger.debug("Resolution rule $rule aligning ${details.requested.group}:${details.requested.name} to $version")
                     }
                     details.useVersion(version)
+                    ResolutionRulesPlugin.insight.addReason(this.name, "${details.requested.group}:${details.requested.name}", "aligned to $version by ${rule.name}", "nebula.resolution-rules")
                 }
             }
         }
