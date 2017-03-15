@@ -18,6 +18,8 @@ package nebula.plugin.resolutionrules
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.netflix.nebula.dependencybase.DependencyBasePlugin
+import com.netflix.nebula.dependencybase.DependencyManagement
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
@@ -45,10 +47,13 @@ class ResolutionRulesPlugin : Plugin<Project> {
         const val JAR_EXT = ".jar"
         const val ZIP_EXT = ".zip"
         const val OPTIONAL_PREFIX = "optional-"
+        lateinit var insight: DependencyManagement
     }
 
     override fun apply(project: Project) {
         this.project = project
+        this.project.plugins.apply(DependencyBasePlugin::class.java)
+        ResolutionRulesPlugin.insight = this.project.extensions.extraProperties.get("nebulaDependencyBase") as DependencyManagement
         rulesConfiguration = project.configurations.create(RESOLUTION_RULES_CONFIG_NAME)
         extension = project.extensions.create("nebulaResolutionRules", NebulaResolutionRulesExtension::class.java)
         mapper = objectMapper()
@@ -101,6 +106,7 @@ class ResolutionRulesPlugin : Plugin<Project> {
             logger.debug("No resolution rules have been added to the '{}' configuration", configuration.name)
         }
         for (file in files) {
+            ResolutionRulesPlugin.insight.addPluginMessage("nebula.resolution-rules uses: ${file.name}")
             if (isIncludedRuleFile(file.name, extension)) {
                 rules.putRules(parseJsonFile(file))
             } else if (file.name.endsWith(JAR_EXT) || file.name.endsWith(ZIP_EXT)) {
@@ -118,7 +124,8 @@ class ResolutionRulesPlugin : Plugin<Project> {
                 logger.debug("Unsupported rules file extension for $file")
             }
         }
-        return rules.values.flatten()
+        val flatRules = rules.values.flatten()
+        return flatRules
     }
 
     fun MutableMap<String, RuleSet>.putRules(ruleSet: RuleSet) {
