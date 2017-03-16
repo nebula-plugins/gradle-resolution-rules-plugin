@@ -1,3 +1,11 @@
+2.5.2 / 2017/03/16
+==================
+- Fix a memory leak in the gradle daemon caused by putting an object in a static context
+
+2.5.1 / 2017/03/15
+==================
+- Minor performance optimization to rule matching
+
 2.5.0 / 2017/03/15
 ==================
 - Use `nebula.dependency-base` to add `dependencyInsightEnhanced` task to grant more insight into resolution rule choices

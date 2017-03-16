@@ -16,6 +16,7 @@
  */
 package nebula.plugin.resolutionrules
 
+import com.netflix.nebula.dependencybase.DependencyManagement
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.artifacts.*
@@ -30,7 +31,7 @@ val versionComparator = DefaultVersionComparator()
 val versionScheme = DefaultVersionSelectorScheme(versionComparator)
 
 interface Rule {
-    fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension)
+    fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension, insight: DependencyManagement)
 }
 
 interface BasicRule : Rule {
@@ -74,19 +75,19 @@ fun Collection<RuleSet>.flatten() = RuleSet(
         flatMap { it.align })
 
 data class ReplaceRule(override val module: String, val with: String, override var ruleSet: String?, override val reason: String, override val author: String, override val date: String) : ModuleRule {
-    override fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension) {
+    override fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension, insight: DependencyManagement) {
         val moduleId = ModuleIdentifier.valueOf(module)
         val withModuleId = ModuleIdentifier.valueOf(with)
         project.dependencies.modules.module(moduleId.toString()) {
             val details = it as ComponentModuleMetadataDetails
             details.replacedBy(withModuleId.toString())
-            ResolutionRulesPlugin.insight.addReason(configuration.name, "${withModuleId.organization}:${withModuleId.name}", "replacement ${details.id.group}:${details.id.name} -> ${withModuleId.organization}:${withModuleId.name}", "nebula.resolution-rules")
+            insight.addReason(configuration.name, "${withModuleId.organization}:${withModuleId.name}", "replacement ${details.id.group}:${details.id.name} -> ${withModuleId.organization}:${withModuleId.name}", "nebula.resolution-rules")
         }
     }
 }
 
 data class SubstituteRule(val module: String, val with: String, override var ruleSet: String?, override val reason: String, override val author: String, override val date: String) : BasicRule {
-    override fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension) {
+    override fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension, insight: DependencyManagement) {
         val substitution = resolutionStrategy.dependencySubstitution
         val selector = substitution.module(module)
         val withModuleId = ModuleVersionIdentifier.valueOf(with)
@@ -101,7 +102,7 @@ data class SubstituteRule(val module: String, val with: String, override var rul
                     val requestedSelector = requested as ModuleComponentSelector
                     if (requestedSelector.group == selector.group && requestedSelector.module == selector.module) {
                         if (versionScheme.parseSelector(selector.version).accept(requestedSelector.version)) {
-                            ResolutionRulesPlugin.insight.addReason(configuration.name, "${withSelector.group}:${withSelector.module}", "substitution because $reason", "nebula.resolution-rules")
+                            insight.addReason(configuration.name, "${withSelector.group}:${withSelector.module}", "substitution because $reason", "nebula.resolution-rules")
                             useTarget(withSelector)
                         }
                     }
@@ -109,7 +110,7 @@ data class SubstituteRule(val module: String, val with: String, override var rul
             })
         } else {
             resolutionStrategy.dependencySubstitution {
-                ResolutionRulesPlugin.insight.addReason(configuration.name, "${withSelector.group}:${withSelector.module}", "substitution because $reason", "nebula.resolution-rules")
+                insight.addReason(configuration.name, "${withSelector.group}:${withSelector.module}", "substitution because $reason", "nebula.resolution-rules")
                 it.substitute(selector).with(withSelector)
             }
         }
@@ -117,7 +118,7 @@ data class SubstituteRule(val module: String, val with: String, override var rul
 }
 
 data class RejectRule(override val module: String, override var ruleSet: String?, override val reason: String, override val author: String, override val date: String) : ModuleRule {
-    override fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension) {
+    override fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension, insight: DependencyManagement) {
         val moduleId = ModuleVersionIdentifier.valueOf(module)
         resolutionStrategy.componentSelection.all(Action<ComponentSelection> { selection ->
             val candidate = selection.candidate
@@ -131,7 +132,7 @@ data class RejectRule(override val module: String, override var ruleSet: String?
 }
 
 data class DenyRule(override val module: String, override var ruleSet: String?, override val reason: String, override val author: String, override val date: String) : ModuleRule {
-    override fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension) {
+    override fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension, insight: DependencyManagement) {
         val moduleId = ModuleVersionIdentifier.valueOf(module)
         val match = configuration.allDependencies.find {
             it is ExternalModuleDependency && it.group == moduleId.organization && it.name == moduleId.name
@@ -146,7 +147,7 @@ data class ExcludeRule(override val module: String, override var ruleSet: String
     val logger: Logger = Logging.getLogger(ExcludeRule::class.java)
 
     @Override
-    override fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension) {
+    override fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension, insight: DependencyManagement) {
         val moduleId = ModuleIdentifier.valueOf(module)
         logger.debug("Resolution rule $this excluding ${moduleId.organization}:${moduleId.name}")
         configuration.exclude(moduleId.organization, moduleId.name)
