@@ -174,9 +174,11 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
     private fun Configuration.applyAligns(alignedVersions: List<AlignedVersion>, shouldLog: Boolean = false): Configuration {
         resolutionStrategy.eachDependency { details ->
             val target = details.target
-            val foundMatch = alignedVersions.filter { it.rule.ruleMatches(target.group, target.name) }
-            if (foundMatch.isNotEmpty()) {
-                val (rule, version) = foundMatch.first()
+            val alignedVersion = alignedVersions.firstOrNull {
+                it.rule.ruleMatches(target.group, target.name)
+            }
+            if (alignedVersion != null) {
+                val (rule, version) = alignedVersion
                 if (version != matchedVersion(rule, details.target.version)) {
                     if (shouldLog) {
                         logger.debug("Resolution rule $rule aligning ${details.requested.group}:${details.requested.name} to $version")
