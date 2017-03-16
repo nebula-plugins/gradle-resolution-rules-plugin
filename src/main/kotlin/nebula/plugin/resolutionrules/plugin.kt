@@ -36,6 +36,7 @@ class ResolutionRulesPlugin : Plugin<Project> {
     lateinit var rulesConfiguration: Configuration
     lateinit var extension: NebulaResolutionRulesExtension
     lateinit var mapper: ObjectMapper
+    lateinit var insight: DependencyManagement
     val ruleSet: RuleSet by lazy {
         rulesFromConfiguration(rulesConfiguration, extension)
     }
@@ -47,13 +48,12 @@ class ResolutionRulesPlugin : Plugin<Project> {
         const val JAR_EXT = ".jar"
         const val ZIP_EXT = ".zip"
         const val OPTIONAL_PREFIX = "optional-"
-        lateinit var insight: DependencyManagement
     }
 
     override fun apply(project: Project) {
         this.project = project
         this.project.plugins.apply(DependencyBasePlugin::class.java)
-        ResolutionRulesPlugin.insight = this.project.extensions.extraProperties.get("nebulaDependencyBase") as DependencyManagement
+        insight = this.project.extensions.extraProperties.get("nebulaDependencyBase") as DependencyManagement
         rulesConfiguration = project.configurations.create(RESOLUTION_RULES_CONFIG_NAME)
         extension = project.extensions.create("nebulaResolutionRules", NebulaResolutionRulesExtension::class.java)
         mapper = objectMapper()
@@ -71,7 +71,7 @@ class ResolutionRulesPlugin : Plugin<Project> {
                     logger.debug("Skipping afterEvaluate rules for $config - No dependencies are configured")
                 } else {
                     ruleSet.dependencyRules().forEach { rule ->
-                        rule.apply(project, config, config.resolutionStrategy, extension)
+                        rule.apply(project, config, config.resolutionStrategy, extension, insight)
                     }
                     afterEvaluateRulesApplied = true
                 }
@@ -84,7 +84,7 @@ class ResolutionRulesPlugin : Plugin<Project> {
                     logger.debug("Skipping beforeResolve rules for $config - afterEvaluate rules have not been applied")
                 } else {
                     ruleSet.beforeResolveRules().forEach { rule ->
-                        rule.apply(project, config, config.resolutionStrategy, extension)
+                        rule.apply(project, config, config.resolutionStrategy, extension, insight)
                     }
                 }
             }
@@ -106,7 +106,8 @@ class ResolutionRulesPlugin : Plugin<Project> {
             logger.debug("No resolution rules have been added to the '{}' configuration", configuration.name)
         }
         for (file in files) {
-            ResolutionRulesPlugin.insight.addPluginMessage("nebula.resolution-rules uses: ${file.name}")
+            val dep = configuration.dependencies.find { it.name == file.name.replace("".toRegex(), "") }
+            insight.addPluginMessage("nebula.resolution-rules uses: ${file.name}")
             if (isIncludedRuleFile(file.name, extension)) {
                 rules.putRules(parseJsonFile(file))
             } else if (file.name.endsWith(JAR_EXT) || file.name.endsWith(ZIP_EXT)) {

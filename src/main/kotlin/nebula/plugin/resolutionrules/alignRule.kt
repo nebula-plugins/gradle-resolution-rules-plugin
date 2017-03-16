@@ -25,7 +25,7 @@ data class AlignRule(val name: String?, val group: Regex, val includes: List<Reg
         if (VersionMatcher.values().filter { it.name == match }.isNotEmpty()) VersionMatcher.valueOf(match!!).pattern else Pattern.compile(match)
     }
 
-    override fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension) {
+    override fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension, insight: DependencyManagement) {
         throw UnsupportedOperationException("Align rules are not applied directly")
     }
 
@@ -42,12 +42,14 @@ data class AlignRule(val name: String?, val group: Regex, val includes: List<Reg
 
 data class AlignRules(val aligns: List<AlignRule>) : Rule {
     val logger: Logger = Logging.getLogger(AlignRules::class.java)
+    lateinit var insight: DependencyManagement
 
     companion object {
         const val CONFIG_SUFFIX = "Align"
     }
 
-    override fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension) {
+    override fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension, insight: DependencyManagement) {
+        this.insight = insight
         if (configuration.name.endsWith(CONFIG_SUFFIX)) {
             // Don't attempt to align an alignment configuration
             return
@@ -184,7 +186,7 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
                         logger.debug("Resolution rule $rule aligning ${details.requested.group}:${details.requested.name} to $version")
                     }
                     details.useVersion(version)
-                    ResolutionRulesPlugin.insight.addReason(this.name, "${details.requested.group}:${details.requested.name}", "aligned to $version by ${rule.name}", "nebula.resolution-rules")
+                    insight.addReason(this.name, "${details.requested.group}:${details.requested.name}", "aligned to $version by ${rule.name}", "nebula.resolution-rules")
                 }
             }
         }
