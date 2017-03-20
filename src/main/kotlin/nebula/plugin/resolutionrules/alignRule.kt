@@ -1,11 +1,10 @@
 package nebula.plugin.resolutionrules
 
 import com.netflix.nebula.dependencybase.DependencyManagement
+import org.gradle.api.Action
 import org.gradle.api.Project
-import org.gradle.api.artifacts.Configuration
-import org.gradle.api.artifacts.ExternalDependency
+import org.gradle.api.artifacts.*
 import org.gradle.api.artifacts.ModuleVersionIdentifier
-import org.gradle.api.artifacts.ResolutionStrategy
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ModuleComponentSelector
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
@@ -177,8 +176,14 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
             = (this as Configuration).applyAligns(alignedVersionsWithDependencies) as CopiedConfiguration
 
     private fun Configuration.applyAligns(alignedVersionsWithDependencies: List<AlignedVersionWithDependencies>, shouldLog: Boolean = false): Configuration {
-        val alignedVersions = alignedVersionsWithDependencies.map { it.alignedVersion }
-        resolutionStrategy.eachDependency { details ->
+        alignedVersionsWithDependencies.map { it.alignedVersion }.let {
+            resolutionStrategy.eachDependency(ApplyAlignsAction(this, it, shouldLog))
+        }
+        return this
+    }
+
+    private inner class ApplyAlignsAction(val configuration: Configuration, val alignedVersions: List<AlignedVersion>, val shouldLog: Boolean) : Action<DependencyResolveDetails> {
+        override fun execute(details: DependencyResolveDetails) {
             val target = details.target
             val alignedVersion = alignedVersions.firstOrNull {
                 it.rule.ruleMatches(target.group, target.name)
@@ -190,11 +195,10 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
                         logger.debug("Resolution rule $rule aligning ${details.requested.group}:${details.requested.name} to $version")
                     }
                     details.useVersion(version)
-                    insight.addReason(this.name, "${details.requested.group}:${details.requested.name}", "aligned to $version by ${rule.name}", "nebula.resolution-rules")
+                    insight.addReason(configuration.name, "${details.requested.group}:${details.requested.name}", "aligned to $version by ${rule.name}", "nebula.resolution-rules")
                 }
             }
         }
-        return this
     }
 
     private fun alignedVersion(rule: AlignRule, moduleVersions: List<ModuleVersionIdentifier>, configuration: Configuration,
