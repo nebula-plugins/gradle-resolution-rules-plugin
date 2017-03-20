@@ -17,12 +17,22 @@ import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.VersionS
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import java.util.*
+import java.util.regex.Matcher
 import java.util.regex.Pattern
 
 data class AlignRule(val name: String?, val group: Regex, val includes: List<Regex>, val excludes: List<Regex>, val match: String?, override var ruleSet: String?, override val reason: String, override val author: String, override val date: String) : BasicRule {
-    val matchPattern: Pattern by lazy {
+    companion object {
+        val logger: Logger = Logging.getLogger(AlignRules::class.java)
+    }
+
+    private var groupMatcher: Matcher? = null
+    private lateinit var includesMatchers: List<Matcher>
+    private lateinit var excludesMatchers: List<Matcher>
+
+    private val matchPattern: Pattern by lazy {
         if (VersionMatcher.values().filter { it.name == match }.isNotEmpty()) VersionMatcher.valueOf(match!!).pattern else Pattern.compile(match)
     }
+    private var matchMatcher: Matcher? = null
 
     override fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension, insight: DependencyManagement) {
         throw UnsupportedOperationException("Align rules are not applied directly")
@@ -31,19 +41,42 @@ data class AlignRule(val name: String?, val group: Regex, val includes: List<Reg
     fun ruleMatches(dep: ModuleVersionIdentifier) = ruleMatches(dep.group, dep.name)
 
     fun ruleMatches(inputGroup: String, inputName: String): Boolean {
-        val matchedIncludes = includes.filter { inputName.matches(it) }
-        val matchedExcludes = excludes.filter { inputName.matches(it) }
-        return inputGroup.matches(group) &&
-                (includes.isEmpty() || !matchedIncludes.isEmpty()) &&
-                (excludes.isEmpty() || matchedExcludes.isEmpty())
+        if (groupMatcher == null) {
+            groupMatcher = group.toPattern().matcher(inputGroup)
+            includesMatchers = includes.map { it.toPattern().matcher(inputName) }
+            excludesMatchers = excludes.map { it.toPattern().matcher(inputName) }
+        }
+
+        return groupMatcher!!.matches(inputGroup) &&
+                (includes.isEmpty() || includesMatchers.any { it.matches(inputName) }) &&
+                (excludes.isEmpty() || excludesMatchers.none { it.matches(inputName) })
+    }
+
+    fun Matcher.matches(input: CharSequence) =
+        reset(input).matches()
+
+    fun matchedVersion(version: String): String {
+        if (match != null) {
+            val matcher = if (matchMatcher == null) {
+                matchMatcher = matchPattern.matcher(version)
+                matchMatcher!!
+            } else matchMatcher!!.reset(version)
+            if (matcher.find()) {
+                return matcher.group()
+            } else if (!versionScheme.parseSelector(version).isDynamic) {
+                logger.warn("Resolution rule $this is unable to honor match. $match does not match $version. Will use $version")
+            }
+        }
+        return version
     }
 }
 
 data class AlignRules(val aligns: List<AlignRule>) : Rule {
-    val logger: Logger = Logging.getLogger(AlignRules::class.java)
     lateinit var insight: DependencyManagement
 
     companion object {
+        val logger: Logger = Logging.getLogger(AlignRules::class.java)
+
         const val CONFIG_SUFFIX = "Align"
     }
 
@@ -190,7 +223,7 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
             }
             if (alignedVersion != null) {
                 val (rule, version) = alignedVersion
-                if (version != matchedVersion(rule, details.target.version)) {
+                if (version != rule.matchedVersion(details.target.version)) {
                     if (shouldLog) {
                         logger.debug("Resolution rule $rule aligning ${details.requested.group}:${details.requested.name} to $version")
                     }
@@ -203,7 +236,7 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
 
     private fun alignedVersion(rule: AlignRule, moduleVersions: List<ModuleVersionIdentifier>, configuration: Configuration,
                                scheme: VersionSelectorScheme, comparator: Comparator<String>): String {
-        val versions = moduleVersions.map { matchedVersion(rule, it.version) }.distinct()
+        val versions = moduleVersions.map { rule.matchedVersion(it.version) }.distinct()
         val highestVersion = versions.maxWith(comparator)!!
 
         val forcedModules = moduleVersions.flatMap { moduleVersion ->
@@ -254,20 +287,6 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
         }
 
         return highestVersion
-    }
-
-    fun matchedVersion(rule: AlignRule, version: String): String {
-        val match = rule.match
-        if (match != null) {
-            val pattern = rule.matchPattern
-            val matcher = pattern.matcher(version)
-            if (matcher.find()) {
-                return matcher.group()
-            } else if (!versionScheme.parseSelector(version).isDynamic) {
-                logger.warn("Resolution rule $rule is unable to honor match. $match does not match $version. Will use $version")
-            }
-        }
-        return version
     }
 }
 

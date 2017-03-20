@@ -106,7 +106,6 @@ class ResolutionRulesPlugin : Plugin<Project> {
             logger.debug("No resolution rules have been added to the '{}' configuration", configuration.name)
         }
         for (file in files) {
-            val dep = configuration.dependencies.find { it.name == file.name.replace("".toRegex(), "") }
             insight.addPluginMessage("nebula.resolution-rules uses: ${file.name}")
             if (isIncludedRuleFile(file.name, extension)) {
                 rules.putRules(parseJsonFile(file))
