@@ -221,7 +221,7 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
         def standardOutput = runTasksSuccessfully('dependencies', '--configuration', 'compile').standardOutput
 
         then:
-        standardOutput.contains 'Found force(s) [test.nebula:a:latest.release] that supersede resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-with-latest-release-force, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z). Will use highest dynamic version 2.0.0 that matches most selective selector latest.release'
+        standardOutput.contains 'Found force(s) [test.nebula:a:latest.release] that supersede resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-with-latest-release-force, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z). Will use highest dynamic version 2.0.0 that matches most specific selector latest.release'
         standardOutput.contains '+--- test.nebula:a:2.0.0\n'
         standardOutput.contains '+--- test.nebula:b:1.0.0 -> 2.0.0\n'
         standardOutput.contains '\\--- test.nebula:c:0.15.0 -> 2.0.0\n'
@@ -274,13 +274,13 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
         def standardOutput = runTasksSuccessfully('dependencies', '--configuration', 'compile').standardOutput
 
         then:
-        standardOutput.contains 'Found force(s) [test.nebula:a:1.+] that supersede resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-with-sub-version-force, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z). Will use highest dynamic version 1.0.0 that matches most selective selector 1.+'
+        standardOutput.contains 'Found force(s) [test.nebula:a:1.+] that supersede resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-with-sub-version-force, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z). Will use highest dynamic version 1.0.0 that matches most specific selector 1.+'
         standardOutput.contains '+--- test.nebula:a:2.0.0 -> 1.0.0\n'
         standardOutput.contains '+--- test.nebula:b:1.0.0\n'
         standardOutput.contains '\\--- test.nebula:c:0.15.0 -> 1.0.0\n'
     }
 
-    def 'alignment uses most selective dynamic version'() {
+    def 'alignment uses most specific dynamic version'() {
         def graph = new DependencyGraphBuilder()
                 .addModule('test.nebula:a:3.0.0')
                 .addModule('test.nebula:a:2.0.0')
@@ -330,7 +330,7 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
         def standardOutput = runTasksSuccessfully('dependencies', '--configuration', 'compile').standardOutput
 
         then:
-        standardOutput.contains 'Found force(s) [test.nebula:a:latest.release, test.nebula:b:1.+, test.nebula:c:[1.0, 2.0)] that supersede resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-uses-most-selective-dynamic-version, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z). Will use highest dynamic version 1.0.0 that matches most selective selector [1.0, 2.0)'
+        standardOutput.contains 'Found force(s) [test.nebula:a:latest.release, test.nebula:b:1.+, test.nebula:c:[1.0, 2.0)] that supersede resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-uses-most-specificn-dynamic-version, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z). Will use highest dynamic version 1.0.0 that matches most specific selector [1.0, 2.0)'
         standardOutput.contains '+--- test.nebula:a:2.0.0 -> 1.0.0\n'
         standardOutput.contains '+--- test.nebula:b:1.0.0\n'
         standardOutput.contains '\\--- test.nebula:c:0.15.0 -> 1.0.0\n'

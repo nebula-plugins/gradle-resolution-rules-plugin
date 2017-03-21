@@ -25,10 +25,12 @@ import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.DefaultV
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.DefaultVersionSelectorScheme
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
+import java.util.*
 import org.gradle.api.artifacts.ModuleVersionIdentifier as GradleModuleVersionIdentifier
 
-val versionComparator = DefaultVersionComparator()
-val versionScheme = DefaultVersionSelectorScheme(versionComparator)
+val VERSION_COMPARATOR = DefaultVersionComparator()
+val STRING_VERSION_COMPARATOR: Comparator<String> = VERSION_COMPARATOR.asStringComparator()
+val VERSION_SCHEME = DefaultVersionSelectorScheme(VERSION_COMPARATOR)
 
 interface Rule {
     fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension, insight: DependencyManagement)
@@ -101,7 +103,7 @@ data class SubstituteRule(val module: String, val with: String, override var rul
                 if (requested is ModuleComponentSelector) {
                     val requestedSelector = requested as ModuleComponentSelector
                     if (requestedSelector.group == selector.group && requestedSelector.module == selector.module) {
-                        if (versionScheme.parseSelector(selector.version).accept(requestedSelector.version)) {
+                        if (VERSION_SCHEME.parseSelector(selector.version).accept(requestedSelector.version)) {
                             insight.addReason(configuration.name, "${withSelector.group}:${withSelector.module}", "substitution because $reason", "nebula.resolution-rules")
                             useTarget(withSelector)
                         }
@@ -123,7 +125,7 @@ data class RejectRule(override val module: String, override var ruleSet: String?
         resolutionStrategy.componentSelection.all(Action<ComponentSelection> { selection ->
             val candidate = selection.candidate
             if (candidate.group == moduleId.organization && candidate.module == moduleId.name) {
-                if (!moduleId.hasVersion() || versionScheme.parseSelector(moduleId.version).accept(candidate.version)) {
+                if (!moduleId.hasVersion() || VERSION_SCHEME.parseSelector(moduleId.version).accept(candidate.version)) {
                     selection.reject("Rejected by resolution rule $ruleSet - $reason")
                 }
             }

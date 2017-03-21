@@ -10,17 +10,24 @@ import org.gradle.api.artifacts.component.ModuleComponentSelector
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.internal.artifacts.DefaultModuleVersionIdentifier
 import org.gradle.api.internal.artifacts.DefaultModuleVersionSelector
-import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.LatestVersionSelector
-import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.SubVersionSelector
-import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.VersionRangeSelector
-import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.VersionSelectorScheme
+import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.Versioned
+import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.*
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import java.util.*
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
-data class AlignRule(val name: String?, val group: Regex, val includes: List<Regex>, val excludes: List<Regex>, val match: String?, override var ruleSet: String?, override val reason: String, override val author: String, override val date: String) : BasicRule {
+data class AlignRule(val name: String?,
+                     val group: Regex,
+                     val includes: List<Regex>,
+                     val excludes: List<Regex>,
+                     val match: String?,
+                     override var ruleSet: String?,
+                     override val reason: String,
+                     override val author: String,
+                     override val date: String) : BasicRule {
+
     companion object {
         val logger: Logger = Logging.getLogger(AlignRules::class.java)
     }
@@ -30,11 +37,16 @@ data class AlignRule(val name: String?, val group: Regex, val includes: List<Reg
     private lateinit var excludesMatchers: List<Matcher>
 
     private val matchPattern: Pattern by lazy {
-        if (VersionMatcher.values().filter { it.name == match }.isNotEmpty()) VersionMatcher.valueOf(match!!).pattern else Pattern.compile(match)
+        val isBuiltIn = VersionMatchers.values().any { it.name == match }
+        if (isBuiltIn) VersionMatchers.valueOf(match!!).pattern else Pattern.compile(match)
     }
     private var matchMatcher: Matcher? = null
 
-    override fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension, insight: DependencyManagement) {
+    override fun apply(project: Project,
+                       configuration: Configuration,
+                       resolutionStrategy: ResolutionStrategy,
+                       extension: NebulaResolutionRulesExtension,
+                       insight: DependencyManagement) {
         throw UnsupportedOperationException("Align rules are not applied directly")
     }
 
@@ -52,9 +64,6 @@ data class AlignRule(val name: String?, val group: Regex, val includes: List<Reg
                 (excludes.isEmpty() || excludesMatchers.none { it.matches(inputName) })
     }
 
-    fun Matcher.matches(input: CharSequence) =
-        reset(input).matches()
-
     fun matchedVersion(version: String): String {
         if (match != null) {
             val matcher = if (matchMatcher == null) {
@@ -63,11 +72,17 @@ data class AlignRule(val name: String?, val group: Regex, val includes: List<Reg
             } else matchMatcher!!.reset(version)
             if (matcher.find()) {
                 return matcher.group()
-            } else if (!versionScheme.parseSelector(version).isDynamic) {
+            } else if (!VERSION_SCHEME.parseSelector(version).isDynamic) {
                 logger.warn("Resolution rule $this is unable to honor match. $match does not match $version. Will use $version")
             }
         }
         return version
+    }
+
+    private enum class VersionMatchers(regex: String) {
+        EXCLUDE_SUFFIXES("^(\\d+\\.)?(\\d+\\.)?(\\*|\\d+)");
+
+        val pattern = regex.toRegex().toPattern()
     }
 }
 
@@ -118,8 +133,7 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
             selectedVersions({ it.selectedModuleVersion }, true)
                     .filter {
                         val resolvedVersions = it.resolvedDependencies
-                                .map { it.selectedVersion }
-                                .distinct()
+                                .mapToSet { it.selectedVersion }
                         resolvedVersions.size > 1 || resolvedVersions.single() != it.alignedVersion.version
                     }
 
@@ -166,14 +180,17 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
     private fun AlignedVersionWithDependencies.ruleMatches(dep: ModuleVersionIdentifier) = alignedVersion.rule.ruleMatches(dep)
 
     private fun CopiedConfiguration.selectedVersions(versionSelector: (ResolvedDependencyResult) -> ModuleVersionIdentifier, shouldLog: Boolean = false): List<AlignedVersionWithDependencies> {
-        val (resolved, unresolved) = incoming.resolutionResult.allDependencies
+        val partitioned = incoming.resolutionResult.allDependencies
                 .partition { it is ResolvedDependencyResult }
+        @Suppress("UNCHECKED_CAST")
+        val resolved = partitioned.first as List<ResolvedDependencyResult>
+        val unresolved = partitioned.second
+
         if (shouldLog && unresolved.isNotEmpty()) {
             logger.warn("Resolution rules could not resolve all dependencies to align $source, those dependencies will not be used during alignment (use --info to list unresolved dependencies)")
             logger.info("Could not resolve:\n ${unresolved.distinct().map { " - $it" }.joinToString("\n")}")
         }
         val resolvedDependencies = resolved
-                .map { it as ResolvedDependencyResult }
                 .filter { it.selectedId is ModuleComponentIdentifier }
                 .distinctBy { it.selectedModule }
         val resolvedVersions = resolvedDependencies.map(versionSelector)
@@ -182,7 +199,7 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
         aligns.forEach { align ->
             val matches = resolvedVersions.filter { dep: ModuleVersionIdentifier -> align.ruleMatches(dep) }
             if (matches.isNotEmpty()) {
-                val alignedVersion = alignedVersion(align, matches, this, versionScheme, versionComparator.asStringComparator())
+                val alignedVersion = alignedVersion(align, matches, this)
                 selectedVersions += AlignedVersion(align, alignedVersion).addResolvedDependencies(resolvedDependencies)
             }
         }
@@ -234,10 +251,9 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
         }
     }
 
-    private fun alignedVersion(rule: AlignRule, moduleVersions: List<ModuleVersionIdentifier>, configuration: Configuration,
-                               scheme: VersionSelectorScheme, comparator: Comparator<String>): String {
-        val versions = moduleVersions.map { rule.matchedVersion(it.version) }.distinct()
-        val highestVersion = versions.maxWith(comparator)!!
+    private fun alignedVersion(rule: AlignRule, moduleVersions: List<ModuleVersionIdentifier>, configuration: Configuration): String {
+        val versions = moduleVersions.mapToSet { rule.matchedVersion(it.version) }
+        val highestVersion = versions.maxWith(STRING_VERSION_COMPARATOR)!!
 
         val forcedModules = moduleVersions.flatMap { moduleVersion ->
             configuration.resolutionStrategy.forcedModules.filter {
@@ -254,44 +270,46 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
         }
 
         val forced = forcedModules + forcedDependencies
-
         if (forced.isNotEmpty()) {
-            val versionsBySelector = forced
-                    .map { it.version }
-                    .distinct()
-                    .associateBy { scheme.parseSelector(it)!! }
-            val static = versionsBySelector.filter { !it.key.isDynamic }
-            val dynamic = versionsBySelector.filter { it.key.isDynamic }
+            val (dynamic, static) = forced
+                    .mapToSet { VersionWithSelector(it.version) }
+                    .partition { it.selector.isDynamic }
             if (static.isNotEmpty()) {
-                val staticVersions = static.values
-                val forcedVersion = staticVersions.minWith(comparator)!!
+                val forcedVersion = static.minWith(VERSION_COMPARATOR)!!
                 logger.debug("Found force(s) $forced that supersede resolution rule $rule. Will use $forcedVersion instead of $highestVersion")
-                return forcedVersion
+                return forcedVersion.stringVersion
             } else {
-                val selector = dynamic.keys.sortedBy {
-                    when (it.javaClass.kotlin) {
+                val mostSpecific = dynamic.minBy {
+                    when (it.selector.javaClass.kotlin) {
                         LatestVersionSelector::class -> 2
                         SubVersionSelector::class -> 1
                         VersionRangeSelector::class -> 0
                         else -> throw IllegalArgumentException("Unknown selector type $it")
                     }
-                }.first()
-                val forcedVersion = if (selector is LatestVersionSelector) {
+                }!!
+                val forcedVersion = if (mostSpecific.selector is LatestVersionSelector) {
                     highestVersion
                 } else {
-                    versions.filter { selector.accept(it) }.maxWith(comparator)!!
+                    versions.filter { mostSpecific.selector.accept(it) }.maxWith(STRING_VERSION_COMPARATOR)!!
                 }
-                logger.debug("Found force(s) $forced that supersede resolution rule $rule. Will use highest dynamic version $forcedVersion that matches most selective selector ${dynamic[selector]}")
+                logger.debug("Found force(s) $forced that supersede resolution rule $rule. Will use highest dynamic version $forcedVersion that matches most specific selector $mostSpecific")
                 return forcedVersion
             }
         }
 
         return highestVersion
     }
+
+    data class VersionWithSelector(val stringVersion: String): Versioned {
+        override fun getVersion(): String =
+                stringVersion
+
+        val selector: VersionSelector by lazy {
+            VERSION_SCHEME.parseSelector(stringVersion)!!
+        }
+
+        override fun toString(): String =
+                stringVersion
+    }
 }
 
-enum class VersionMatcher(regex: String) {
-    EXCLUDE_SUFFIXES("^(\\d+\\.)?(\\d+\\.)?(\\*|\\d+)");
-
-    val pattern = regex.toRegex().toPattern()
-}
