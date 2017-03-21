@@ -24,7 +24,7 @@ plugins {
 apply plugin: 'kotlin'
 
 dependencies {
-    compile 'org.jetbrains.kotlin:kotlin-reflect:1.0.6'
+    compile 'org.jetbrains.kotlin:kotlin-reflect'
     compile 'com.fasterxml.jackson.module:jackson-module-kotlin:2.7.5'
     compile 'com.netflix.nebula:nebula-dependency-base-plugin:0.1.0'
 }
