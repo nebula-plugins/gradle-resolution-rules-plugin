@@ -65,7 +65,7 @@ data class AlignRule(val name: String?,
     }
 
     fun matchedVersion(version: String): String {
-        if (match != null) {
+        if (match != null && version.isNotBlank()) {
             val matcher = if (matchMatcher == null) {
                 matchMatcher = matchPattern.matcher(version)
                 matchMatcher!!
@@ -73,7 +73,7 @@ data class AlignRule(val name: String?,
             if (matcher.find()) {
                 return matcher.group()
             } else if (!VERSION_SCHEME.parseSelector(version).isDynamic) {
-                logger.warn("Resolution rule $this is unable to honor match. $match does not match $version. Will use $version")
+                logger.debug("Resolution rule $this is unable to honor match. $match does not match $version. Will use $version")
             }
         }
         return version
