@@ -1,40 +1,12 @@
 package nebula.plugin.resolutionrules
 
-import groovy.lang.Closure
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
-import org.gradle.api.artifacts.ModuleIdentifier
-import org.gradle.api.artifacts.ModuleVersionIdentifier
-import org.gradle.api.artifacts.component.ComponentIdentifier
-import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.internal.artifacts.configurations.ConfigurationInternal
-import org.gradle.api.internal.collections.CollectionEventRegister
 import org.gradle.util.Path
 import java.lang.reflect.Field
 import java.lang.reflect.Modifier
-
-inline fun <T> T.groovyClosure(crossinline call: () -> Unit) = object : Closure<Unit>(this) {
-    @Suppress("unused")
-    fun doCall() {
-        call()
-    }
-}
-
-inline fun <U> Any.action(crossinline call: U.() -> Unit) = Action<U> { call(it) }
-
-
-val ResolvedDependencyResult.selectedId: ComponentIdentifier
-    get() = selected.id
-
-val ResolvedDependencyResult.selectedModuleVersion: ModuleVersionIdentifier
-    get() = selected.moduleVersion
-
-val ResolvedDependencyResult.selectedModule: ModuleIdentifier
-    get() = selected.moduleVersion.module
-
-val ResolvedDependencyResult.selectedVersion: String
-    get() = selected.moduleVersion.version
 
 /**
  * Various reflection hackiness follows due to deficiencies in the Gradle configuration APIs:

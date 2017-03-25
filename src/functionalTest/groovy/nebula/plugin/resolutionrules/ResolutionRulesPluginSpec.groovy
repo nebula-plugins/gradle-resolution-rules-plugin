@@ -443,8 +443,8 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
         def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
 
         then:
-        result.standardOutput.contains('Skipping afterEvaluate rules for configuration \':compile\' - No dependencies are configured')
-        result.standardOutput.contains('Skipping beforeResolve rules for configuration \':compile\' - No dependencies are configured')
+        result.standardOutput.contains('Skipping dependency rules for configuration \':compile\' - No dependencies are configured')
+        result.standardOutput.contains('Skipping resolve rules for configuration \':compile\' - No dependencies are configured')
     }
 
     def 'rules apply to detached configurations that have been added to the configurations container'() {

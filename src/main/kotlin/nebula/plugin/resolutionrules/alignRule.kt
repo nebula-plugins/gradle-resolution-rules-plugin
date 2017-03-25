@@ -1,6 +1,10 @@
 package nebula.plugin.resolutionrules
 
 import com.netflix.nebula.dependencybase.DependencyManagement
+import com.netflix.nebula.interop.selectedId
+import com.netflix.nebula.interop.selectedModule
+import com.netflix.nebula.interop.selectedModuleVersion
+import com.netflix.nebula.interop.selectedVersion
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.artifacts.*

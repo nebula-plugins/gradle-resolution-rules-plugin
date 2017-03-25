@@ -17,6 +17,7 @@
 package nebula.plugin.resolutionrules
 
 import com.netflix.nebula.dependencybase.DependencyManagement
+import com.netflix.nebula.interop.action
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.artifacts.*
@@ -58,7 +59,7 @@ data class RuleSet(
 
     fun dependencyRules() = listOf(replace, substitute, reject, deny, exclude).flatten()
 
-    fun beforeResolveRules() = listOf(AlignRules(align))
+    fun resolveRules() = listOf(AlignRules(align))
 }
 
 fun RuleSet.withName(ruleSetName: String): RuleSet {

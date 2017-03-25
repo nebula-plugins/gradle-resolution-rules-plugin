@@ -20,6 +20,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.netflix.nebula.dependencybase.DependencyBasePlugin
 import com.netflix.nebula.dependencybase.DependencyManagement
+import com.netflix.nebula.interop.onExecute
+import com.netflix.nebula.interop.onResolve
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
@@ -32,14 +34,15 @@ import java.util.zip.ZipFile
 
 class ResolutionRulesPlugin : Plugin<Project> {
     val logger: Logger = Logging.getLogger(ResolutionRulesPlugin::class.java)
+    val ruleSet: RuleSet by lazy {
+        rulesFromConfiguration(rulesConfiguration, extension)
+    }
+
     lateinit var project: Project
     lateinit var rulesConfiguration: Configuration
     lateinit var extension: NebulaResolutionRulesExtension
     lateinit var mapper: ObjectMapper
     lateinit var insight: DependencyManagement
-    val ruleSet: RuleSet by lazy {
-        rulesFromConfiguration(rulesConfiguration, extension)
-    }
 
     companion object Constants {
         const val RESOLUTION_RULES_CONFIG_NAME = "resolutionRules"
@@ -63,39 +66,31 @@ class ResolutionRulesPlugin : Plugin<Project> {
                 return@all
             }
 
-            var afterEvaluateRulesApplied = false
-            project.afterExecute {
+            var dependencyRulesApplied = false
+            project.onExecute {
                 if (config.state != Configuration.State.UNRESOLVED) {
-                    logger.warn("Dependency resolution rules will not be applied to $config, it was resolved before the project was evaluated")
+                    logger.warn("Dependency resolution rules will not be applied to $config, it was resolved before the project was executed")
                 } else if (config.allDependencies.isEmpty()) {
-                    logger.debug("Skipping afterEvaluate rules for $config - No dependencies are configured")
+                    logger.debug("Skipping dependency rules for $config - No dependencies are configured")
                 } else {
                     ruleSet.dependencyRules().forEach { rule ->
                         rule.apply(project, config, config.resolutionStrategy, extension, insight)
                     }
-                    afterEvaluateRulesApplied = true
+                    dependencyRulesApplied = true
                 }
             }
 
-            config.incoming.beforeResolve {
+            config.onResolve {
                 if (config.allDependencies.isEmpty()) {
-                    logger.debug("Skipping beforeResolve rules for $config - No dependencies are configured")
-                } else if (!afterEvaluateRulesApplied) {
-                    logger.debug("Skipping beforeResolve rules for $config - afterEvaluate rules have not been applied")
+                    logger.debug("Skipping resolve rules for $config - No dependencies are configured")
+                } else if (!dependencyRulesApplied) {
+                    logger.debug("Skipping resolve rules for $config - dependency rules have not been applied")
                 } else {
-                    ruleSet.beforeResolveRules().forEach { rule ->
+                    ruleSet.resolveRules().forEach { rule ->
                         rule.apply(project, config, config.resolutionStrategy, extension, insight)
                     }
                 }
             }
-        }
-    }
-
-    fun Project.afterExecute(action: () -> Unit) {
-        if (state.executed) {
-            action()
-        } else {
-            afterEvaluate { action() }
         }
     }
 
