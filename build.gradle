@@ -21,8 +21,6 @@ plugins {
     id 'nebula.kotlin' version '1.1.0'
 }
 
-apply plugin: 'kotlin'
-
 dependencies {
     compile 'org.jetbrains.kotlin:kotlin-reflect:1.1.0'
     compile 'com.netflix.nebula:nebula-gradle-interop:latest.release'
