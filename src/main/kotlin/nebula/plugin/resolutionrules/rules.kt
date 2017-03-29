@@ -17,6 +17,7 @@
 package nebula.plugin.resolutionrules
 
 import com.netflix.nebula.dependencybase.DependencyManagement
+import com.netflix.nebula.interop.VersionWithSelector
 import com.netflix.nebula.interop.action
 import org.gradle.api.Action
 import org.gradle.api.Project
@@ -28,9 +29,6 @@ import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import java.util.*
 import org.gradle.api.artifacts.ModuleVersionIdentifier as GradleModuleVersionIdentifier
-
-val VERSION_COMPARATOR = DefaultVersionComparator()
-val VERSION_SCHEME = DefaultVersionSelectorScheme(VERSION_COMPARATOR)
 
 interface Rule {
     fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension, insight: DependencyManagement)
@@ -103,7 +101,8 @@ data class SubstituteRule(val module: String, val with: String, override var rul
                 if (requested is ModuleComponentSelector) {
                     val requestedSelector = requested as ModuleComponentSelector
                     if (requestedSelector.group == selector.group && requestedSelector.module == selector.module) {
-                        if (VERSION_SCHEME.parseSelector(selector.version).accept(requestedSelector.version)) {
+                        val versionSelector = VersionWithSelector(selector.version).asSelector()
+                        if (versionSelector.accept(requestedSelector.version)) {
                             insight.addReason(configuration.name, "${withSelector.group}:${withSelector.module}", "substitution because $reason", "nebula.resolution-rules")
                             useTarget(withSelector)
                         }
@@ -125,7 +124,8 @@ data class RejectRule(override val module: String, override var ruleSet: String?
         resolutionStrategy.componentSelection.all(Action<ComponentSelection> { selection ->
             val candidate = selection.candidate
             if (candidate.group == moduleId.organization && candidate.module == moduleId.name) {
-                if (!moduleId.hasVersion() || VERSION_SCHEME.parseSelector(moduleId.version).accept(candidate.version)) {
+                val versionSelector = VersionWithSelector(moduleId.version).asSelector()
+                if (!moduleId.hasVersion() || versionSelector.accept(candidate.version)) {
                     selection.reject("Rejected by resolution rule $ruleSet - $reason")
                 }
             }

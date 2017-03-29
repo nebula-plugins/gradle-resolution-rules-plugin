@@ -1,10 +1,7 @@
 package nebula.plugin.resolutionrules
 
 import com.netflix.nebula.dependencybase.DependencyManagement
-import com.netflix.nebula.interop.selectedId
-import com.netflix.nebula.interop.selectedModule
-import com.netflix.nebula.interop.selectedModuleVersion
-import com.netflix.nebula.interop.selectedVersion
+import com.netflix.nebula.interop.*
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.artifacts.*
@@ -14,11 +11,9 @@ import org.gradle.api.artifacts.component.ModuleComponentSelector
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.internal.artifacts.DefaultModuleVersionIdentifier
 import org.gradle.api.internal.artifacts.DefaultModuleVersionSelector
-import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.Versioned
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.LatestVersionSelector
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.SubVersionSelector
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.VersionRangeSelector
-import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.VersionSelector
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import java.util.*
@@ -79,7 +74,7 @@ data class AlignRule(val name: String?,
             } else matchMatcher!!.reset(version)
             if (matcher.find()) {
                 return matcher.group()
-            } else if (!VERSION_SCHEME.parseSelector(version).isDynamic) {
+            } else if (!VersionWithSelector(version).asSelector().isDynamic) {
                 logger.debug("Resolution rule $this is unable to honor match. $match does not match $version. Will use $version")
             }
         }
@@ -260,7 +255,7 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
 
     private fun alignedVersion(rule: AlignRule, moduleVersions: List<ModuleVersionIdentifier>, configuration: Configuration): String {
         val versions = moduleVersions.mapToSet { VersionWithSelector(rule.matchedVersion(it.version)) }
-        val highestVersion = versions.maxWith(VERSION_COMPARATOR)!!
+        val highestVersion = versions.max()!!
 
         val forcedModules = moduleVersions.flatMap { moduleVersion ->
             configuration.resolutionStrategy.forcedModules.filter {
@@ -280,43 +275,31 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
         if (forced.isNotEmpty()) {
             val (dynamic, static) = forced
                     .mapToSet { VersionWithSelector(it.version) }
-                    .partition { it.selector.isDynamic }
+                    .partition { it.asSelector().isDynamic }
             if (static.isNotEmpty()) {
-                val forcedVersion = static.minWith(VERSION_COMPARATOR)!!
+                val forcedVersion = static.min()!!
                 logger.debug("Found force(s) $forced that supersede resolution rule $rule. Will use $forcedVersion instead of $highestVersion")
                 return forcedVersion.stringVersion
             } else {
                 val mostSpecific = dynamic.minBy {
-                    when (it.selector.javaClass.kotlin) {
+                    when (it.asSelector().javaClass.kotlin) {
                         LatestVersionSelector::class -> 2
                         SubVersionSelector::class -> 1
                         VersionRangeSelector::class -> 0
                         else -> throw IllegalArgumentException("Unknown selector type $it")
                     }
                 }!!
-                val forcedVersion = if (mostSpecific.selector is LatestVersionSelector) {
+                val forcedVersion = if (mostSpecific.asSelector() is LatestVersionSelector) {
                     highestVersion
                 } else {
-                    versions.filter { mostSpecific.selector.accept(it.version) }.maxWith(VERSION_COMPARATOR)!!
+                    versions.filter { mostSpecific.asSelector().accept(it.stringVersion) }.max()!!
                 }
                 logger.debug("Found force(s) $forced that supersede resolution rule $rule. Will use highest dynamic version $forcedVersion that matches most specific selector $mostSpecific")
-                return forcedVersion.version
+                return forcedVersion.stringVersion
             }
         }
 
-        return highestVersion.version
-    }
-
-    data class VersionWithSelector(val stringVersion: String): Versioned {
-        override fun getVersion(): String =
-                stringVersion
-
-        val selector: VersionSelector by lazy {
-            VERSION_SCHEME.parseSelector(stringVersion)!!
-        }
-
-        override fun toString(): String =
-                stringVersion
+        return highestVersion.stringVersion
     }
 }
 
