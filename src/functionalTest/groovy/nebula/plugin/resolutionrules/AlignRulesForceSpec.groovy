@@ -50,7 +50,8 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
         def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
 
         then:
-        result.standardOutput.contains "Found force(s) [test.nebula:a:0.15.0] that supersede resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=${projectDir.name}, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z). Will use 0.15.0 instead of 1.0.0"
+        result.standardOutput.contains "Found force(s) [test.nebula:a:0.15.0] that supersede resolution rule"
+        result.standardOutput.contains "reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z). Will use 0.15.0 instead of 1.0.0"
         result.standardOutput.contains '+--- test.nebula:a:1.0.0 -> 0.15.0\n'
         result.standardOutput.contains '+--- test.nebula:b:1.0.0 -> 0.15.0\n'
         result.standardOutput.contains '+--- test.nebula:c:0.15.0\n'
