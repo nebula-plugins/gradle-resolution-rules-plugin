@@ -15,7 +15,10 @@ import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.internal.artifacts.DefaultModuleVersionIdentifier
 import org.gradle.api.internal.artifacts.DefaultModuleVersionSelector
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.Versioned
-import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.*
+import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.LatestVersionSelector
+import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.SubVersionSelector
+import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.VersionRangeSelector
+import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.VersionSelector
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import java.util.*
@@ -256,8 +259,8 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
     }
 
     private fun alignedVersion(rule: AlignRule, moduleVersions: List<ModuleVersionIdentifier>, configuration: Configuration): String {
-        val versions = moduleVersions.mapToSet { rule.matchedVersion(it.version) }
-        val highestVersion = versions.maxWith(STRING_VERSION_COMPARATOR)!!
+        val versions = moduleVersions.mapToSet { VersionWithSelector(rule.matchedVersion(it.version)) }
+        val highestVersion = versions.maxWith(VERSION_COMPARATOR)!!
 
         val forcedModules = moduleVersions.flatMap { moduleVersion ->
             configuration.resolutionStrategy.forcedModules.filter {
@@ -294,14 +297,14 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
                 val forcedVersion = if (mostSpecific.selector is LatestVersionSelector) {
                     highestVersion
                 } else {
-                    versions.filter { mostSpecific.selector.accept(it) }.maxWith(STRING_VERSION_COMPARATOR)!!
+                    versions.filter { mostSpecific.selector.accept(it.version) }.maxWith(VERSION_COMPARATOR)!!
                 }
                 logger.debug("Found force(s) $forced that supersede resolution rule $rule. Will use highest dynamic version $forcedVersion that matches most specific selector $mostSpecific")
-                return forcedVersion
+                return forcedVersion.version
             }
         }
 
-        return highestVersion
+        return highestVersion.version
     }
 
     data class VersionWithSelector(val stringVersion: String): Versioned {

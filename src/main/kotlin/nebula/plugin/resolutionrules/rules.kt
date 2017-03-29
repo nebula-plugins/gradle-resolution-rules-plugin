@@ -30,7 +30,6 @@ import java.util.*
 import org.gradle.api.artifacts.ModuleVersionIdentifier as GradleModuleVersionIdentifier
 
 val VERSION_COMPARATOR = DefaultVersionComparator()
-val STRING_VERSION_COMPARATOR: Comparator<String> = VERSION_COMPARATOR.asStringComparator()
 val VERSION_SCHEME = DefaultVersionSelectorScheme(VERSION_COMPARATOR)
 
 interface Rule {
