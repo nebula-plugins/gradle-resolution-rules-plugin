@@ -79,8 +79,8 @@
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.0.0",
-            "requested": "6.0.0"
+            "locked": "6.0.1",
+            "requested": "6.0.1"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
             "locked": "1.1.0",
@@ -105,8 +105,8 @@
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.0.0",
-            "requested": "6.0.0"
+            "locked": "6.0.1",
+            "requested": "6.0.1"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
             "locked": "1.1.0",
@@ -131,8 +131,8 @@
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.0.0",
-            "requested": "6.0.0"
+            "locked": "6.0.1",
+            "requested": "6.0.1"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
             "locked": "1.1.0",
@@ -157,8 +157,8 @@
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.0.0",
-            "requested": "6.0.0"
+            "locked": "6.0.1",
+            "requested": "6.0.1"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
             "locked": "1.1.0",
@@ -183,8 +183,8 @@
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.0.0",
-            "requested": "6.0.0"
+            "locked": "6.0.1",
+            "requested": "6.0.1"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
             "locked": "1.1.0",
@@ -209,8 +209,8 @@
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.0.0",
-            "requested": "6.0.0"
+            "locked": "6.0.1",
+            "requested": "6.0.1"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
             "locked": "1.1.0",
@@ -235,8 +235,8 @@
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.0.0",
-            "requested": "6.0.0"
+            "locked": "6.0.1",
+            "requested": "6.0.1"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
             "locked": "1.1.0",
@@ -261,8 +261,8 @@
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.0.0",
-            "requested": "6.0.0"
+            "locked": "6.0.1",
+            "requested": "6.0.1"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
             "locked": "1.1.0",
@@ -365,8 +365,8 @@
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.0.0",
-            "requested": "6.0.0"
+            "locked": "6.0.1",
+            "requested": "6.0.1"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
             "locked": "1.1.0",
@@ -391,8 +391,8 @@
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.0.0",
-            "requested": "6.0.0"
+            "locked": "6.0.1",
+            "requested": "6.0.1"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
             "locked": "1.1.0",
@@ -417,8 +417,8 @@
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.0.0",
-            "requested": "6.0.0"
+            "locked": "6.0.1",
+            "requested": "6.0.1"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
             "locked": "1.1.0",
@@ -443,8 +443,8 @@
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.0.0",
-            "requested": "6.0.0"
+            "locked": "6.0.1",
+            "requested": "6.0.1"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
             "locked": "1.1.0",
