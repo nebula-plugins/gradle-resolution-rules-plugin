@@ -145,6 +145,83 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
         result.standardOutput.contains '\\--- test.a:a: -> 1.42.2\n'
     }
 
+    def 'alignment interaction with dependency-recommender transitive project dependencies'() {
+        def graph = new DependencyGraphBuilder()
+                .addModule('test.a:a:1.42.2')
+                .build()
+        def mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen")
+        mavenrepo.generateTestMavenRepo()
+
+        def rulesJsonFile = new File(projectDir, 'rules.json')
+
+        rulesJsonFile << '''\
+            {
+                "deny": [], "reject": [], "substitute": [], "replace": [],
+                "align": [
+                    {
+                        "name": "testNebula",
+                        "group": "test.nebula",
+                        "reason": "Align test.nebula dependencies",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    }
+                ]
+            }
+        '''.stripIndent()
+
+        addSubproject('a')
+        addSubproject('b')
+
+        buildFile << """\
+            buildscript {
+                repositories { jcenter() }
+
+                dependencies {
+                    classpath 'com.netflix.nebula:nebula-dependency-recommender:3.1.0'
+                }
+            }
+
+            allprojects {
+                apply plugin: 'nebula.dependency-recommender'
+            }
+
+            subprojects {
+                ${applyPlugin(ResolutionRulesPlugin)}
+                apply plugin: 'java'
+
+                repositories {
+                    ${mavenrepo.mavenRepositoryBlock}
+                }
+    
+                dependencyRecommendations {
+                   map recommendations: ['test.a:a': '1.42.2']
+                }
+    
+                dependencies {
+                    resolutionRules files('$rulesJsonFile')
+                }
+            }
+            
+            project(':a') {
+                dependencies {
+                    compile project(':b')
+                }
+            }
+            
+            project(':b') {
+                dependencies {
+                    compile 'test.a:a'
+                }
+            }
+        """.stripIndent()
+
+        when:
+        def result = runTasksSuccessfully(':a:dependencies', '--configuration', 'compile')
+
+        then:
+        result.standardOutput.contains '\\--- test.a:a: -> 1.42.2\n'
+    }
+
     @Unroll
     def 'align rules work with spring-boot version #springVersion'() {
         def rulesJsonFile = new File(projectDir, 'rules.json')
