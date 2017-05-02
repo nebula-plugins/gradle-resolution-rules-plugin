@@ -20,6 +20,7 @@ import nebula.test.IntegrationSpec
 import nebula.test.dependencies.DependencyGraphBuilder
 import nebula.test.dependencies.GradleDependencyGenerator
 import spock.lang.Ignore
+import spock.lang.Issue
 import spock.lang.Unroll
 
 import java.util.jar.Attributes
@@ -140,6 +141,79 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
 
         when:
         def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+
+        then:
+        result.standardOutput.contains '\\--- test.a:a: -> 1.42.2\n'
+    }
+
+    def 'alignment interaction with dependency-recommender transitive project dependencies'() {
+        def graph = new DependencyGraphBuilder()
+                .addModule('test.a:a:1.42.2')
+                .build()
+        def mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen")
+        mavenrepo.generateTestMavenRepo()
+
+        def rulesJsonFile = new File(projectDir, 'rules.json')
+
+        rulesJsonFile << '''\
+            {
+                "deny": [], "reject": [], "substitute": [], "replace": [],
+                "align": [
+                    {
+                        "name": "testNebula",
+                        "group": "test.nebula",
+                        "reason": "Align test.nebula dependencies",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    }
+                ]
+            }
+        '''.stripIndent()
+
+        addSubproject('a')
+        addSubproject('b')
+
+        buildFile << """\
+            buildscript {
+                repositories { jcenter() }
+                dependencies {
+                    classpath 'com.netflix.nebula:nebula-dependency-recommender:3.1.0'
+                }
+            }
+            allprojects {
+                apply plugin: 'nebula.dependency-recommender'
+            }
+            subprojects {
+                ${applyPlugin(ResolutionRulesPlugin)}
+                apply plugin: 'java'
+                repositories {
+                    ${mavenrepo.mavenRepositoryBlock}
+                }
+    
+                dependencyRecommendations {
+                   map recommendations: ['test.a:a': '1.42.2']
+                }
+    
+                dependencies {
+                    resolutionRules files('$rulesJsonFile')
+                }
+            }
+            
+            project(':a') {
+                dependencies {
+                    compile project(':b')
+                }
+            }
+            
+            project(':b') {
+                dependencies {
+                    compile 'test.a:a'
+                }
+            }
+        """.stripIndent()
+
+        when:
+        def result = runTasksSuccessfully(':a:dependencies', '--configuration', 'compile')
 
         then:
         result.standardOutput.contains '\\--- test.a:a: -> 1.42.2\n'
@@ -667,6 +741,178 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
         }
         '''.stripIndent()
         [mavenrepo, rulesJsonFile]
+    }
+
+    @Issue('#55')
+    def 'alignment does not infinite loop on force to non existent version'() {
+        def graph = new DependencyGraphBuilder()
+                .addModule('test.nebula:a:1.0.0')
+                .addModule('test.nebula:a:0.15.0')
+                .addModule('test.nebula:b:1.0.0')
+                .addModule('test.nebula:b:0.15.0')
+                .addModule('test.nebula:c:0.15.0')
+                .build()
+        File mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
+
+        def rulesJsonFile = new File(projectDir, 'rules.json')
+        rulesJsonFile << '''\
+            {
+                "deny": [], "reject": [], "substitute": [], "replace": [],
+                "align": [
+                    {
+                        "name": "testNebula",
+                        "group": "test.nebula",
+                        "reason": "Align test.nebula dependencies",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    }
+                ]
+            }
+        '''.stripIndent()
+
+        addSubproject('common', '''\
+            dependencyRecommendations {
+                map recommendations: [
+                    'test.nebula:a': '0.15.0',
+                    'test.nebula:b': '0.15.0',
+                    'test.nebula:c': '0.15.0'
+                ]
+            }
+            
+            dependencies {
+                compile 'test.nebula:a'
+                compile 'test.nebula:b'
+                compile 'test.nebula:c'
+            }
+            '''.stripIndent())
+
+        addSubproject('app', '''\
+            configurations.compile.resolutionStrategy {
+                force 'test.nebula:c:1.0.0'
+            }
+            
+            dependencies {
+                compile project(':common')
+                compile 'test.nebula:a:1.0.0'
+            }
+            '''.stripIndent())
+
+        buildFile << """\
+            buildscript {
+                repositories { jcenter() }
+                dependencies { classpath 'com.netflix.nebula:nebula-dependency-recommender:4.2.0' }
+            }
+            
+            allprojects {
+                ${applyPlugin(ResolutionRulesPlugin)}
+                dependencies {
+                    resolutionRules files('$rulesJsonFile')
+                }
+                apply plugin: 'nebula.dependency-recommender'
+            }
+
+            subprojects {
+                apply plugin: 'java'
+                repositories {
+                    maven { url '${mavenrepo.absolutePath}' }
+                }
+            }
+        """.stripIndent()
+
+        when:
+        def result = runTasksSuccessfully(':app:dependencies', '--configuration', 'compile')
+
+        then:
+        result.standardOutput.contains '|    +--- test.nebula:b: FAILED'
+        result.standardOutput.contains '|    \\--- test.nebula:c: -> 1.0.0 FAILED'
+    }
+
+    @Issue('#55')
+    def 'alignment does not infinite loop on force to non existent version with recommender strictMode'() {
+        def graph = new DependencyGraphBuilder()
+                .addModule('test.nebula:a:1.0.0')
+                .addModule('test.nebula:a:0.15.0')
+                .addModule('test.nebula:b:1.0.0')
+                .addModule('test.nebula:b:0.15.0')
+                .addModule('test.nebula:c:0.15.0')
+                .build()
+        File mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
+
+        def rulesJsonFile = new File(projectDir, 'rules.json')
+        rulesJsonFile << '''\
+            {
+                "deny": [], "reject": [], "substitute": [], "replace": [],
+                "align": [
+                    {
+                        "name": "testNebula",
+                        "group": "test.nebula",
+                        "reason": "Align test.nebula dependencies",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    }
+                ]
+            }
+        '''.stripIndent()
+
+        addSubproject('common', '''\
+            dependencyRecommendations {
+                map recommendations: [
+                    'test.nebula:a': '0.15.0',
+                    'test.nebula:b': '0.15.0',
+                    'test.nebula:c': '0.15.0'
+                ]
+            }
+            
+            dependencies {
+                compile 'test.nebula:a'
+                compile 'test.nebula:b'
+                compile 'test.nebula:c'
+            }
+            '''.stripIndent())
+
+        addSubproject('app', '''\
+            configurations.compile.resolutionStrategy {
+                force 'test.nebula:c:1.0.0'
+            }
+            
+            dependencies {
+                compile project(':common')
+                compile 'test.nebula:a:1.0.0'
+            }
+            '''.stripIndent())
+
+        buildFile << """\
+            buildscript {
+                repositories { jcenter() }
+                dependencies { classpath 'com.netflix.nebula:nebula-dependency-recommender:4.2.0' }
+            }
+            
+            allprojects {
+                ${applyPlugin(ResolutionRulesPlugin)}
+                dependencies {
+                    resolutionRules files('$rulesJsonFile')
+                }
+                apply plugin: 'nebula.dependency-recommender'
+                dependencyRecommendations {
+                    strictMode = true
+                }
+            }
+
+            subprojects {
+                apply plugin: 'java'
+                repositories {
+                    maven { url '${mavenrepo.absolutePath}' }
+                }
+            }
+        """.stripIndent()
+
+        when:
+        def result = runTasks(':app:dependencies', '--configuration', 'compile')
+
+        then:
+        result.standardOutput.contains '|    +--- test.nebula:b: FAILED'
+        result.standardOutput.contains '|    \\--- test.nebula:c: -> 1.0.0 FAILED'
+        result.standardError.contains 'Dependency test.nebula:a omitted version with no recommended version. General causes include a dependency being removed from the recommendation source or not applying a recommendation source to a project that depends on another project using a recommender.'
     }
 
     @Ignore

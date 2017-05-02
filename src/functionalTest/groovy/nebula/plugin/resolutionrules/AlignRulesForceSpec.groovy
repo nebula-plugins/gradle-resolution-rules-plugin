@@ -2,6 +2,8 @@ package nebula.plugin.resolutionrules
 
 import nebula.test.dependencies.DependencyGraphBuilder
 import nebula.test.dependencies.GradleDependencyGenerator
+import org.gradle.api.logging.LogLevel
+import spock.lang.Issue
 import spock.lang.Unroll
 
 class AlignRulesForceSpec extends AbstractAlignRulesSpec {
@@ -335,5 +337,73 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
         standardOutput.contains '+--- test.nebula:a:2.0.0 -> 1.0.0\n'
         standardOutput.contains '+--- test.nebula:b:1.0.0\n'
         standardOutput.contains '\\--- test.nebula:c:0.15.0 -> 1.0.0\n'
+    }
+
+    @Issue('#55')
+    def 'alignment short-circuits when aligned dependency cannot be resolved'() {
+        def graph = new DependencyGraphBuilder()
+                .addModule('test.nebula.a:a1:1.0.0')
+                .addModule('test.nebula.a:a1:2.0.0')
+                .addModule('test.nebula.a:a2:1.0.0')
+                .addModule('test.nebula.a:a2:2.0.0')
+                .addModule('test.nebula.b:b1:1.0.0')
+                .addModule('test.nebula.b:b1:2.0.0')
+                .addModule('test.nebula.b:b2:1.0.0')
+                .addModule('test.nebula.b:b2:2.0.0')
+                .build()
+        File mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
+
+        rulesJsonFile << '''\
+            {
+                "deny": [], "reject": [], "substitute": [], "replace": [],
+                "align": [
+                    {
+                        "group": "test.nebula.a",
+                        "reason": "Align test.nebula.a dependencies",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    },
+                    {
+                        "group": "test.nebula.b",
+                        "reason": "Align test.nebula.b dependencies",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    }
+                ]
+            }
+        '''.stripIndent()
+
+        buildFile << """\
+            repositories {
+                maven { url '${mavenrepo.absolutePath}' }
+            }
+            dependencies {
+                compile 'test.nebula.a:a1:1.0.0'
+                compile 'test.nebula.a:a2:2.0.0'
+                
+                compile 'test.nebula.b:b1:1.0.0'
+                compile 'test.nebula.b:b2:2.0.0'
+            }
+            // A resolution strategy that uses eachDependency to correct a bad force, which is then respected by alignment causing the depenency to be unresolvable on the <n>th passes
+            configurations.compile.resolutionStrategy {
+                force 'test.nebula.a:a1:3.0.0'
+                
+                eachDependency { details ->
+                    if (details.requested.group == 'test.nebula.a' && details.requested.name == 'a1') {
+                        details.useVersion '1.0.0'
+                    }
+                }
+            }
+        """.stripIndent()
+
+        when:
+        def standardOutput = runTasksSuccessfully('dependencies', '--configuration', 'compile').standardOutput
+
+        then:
+        standardOutput.contains 'Found force(s) [test.nebula.a:a1:3.0.0]'
+        standardOutput.contains '+--- test.nebula.a:a1:1.0.0'
+        standardOutput.contains '+--- test.nebula.a:a2:2.0.0'
+        standardOutput.contains '+--- test.nebula.b:b1:1.0.0 -> 2.0.0'
+        standardOutput.contains '\\--- test.nebula.b:b2:2.0.0'
     }
 }
