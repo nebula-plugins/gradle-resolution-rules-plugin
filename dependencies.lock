@@ -9,7 +9,7 @@
             "requested": "0.1.0"
         },
         "com.netflix.nebula:nebula-gradle-interop": {
-            "locked": "0.4.0",
+            "locked": "0.5.0",
             "requested": "latest.release"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
@@ -31,7 +31,7 @@
             "requested": "0.1.0"
         },
         "com.netflix.nebula:nebula-gradle-interop": {
-            "locked": "0.4.0",
+            "locked": "0.5.0",
             "requested": "latest.release"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
@@ -53,7 +53,7 @@
             "requested": "0.1.0"
         },
         "com.netflix.nebula:nebula-gradle-interop": {
-            "locked": "0.4.0",
+            "locked": "0.5.0",
             "requested": "latest.release"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
@@ -75,7 +75,7 @@
             "requested": "0.1.0"
         },
         "com.netflix.nebula:nebula-gradle-interop": {
-            "locked": "0.4.0",
+            "locked": "0.5.0",
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
@@ -101,7 +101,7 @@
             "requested": "0.1.0"
         },
         "com.netflix.nebula:nebula-gradle-interop": {
-            "locked": "0.4.0",
+            "locked": "0.5.0",
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
@@ -127,7 +127,7 @@
             "requested": "0.1.0"
         },
         "com.netflix.nebula:nebula-gradle-interop": {
-            "locked": "0.4.0",
+            "locked": "0.5.0",
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
@@ -153,7 +153,7 @@
             "requested": "0.1.0"
         },
         "com.netflix.nebula:nebula-gradle-interop": {
-            "locked": "0.4.0",
+            "locked": "0.5.0",
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
@@ -179,7 +179,7 @@
             "requested": "0.1.0"
         },
         "com.netflix.nebula:nebula-gradle-interop": {
-            "locked": "0.4.0",
+            "locked": "0.5.0",
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
@@ -205,7 +205,7 @@
             "requested": "0.1.0"
         },
         "com.netflix.nebula:nebula-gradle-interop": {
-            "locked": "0.4.0",
+            "locked": "0.5.0",
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
@@ -231,7 +231,7 @@
             "requested": "0.1.0"
         },
         "com.netflix.nebula:nebula-gradle-interop": {
-            "locked": "0.4.0",
+            "locked": "0.5.0",
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
@@ -257,7 +257,7 @@
             "requested": "0.1.0"
         },
         "com.netflix.nebula:nebula-gradle-interop": {
-            "locked": "0.4.0",
+            "locked": "0.5.0",
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
@@ -317,7 +317,7 @@
             "requested": "0.1.0"
         },
         "com.netflix.nebula:nebula-gradle-interop": {
-            "locked": "0.4.0",
+            "locked": "0.5.0",
             "requested": "latest.release"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
@@ -339,7 +339,7 @@
             "requested": "0.1.0"
         },
         "com.netflix.nebula:nebula-gradle-interop": {
-            "locked": "0.4.0",
+            "locked": "0.5.0",
             "requested": "latest.release"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
@@ -361,7 +361,7 @@
             "requested": "0.1.0"
         },
         "com.netflix.nebula:nebula-gradle-interop": {
-            "locked": "0.4.0",
+            "locked": "0.5.0",
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
@@ -387,7 +387,7 @@
             "requested": "0.1.0"
         },
         "com.netflix.nebula:nebula-gradle-interop": {
-            "locked": "0.4.0",
+            "locked": "0.5.0",
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
@@ -413,7 +413,7 @@
             "requested": "0.1.0"
         },
         "com.netflix.nebula:nebula-gradle-interop": {
-            "locked": "0.4.0",
+            "locked": "0.5.0",
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
@@ -439,7 +439,7 @@
             "requested": "0.1.0"
         },
         "com.netflix.nebula:nebula-gradle-interop": {
-            "locked": "0.4.0",
+            "locked": "0.5.0",
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
