@@ -95,6 +95,7 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
         val logger: Logger = Logging.getLogger(AlignRules::class.java)
 
         const val CONFIG_SUFFIX = "Align"
+        const val MAX_PASSES = 10
     }
 
     override fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension, insight: DependencyManagement) {
@@ -159,6 +160,9 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
             })
 
     tailrec private fun CopiedConfiguration.stableResolvedAligns(baselineAligns: List<AlignedVersionWithDependencies>, pass: Int = 1): List<AlignedVersionWithDependencies> {
+        check(pass > MAX_PASSES) {
+            "The maximum number of alignment passes were attempted ($MAX_PASSES) for $source, "
+        }
         val resolvedAligns = resolvedAligns(baselineAligns)
         val copy = copyConfiguration("StabilityPass$pass").applyAligns(resolvedAligns)
         val copyResolvedAligns = copy.resolvedAligns(baselineAligns)
