@@ -28,13 +28,6 @@ dependencies {
     compile 'com.netflix.nebula:nebula-dependency-base-plugin:0.1.0'
 }
 
-facets {
-    functionalTest {
-        parentSourceSet = 'test'
-        testTaskName = 'functionalTest'
-    }
-}
-
 apply from: 'gradle/idea.gradle'
 
 description 'Gradle resolution rules plugin'
