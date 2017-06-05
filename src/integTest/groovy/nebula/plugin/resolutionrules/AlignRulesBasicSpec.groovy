@@ -164,14 +164,14 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
         def aResult = runTasksSuccessfully('dependencyInsightEnhanced', '--configuration', 'compile', '--dependency', 'a')
 
         then:
-        aResult.standardOutput.contains 'test.nebula:a:1.1.0 (aligned to 1.1.0 by testNebula)'
+        aResult.standardOutput.contains 'test.nebula:a:1.1.0 (aligned to [0.42.0,1.1.0] by testNebula)'
         aResult.standardOutput.contains 'nebula.resolution-rules uses: dependencyInsightEnhanced-adds-extra-info-for-alignment.json'
 
         when:
         def aResultCompileClasspath = runTasksSuccessfully('dependencyInsightEnhanced', '--configuration', 'compileClasspath', '--dependency', 'a')
 
         then:
-        aResultCompileClasspath.standardOutput.contains 'test.nebula:a:1.1.0 (aligned to 1.1.0 by testNebula)'
+        aResultCompileClasspath.standardOutput.contains 'test.nebula:a:1.1.0 (aligned to [0.42.0,1.1.0] by testNebula)'
 
         when:
         def bResult = runTasksSuccessfully('dependencyInsightEnhanced', '--configuration', 'compile', '--dependency', 'b')
@@ -183,7 +183,7 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
         def cResult = runTasksSuccessfully('dependencyInsightEnhanced', '--configuration', 'compile', '--dependency', 'c')
 
         then:
-        cResult.standardOutput.contains 'test.nebula:c:1.1.0 (aligned to 1.1.0 by testNebula)'
+        cResult.standardOutput.contains 'test.nebula:c:1.1.0 (aligned to [0.42.0,1.1.0] by testNebula)'
 
     }
 
@@ -664,7 +664,8 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
         def result = runTasksSuccessfully('dependencyInsight', '--configuration', 'compile', '--dependency', 'test.nebula')
 
         then:
-        result.standardOutput.contains 'Resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-does-not-apply-to-dependencies-that-already-have-the-expected-version, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z) aligning test.nebula:b to 1.0.0'
+        !result.standardOutput.contains('Resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-does-not-apply-to-dependencies-that-already-have-the-expected-version, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z) aligning test.nebula:a to [0.15.0,1.0.0]')
+        result.standardOutput.contains 'Resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-does-not-apply-to-dependencies-that-already-have-the-expected-version, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z) aligning test.nebula:b to [0.15.0,1.0.0]'
         result.standardOutput.contains 'test.nebula:a:1.0.0\n'
         result.standardOutput.contains 'test.nebula:b:0.15.0 -> 1.0.0\n'
     }
@@ -716,8 +717,8 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
 
         then:
         def output = result.standardOutput
-        output.contains 'Resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-applies-to-versions-affected-by-resolution-strategies, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z) aligning test.nebula:a to 1.0.0'
-        output.contains 'Resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-applies-to-versions-affected-by-resolution-strategies, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z) aligning test.nebula:b to 1.0.0'
+        output.contains 'Resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-applies-to-versions-affected-by-resolution-strategies, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z) aligning test.nebula:a to [0.15.0,1.0.0]'
+        output.contains 'Resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-applies-to-versions-affected-by-resolution-strategies, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z) aligning test.nebula:b to [0.15.0,1.0.0]'
         output.contains 'test.nebula:a:1.0.0 (selected by rule)\n'
         output.contains 'test.nebula:b:1.0.0 (selected by rule)\n'
         output.contains 'test.nebula:b:0.15.0 -> 1.0.0\n'

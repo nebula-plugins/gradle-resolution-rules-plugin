@@ -263,6 +263,6 @@ class AlignRulesDirectDependenciesSpec extends AbstractAlignRulesSpec {
         where:
         tasks | _
         ['dependencies', '--configuration', 'compile'] | _
-        ['dependencyInsight', '--dependency', 'guava'] | _
+        ['dependencyInsight', '--dependency', 'guava', '--configuration', 'compile'] | _
     }
 }
