@@ -62,7 +62,7 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
         val logger: Logger = Logging.getLogger(AlignRules::class.java)
 
         const val CONFIG_SUFFIX = "Align"
-        const val MAX_PASSES = 10
+        const val MAX_PASSES = 5
     }
 
     override fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension, insight: DependencyManagement) {
