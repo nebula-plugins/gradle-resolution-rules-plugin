@@ -703,6 +703,52 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
         results.standardOutput.contains '\\--- test.nebula:b:1.42.2\n'
     }
 
+    def 'dependency-lock causes alignment to short circuit if dependencies are aligned by the lock file'() {
+        def (GradleDependencyGenerator mavenrepo, File rulesJsonFile) = dependencyLockAlignInteractionSetup()
+
+        def dependencyLock = new File(projectDir, 'dependencies.lock')
+        dependencyLock.delete()
+        dependencyLock << '''\
+        {
+            "compile": {
+                "test.nebula:a": { "locked": "1.41.5" },
+                "test.nebula:b": { "locked": "1.41.5" }
+            }
+        }
+        '''.stripIndent()
+
+        buildFile << """\
+            buildscript {
+                repositories { jcenter() }
+                dependencies {
+                    classpath 'com.netflix.nebula:gradle-dependency-lock-plugin:4.9.4'
+                }
+            }
+
+            ${applyPlugin(ResolutionRulesPlugin)}
+            apply plugin: 'nebula.dependency-lock'
+            apply plugin: 'java'
+
+            repositories {
+                ${mavenrepo.mavenRepositoryBlock}
+            }
+
+            dependencies {
+                resolutionRules files('$rulesJsonFile')
+                compile 'test.nebula:a:1.41.5'
+                compile 'test.nebula:b:1.42.2'
+            }
+        """.stripIndent()
+
+        when:
+        def results = runTasksSuccessfully('dependencies', '--configuration', 'compile', '--debug')
+
+        then:
+        !results.standardOutput.contains('aligning test.nebula:a to [1.41.5,1.42.2]')
+        results.standardOutput.contains '+--- test.nebula:a:1.41.5\n'
+        results.standardOutput.contains '\\--- test.nebula:b:1.42.2 -> 1.41.5'
+    }
+
     private List dependencyLockAlignInteractionSetup() {
         def graph = new DependencyGraphBuilder()
                 .addModule('test.nebula:a:1.41.5')
@@ -972,8 +1018,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
         """.stripIndent()
     }
 
-    private void add(File source, File unneededRoot, JarOutputStream target) throws IOException
-    {
+    private void add(File source, File unneededRoot, JarOutputStream target) throws IOException {
         def prefix = "${unneededRoot.path}/"
         if (source.isDirectory()) {
             String dirName = source.path - prefix

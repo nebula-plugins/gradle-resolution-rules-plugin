@@ -78,7 +78,7 @@ data class ReplaceRule(override val module: String, val with: String, override v
         project.dependencies.modules.module(moduleId.toString()) {
             val details = it as ComponentModuleMetadataDetails
             details.replacedBy(withModuleId.toString())
-            insight.addReason(configuration.name, "${withModuleId.organization}:${withModuleId.name}", "replacement ${details.id.group}:${details.id.name} -> ${withModuleId.organization}:${withModuleId.name}", "nebula.resolution-rules")
+            insight.addReason(configuration, "${withModuleId.organization}:${withModuleId.name}", "replacement ${details.id.group}:${details.id.name} -> ${withModuleId.organization}:${withModuleId.name}")
         }
     }
 }
@@ -100,7 +100,7 @@ data class SubstituteRule(val module: String, val with: String, override var rul
                     if (requestedSelector.group == selector.group && requestedSelector.module == selector.module) {
                         val versionSelector = VersionWithSelector(selector.version).asSelector()
                         if (versionSelector.accept(requestedSelector.version)) {
-                            insight.addReason(configuration.name, "${withSelector.group}:${withSelector.module}", "substitution because $reason", "nebula.resolution-rules")
+                            insight.addReason(configuration, "${withSelector.group}:${withSelector.module}", "substitution because $reason")
                             useTarget(withSelector)
                         }
                     }
@@ -108,7 +108,7 @@ data class SubstituteRule(val module: String, val with: String, override var rul
             })
         } else {
             resolutionStrategy.dependencySubstitution {
-                insight.addReason(configuration.name, "${withSelector.group}:${withSelector.module}", "substitution because $reason", "nebula.resolution-rules")
+                insight.addReason(configuration, "${withSelector.group}:${withSelector.module}", "substitution because $reason")
                 it.substitute(selector).with(withSelector)
             }
         }

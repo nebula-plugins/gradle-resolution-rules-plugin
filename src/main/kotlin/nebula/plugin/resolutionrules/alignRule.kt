@@ -61,14 +61,13 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
     companion object {
         val logger: Logger = Logging.getLogger(AlignRules::class.java)
 
-        const val CONFIG_SUFFIX = "Align"
         const val MAX_PASSES = 5
     }
 
     override fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension, insight: DependencyManagement) {
         this.insight = insight
-        if (configuration.name.endsWith(CONFIG_SUFFIX)) {
-            // Don't attempt to align an alignment configuration
+        if (configuration.isCopy) {
+            // Don't attempt to align one of our copied configurations
             return
         }
 
@@ -83,7 +82,7 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
         }
 
         val baselineAligns = project
-                .copyConfiguration(configuration, configuration.name, "Baseline")
+                .copyConfiguration(configuration)
                 .baselineAligns()
 
         if (baselineAligns.isEmpty()) {
@@ -92,7 +91,7 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
         }
 
         val stableAligns = project
-                .copyConfiguration(configuration, configuration.name, "Resolved")
+                .copyConfiguration(configuration)
                 .applyAligns(baselineAligns)
                 .stableResolvedAligns(baselineAligns)
 
@@ -131,7 +130,7 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
             "The maximum number of alignment passes were attempted ($MAX_PASSES) for $source"
         }
         val resolvedAligns = resolvedAligns(baselineAligns)
-        val copy = copyConfiguration("StabilityPass$pass").applyAligns(resolvedAligns)
+        val copy = copyConfiguration().applyAligns(resolvedAligns)
         val copyResolvedAligns = copy.resolvedAligns(baselineAligns)
         if (resolvedAligns == copyResolvedAligns) {
             return resolvedAligns
@@ -223,7 +222,7 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
                         logger.debug("Resolution rule $rule aligning ${details.requested.group}:${details.requested.name} to $version")
                     }
                     details.useVersion(version)
-                    insight.addReason(configuration.name, "${details.requested.group}:${details.requested.name}", "aligned to $version by ${rule.name}", "nebula.resolution-rules")
+                    insight.addReason(configuration, "${details.requested.group}:${details.requested.name}", "aligned to $version by ${rule.name}")
                 }
             }
         }

@@ -1,5 +1,6 @@
 package nebula.plugin.resolutionrules
 
+import com.netflix.nebula.dependencybase.DependencyManagement
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
@@ -15,14 +16,16 @@ import java.lang.reflect.Modifier
  * - We can't set the configuration name on copyRecursive, which makes for confusing logging output when we're resolving our configurations
  */
 
-class CopiedConfiguration(val source: Configuration, val project: Project, val baseName: String, copy: Configuration) : Configuration by copy
+const val COPY_DESCRIPTION_SUFFIX = " (Copy)"
 
-fun CopiedConfiguration.copyConfiguration(alignmentPhase: String) = project.copyConfiguration(this, baseName, alignmentPhase)
+class CopiedConfiguration(val source: Configuration, val project: Project, copy: Configuration) : Configuration by copy
 
-fun Project.copyConfiguration(configuration: Configuration, baseName: String, alignmentPhase: String): CopiedConfiguration {
+fun CopiedConfiguration.copyConfiguration() = project.copyConfiguration(source)
+
+fun Project.copyConfiguration(configuration: Configuration): CopiedConfiguration {
     val copy = configuration.copyRecursive()
-    val name = "$baseName$alignmentPhase${AlignRules.CONFIG_SUFFIX}"
-    copy.setName(name)
+    copy.setName(configuration.name)
+    copy.description = copy.description + COPY_DESCRIPTION_SUFFIX
 
     // Apply container register actions, without risking concurrently modifying the configuration container
     val eventRegister = configurations.javaClass.getDeclaredMethod("getEventRegister").invoke(configurations)
@@ -33,7 +36,17 @@ fun Project.copyConfiguration(configuration: Configuration, baseName: String, al
     // Hacky workaround to prevent Gradle from attempting to resolve a project dependency as an external dependency
     copy.exclude(this.group.toString(), this.name)
 
-    return CopiedConfiguration(configuration, this, baseName, copy)
+    return CopiedConfiguration(configuration, this, copy)
+}
+
+val Configuration.isCopy: Boolean
+  get() = if (description == null) false else description.endsWith(COPY_DESCRIPTION_SUFFIX)
+
+
+fun DependencyManagement.addReason(configuration: Configuration, coordinate: String, message: String) {
+    if (!configuration.isCopy) {
+        addReason(configuration.name, coordinate, message, "nebula.resolution-rules")
+    }
 }
 
 fun Configuration.setName(name: String) {
