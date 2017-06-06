@@ -235,8 +235,8 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
             }
 
             dependencies {
-                compile 'test.nebula.a:a1:1.0.0'
-                compile 'test.nebula.a:a2:2.0.0'
+                compile 'test.nebula.a:a1:1.+'
+                compile 'test.nebula.a:a2:latest.release'
                 compile 'test.nebula.b:b2:1.0.0'
                 compile 'test.nebula.c:c1:1.0.0'
             }
@@ -246,9 +246,9 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
         def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
 
         then:
-        result.standardOutput.contains '+--- test.nebula.a:a1:1.0.0 -> 2.0.0\n'
+        result.standardOutput.contains '+--- test.nebula.a:a1:1.+ -> 2.0.0\n'
         result.standardOutput.contains '|    \\--- test.nebula.b:b1:2.0.0\n'
-        result.standardOutput.contains '+--- test.nebula.a:a2:2.0.0\n'
+        result.standardOutput.contains '+--- test.nebula.a:a2:latest.release -> 2.0.0\n'
         result.standardOutput.contains '+--- test.nebula.b:b2:1.0.0 -> 2.0.0\n'
         result.standardOutput.contains '\\--- test.nebula.a:a3:1.0.0 -> 2.0.0\n'
         result.standardOutput.contains '\\--- test.nebula.c:c1:1.0.0'
