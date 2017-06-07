@@ -188,7 +188,7 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
         def graph = new DependencyGraphBuilder()
                 .addModule(new ModuleBuilder('test.nebula.a:a1:1.0.0').addDependency('test.nebula.b:b1:1.0.0').build())
                 .addModule(new ModuleBuilder('test.nebula.a:a1:2.0.0').addDependency('test.nebula.b:b1:2.0.0').build())
-                .addModule('test.nebula.a:a1:1.0.0')
+                .addModule('test.nebula.a:a2:1.0.0')
                 .addModule('test.nebula.a:a2:2.0.0')
                 .addModule('test.nebula.a:a3:1.0.0')
                 .addModule('test.nebula.a:a3:2.0.0')

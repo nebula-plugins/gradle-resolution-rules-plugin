@@ -112,14 +112,21 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
                 val alignedVersion = baselineAligns.singleOrNull {
                     it.ruleMatches(selectedModuleVersion)
                 }
-                if (alignedVersion.selectedVersionConflictResolved(selectedModuleVersion)) {
+                if (alignedVersion.useRequestedVersion(selectedModuleVersion)) {
                     /**
-                     * If the selected version for an aligned dependency was as a result of conflict resolution (i.e. unaffected by
-                     * resolutionStrategies etc), then we choose the requested version so we can reflect the requested
-                     * dependency pre-alignment.
+                     * If the selected version for an aligned dependency was unaffected by resolutionStrategies etc.,
+                     * then we choose the requested version so we can reflect the requested dependency pre-alignment.
+                     *
+                     * We ignore dynamic selectors, which would be a problem when an aligned dependency brings in a
+                     * dynamic selector - but we'll have to live with that very small chance of inconsistency while
+                     * we have to do alignment like this...
                      */
                     val selector = dependency.requested as ModuleComponentSelector
-                    DefaultModuleVersionIdentifier(selector.group, selector.module, selector.version)
+                    if (VersionWithSelector(selector.version).asSelector().isDynamic) {
+                        selectedModuleVersion
+                    } else {
+                        DefaultModuleVersionIdentifier(selector.group, selector.module, selector.version)
+                    }
                 } else {
                     selectedModuleVersion
                 }
@@ -139,14 +146,15 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
         }
     }
 
-    private fun AlignedVersionWithDependencies?.selectedVersionConflictResolved(moduleVersion: ModuleVersionIdentifier): Boolean {
+    private fun AlignedVersionWithDependencies?.useRequestedVersion(moduleVersion: ModuleVersionIdentifier): Boolean {
         if (this == null) {
             return false
         }
         val dependency = resolvedDependencies
                 .map { it.selected }
-                .singleOrNull { it.moduleVersion.module == moduleVersion.module }
-        return dependency == null || dependency.selectionReason.isConflictResolution
+                .singleOrNull { it.moduleVersion.module == moduleVersion.module } ?: return true
+        val selectionReason = dependency.selectionReason
+        return selectionReason.isExpected || selectionReason.isConflictResolution
     }
 
     private fun AlignedVersionWithDependencies.ruleMatches(dep: ModuleVersionIdentifier) = alignedVersion.rule.ruleMatches(dep)
@@ -229,6 +237,7 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
 
     private fun alignedRange(rule: AlignRule, moduleVersions: List<ModuleVersionIdentifier>, configuration: Configuration): VersionWithSelector {
         val versions = moduleVersions.mapToSet { VersionWithSelector(it.version) }
+        check(versions.all { !it.asSelector().isDynamic }) { "A dynamic version was included in $versions for $rule" }
         val highestVersion = versions.max()!!
 
         val forcedModules = moduleVersions.flatMap { moduleVersion ->
