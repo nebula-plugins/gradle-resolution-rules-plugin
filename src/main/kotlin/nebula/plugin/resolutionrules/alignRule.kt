@@ -224,11 +224,7 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
                     if (shouldLog) {
                         logger.debug("Resolution rule $rule aligning ${details.requested.group}:${details.requested.name} to $version")
                     }
-                    if (version.asSelector().isDynamic) {
-                        details.useVersion(version.stringVersion)
-                    } else {
-                        details.useVersion("(,$version]")
-                    }
+                    details.useVersion("(,$version]")
                     insight.addReason(configuration, "${details.requested.group}:${details.requested.name}", "aligned to $version by ${rule.name}")
                 }
             }
