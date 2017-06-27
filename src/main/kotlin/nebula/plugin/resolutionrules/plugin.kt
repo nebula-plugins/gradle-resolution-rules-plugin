@@ -57,7 +57,7 @@ class ResolutionRulesPlugin : Plugin<Project> {
         this.project = project
         this.project.plugins.apply(DependencyBasePlugin::class.java)
         insight = this.project.extensions.extraProperties.get("nebulaDependencyBase") as DependencyManagement
-        rulesConfiguration = project.configurations.create(RESOLUTION_RULES_CONFIG_NAME)
+        rulesConfiguration = project.rootProject.configurations.maybeCreate(RESOLUTION_RULES_CONFIG_NAME)
         extension = project.extensions.create("nebulaResolutionRules", NebulaResolutionRulesExtension::class.java)
         mapper = objectMapper()
 

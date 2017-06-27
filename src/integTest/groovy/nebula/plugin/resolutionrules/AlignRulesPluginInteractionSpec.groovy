@@ -182,20 +182,22 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
             }
             allprojects {
                 apply plugin: 'nebula.dependency-recommender'
-            }
-            subprojects {
                 ${applyPlugin(ResolutionRulesPlugin)}
-                apply plugin: 'java'
+
                 repositories {
                     ${mavenrepo.mavenRepositoryBlock}
                 }
+            }
+
+            dependencies {
+                resolutionRules files('$rulesJsonFile')
+            }
+
+            subprojects {
+                apply plugin: 'java'
     
                 dependencyRecommendations {
                    map recommendations: ['test.a:a': '1.42.2']
-                }
-    
-                dependencies {
-                    resolutionRules files('$rulesJsonFile')
                 }
             }
             
@@ -537,21 +539,22 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
                     classpath 'com.netflix.nebula:gradle-extra-configurations-plugin:3.1.0'
                 }
             }
-            subprojects {
-                apply plugin: 'nebula.maven-publish'
-                apply plugin: 'nebula.provided-base'
+            allprojects {
                 ${applyPlugin(ResolutionRulesPlugin)}
-                apply plugin: 'java'
-
-
-
+            
                 repositories {
                     ${mavenrepo.mavenRepositoryBlock}
                 }
+            }
+            
+            dependencies {
+                resolutionRules files('$rulesJsonFile')
+            }
 
-                dependencies {
-                    resolutionRules files('$rulesJsonFile')
-                }
+            subprojects {
+                apply plugin: 'nebula.maven-publish'
+                apply plugin: 'nebula.provided-base'
+                apply plugin: 'java'
             }
         """.stripIndent()
 
@@ -851,10 +854,11 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
             
             allprojects {
                 ${applyPlugin(ResolutionRulesPlugin)}
-                dependencies {
-                    resolutionRules files('$rulesJsonFile')
-                }
                 apply plugin: 'nebula.dependency-recommender'
+            }
+
+            dependencies {
+                resolutionRules files('$rulesJsonFile')
             }
 
             subprojects {
@@ -935,13 +939,14 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
             
             allprojects {
                 ${applyPlugin(ResolutionRulesPlugin)}
-                dependencies {
-                    resolutionRules files('$rulesJsonFile')
-                }
                 apply plugin: 'nebula.dependency-recommender'
                 dependencyRecommendations {
                     strictMode = true
                 }
+            }
+
+            dependencies {
+                resolutionRules files('$rulesJsonFile')
             }
 
             subprojects {

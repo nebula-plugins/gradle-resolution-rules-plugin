@@ -34,10 +34,10 @@ class AlignRulesMultiprojectSpec extends IntegrationSpec {
                 apply plugin: 'java'
 
                 group = 'test.nebula'
+            }
 
-                dependencies {
-                    resolutionRules files('$rulesJsonFile')
-                }
+            dependencies {
+                resolutionRules files('$rulesJsonFile')
             }
         """.stripIndent()
 
