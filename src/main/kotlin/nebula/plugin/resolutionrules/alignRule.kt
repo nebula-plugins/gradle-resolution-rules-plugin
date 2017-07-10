@@ -99,7 +99,7 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
     }
 
     private fun CopiedConfiguration.baselineAligns(): List<AlignedVersionWithDependencies> =
-            selectedVersions({ it.selectedModuleVersion }, true)
+            selectedVersions({ it.selectedModuleVersion })
                     .filter {
                         val resolvedVersions = it.resolvedDependencies
                                 .mapToSet { it.selectedVersion }
@@ -159,16 +159,17 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
 
     private fun AlignedVersionWithDependencies.ruleMatches(dep: ModuleVersionIdentifier) = alignedVersion.rule.ruleMatches(dep)
 
-    private fun CopiedConfiguration.selectedVersions(versionSelector: (ResolvedDependencyResult) -> ModuleVersionIdentifier, shouldLog: Boolean = false): List<AlignedVersionWithDependencies> {
+    private fun CopiedConfiguration.selectedVersions(versionSelector: (ResolvedDependencyResult) -> ModuleVersionIdentifier): List<AlignedVersionWithDependencies> {
         val partitioned = incoming.resolutionResult.allDependencies
                 .partition { it is ResolvedDependencyResult }
         @Suppress("UNCHECKED_CAST")
         val resolved = partitioned.first as List<ResolvedDependencyResult>
         val unresolved = partitioned.second
 
-        if (shouldLog && unresolved.isNotEmpty()) {
-            logger.warn("Resolution rules could not resolve all dependencies to align $source, those dependencies will not be used during alignment (use --info to list unresolved dependencies)")
+        if (unresolved.isNotEmpty()) {
+            logger.warn("Resolution rules could not resolve all dependencies to align $source. This configuration will not be aligned (use --info to list unresolved dependencies)")
             logger.info("Could not resolve:\n ${unresolved.distinct().map { " - $it" }.joinToString("\n")}")
+            return emptyList()
         }
         val resolvedDependencies = resolved
                 .filter { it.selectedId is ModuleComponentIdentifier }
