@@ -905,4 +905,52 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
         then:
         result.standardOutput.contains('Skipping alignment for configuration \':compile\' - Configuration is not transitive')
     }
+
+    def 'configurations with artifacts can be aligned'() {
+        def graph = new DependencyGraphBuilder()
+                .addModule('test.nebula:a:1.0.0')
+                .addModule('test.nebula:a:0.15.0')
+                .addModule('test.nebula:b:1.0.0')
+                .addModule('test.nebula:b:0.15.0')
+                .build()
+        File mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
+
+        rulesJsonFile << '''\
+            {
+                "deny": [], "reject": [], "substitute": [], "replace": [],
+                "align": [
+                    {
+                        "name": "testNebula",
+                        "group": "test.nebula",
+                        "reason": "Align test.nebula dependencies",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    }
+                ]
+            }
+        '''.stripIndent()
+
+        buildFile << """\
+            repositories {
+                maven { url '${mavenrepo.absolutePath}' }
+            }
+            
+            dependencies {
+                compile 'test.nebula:a:1.0.0'
+                compile 'test.nebula:b:0.15.0'
+            }
+            
+            task myZip(type: Zip)
+            
+            artifacts {
+                runtime myZip
+            }        
+        """.stripIndent()
+
+        when:
+        def result = runTasksSuccessfully('dependencies')
+
+        then:
+        noExceptionThrown()
+    }
 }

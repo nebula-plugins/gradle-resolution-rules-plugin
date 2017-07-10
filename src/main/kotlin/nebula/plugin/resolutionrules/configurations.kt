@@ -27,6 +27,11 @@ fun Project.copyConfiguration(configuration: Configuration): CopiedConfiguration
     copy.setName(configuration.name)
     copy.description = copy.description + COPY_DESCRIPTION_SUFFIX
 
+    // Prevent base plugin artifact handlers from adding artifacts from this configuration to the archives configuration
+    val detachedConfiguration = configurations.detachedConfiguration() // Just a nice way of getting at constructed collections
+    copy.setField("artifacts", detachedConfiguration.artifacts)
+    copy.setField("allArtifacts", detachedConfiguration.allArtifacts)
+
     // Apply container register actions, without risking concurrently modifying the configuration container
     val eventRegister = configurations.javaClass.getDeclaredMethod("getEventRegister").invoke(configurations)
     @Suppress("UNCHECKED_CAST")
@@ -40,8 +45,7 @@ fun Project.copyConfiguration(configuration: Configuration): CopiedConfiguration
 }
 
 val Configuration.isCopy: Boolean
-  get() = if (description == null) false else description.endsWith(COPY_DESCRIPTION_SUFFIX)
-
+    get() = if (description == null) false else description.endsWith(COPY_DESCRIPTION_SUFFIX)
 
 fun DependencyManagement.addReason(configuration: Configuration, coordinate: String, message: String) {
     if (!configuration.isCopy) {
