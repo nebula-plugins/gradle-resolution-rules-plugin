@@ -105,8 +105,7 @@ class ResolutionRulesPlugin : Plugin<Project> {
             if (isIncludedRuleFile(file.name, extension)) {
                 rules.putRules(parseJsonFile(file))
             } else if (file.name.endsWith(JAR_EXT) || file.name.endsWith(ZIP_EXT)) {
-                val zip = ZipFile(file)
-                zip.use { zip ->
+                ZipFile(file).use { zip ->
                     val entries = zip.entries()
                     while (entries.hasMoreElements()) {
                         val entry = entries.nextElement()

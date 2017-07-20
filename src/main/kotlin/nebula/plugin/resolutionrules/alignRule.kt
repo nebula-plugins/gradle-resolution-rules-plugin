@@ -152,7 +152,7 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
         }
         val dependency = resolvedDependencies
                 .map { it.selected }
-                .singleOrNull { it.moduleVersion.module == moduleVersion.module } ?: return true
+                .singleOrNull { it.moduleVersion?.module == moduleVersion.module } ?: return true
         val selectionReason = dependency.selectionReason
         return selectionReason.isExpected || selectionReason.isConflictResolution
     }
