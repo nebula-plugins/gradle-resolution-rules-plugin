@@ -10,11 +10,11 @@
         },
         "com.netflix.nebula:nebula-gradle-interop": {
             "locked": "0.5.0",
-            "requested": "latest.release"
+            "requested": "0.5.0"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
-            "locked": "1.1.0",
-            "requested": "1.1.0"
+            "locked": "1.1.2-4",
+            "requested": "1.1.2-4"
         },
         "org.jetbrains.kotlin:kotlin-stdlib-jre7": {
             "locked": "1.1.0",
@@ -32,11 +32,11 @@
         },
         "com.netflix.nebula:nebula-gradle-interop": {
             "locked": "0.5.0",
-            "requested": "latest.release"
+            "requested": "0.5.0"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
-            "locked": "1.1.0",
-            "requested": "1.1.0"
+            "locked": "1.1.2-4",
+            "requested": "1.1.2-4"
         },
         "org.jetbrains.kotlin:kotlin-stdlib-jre7": {
             "locked": "1.1.0",
@@ -54,115 +54,11 @@
         },
         "com.netflix.nebula:nebula-gradle-interop": {
             "locked": "0.5.0",
-            "requested": "latest.release"
+            "requested": "0.5.0"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
-            "locked": "1.1.0",
-            "requested": "1.1.0"
-        },
-        "org.jetbrains.kotlin:kotlin-stdlib-jre7": {
-            "locked": "1.1.0",
-            "requested": "1.1.0"
-        }
-    },
-    "functionalTestCompile": {
-        "com.fasterxml.jackson.module:jackson-module-kotlin": {
-            "locked": "2.7.5",
-            "requested": "2.7.5"
-        },
-        "com.netflix.nebula:nebula-dependency-base-plugin": {
-            "locked": "0.1.0",
-            "requested": "0.1.0"
-        },
-        "com.netflix.nebula:nebula-gradle-interop": {
-            "locked": "0.5.0",
-            "requested": "latest.release"
-        },
-        "com.netflix.nebula:nebula-test": {
-            "locked": "6.0.1",
-            "requested": "6.0.1"
-        },
-        "org.jetbrains.kotlin:kotlin-reflect": {
-            "locked": "1.1.0",
-            "requested": "1.1.0"
-        },
-        "org.jetbrains.kotlin:kotlin-stdlib-jre7": {
-            "locked": "1.1.0",
-            "requested": "1.1.0"
-        }
-    },
-    "functionalTestCompileClasspath": {
-        "com.fasterxml.jackson.module:jackson-module-kotlin": {
-            "locked": "2.7.5",
-            "requested": "2.7.5"
-        },
-        "com.netflix.nebula:nebula-dependency-base-plugin": {
-            "locked": "0.1.0",
-            "requested": "0.1.0"
-        },
-        "com.netflix.nebula:nebula-gradle-interop": {
-            "locked": "0.5.0",
-            "requested": "latest.release"
-        },
-        "com.netflix.nebula:nebula-test": {
-            "locked": "6.0.1",
-            "requested": "6.0.1"
-        },
-        "org.jetbrains.kotlin:kotlin-reflect": {
-            "locked": "1.1.0",
-            "requested": "1.1.0"
-        },
-        "org.jetbrains.kotlin:kotlin-stdlib-jre7": {
-            "locked": "1.1.0",
-            "requested": "1.1.0"
-        }
-    },
-    "functionalTestRuntime": {
-        "com.fasterxml.jackson.module:jackson-module-kotlin": {
-            "locked": "2.7.5",
-            "requested": "2.7.5"
-        },
-        "com.netflix.nebula:nebula-dependency-base-plugin": {
-            "locked": "0.1.0",
-            "requested": "0.1.0"
-        },
-        "com.netflix.nebula:nebula-gradle-interop": {
-            "locked": "0.5.0",
-            "requested": "latest.release"
-        },
-        "com.netflix.nebula:nebula-test": {
-            "locked": "6.0.1",
-            "requested": "6.0.1"
-        },
-        "org.jetbrains.kotlin:kotlin-reflect": {
-            "locked": "1.1.0",
-            "requested": "1.1.0"
-        },
-        "org.jetbrains.kotlin:kotlin-stdlib-jre7": {
-            "locked": "1.1.0",
-            "requested": "1.1.0"
-        }
-    },
-    "functionalTestRuntimeClasspath": {
-        "com.fasterxml.jackson.module:jackson-module-kotlin": {
-            "locked": "2.7.5",
-            "requested": "2.7.5"
-        },
-        "com.netflix.nebula:nebula-dependency-base-plugin": {
-            "locked": "0.1.0",
-            "requested": "0.1.0"
-        },
-        "com.netflix.nebula:nebula-gradle-interop": {
-            "locked": "0.5.0",
-            "requested": "latest.release"
-        },
-        "com.netflix.nebula:nebula-test": {
-            "locked": "6.0.1",
-            "requested": "6.0.1"
-        },
-        "org.jetbrains.kotlin:kotlin-reflect": {
-            "locked": "1.1.0",
-            "requested": "1.1.0"
+            "locked": "1.1.2-4",
+            "requested": "1.1.2-4"
         },
         "org.jetbrains.kotlin:kotlin-stdlib-jre7": {
             "locked": "1.1.0",
@@ -180,15 +76,15 @@
         },
         "com.netflix.nebula:nebula-gradle-interop": {
             "locked": "0.5.0",
-            "requested": "latest.release"
+            "requested": "0.5.0"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.0.1",
-            "requested": "6.0.1"
+            "locked": "6.1.0",
+            "requested": "6.+"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
-            "locked": "1.1.0",
-            "requested": "1.1.0"
+            "locked": "1.1.2-4",
+            "requested": "1.1.2-4"
         },
         "org.jetbrains.kotlin:kotlin-stdlib-jre7": {
             "locked": "1.1.0",
@@ -206,15 +102,15 @@
         },
         "com.netflix.nebula:nebula-gradle-interop": {
             "locked": "0.5.0",
-            "requested": "latest.release"
+            "requested": "0.5.0"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.0.1",
-            "requested": "6.0.1"
+            "locked": "6.1.0",
+            "requested": "6.+"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
-            "locked": "1.1.0",
-            "requested": "1.1.0"
+            "locked": "1.1.2-4",
+            "requested": "1.1.2-4"
         },
         "org.jetbrains.kotlin:kotlin-stdlib-jre7": {
             "locked": "1.1.0",
@@ -226,21 +122,25 @@
             "locked": "2.7.5",
             "requested": "2.7.5"
         },
+        "com.netflix.nebula:gradle-dependency-lock-plugin": {
+            "locked": "4.9.4",
+            "requested": "4.9.4"
+        },
         "com.netflix.nebula:nebula-dependency-base-plugin": {
             "locked": "0.1.0",
             "requested": "0.1.0"
         },
         "com.netflix.nebula:nebula-gradle-interop": {
             "locked": "0.5.0",
-            "requested": "latest.release"
+            "requested": "0.5.0"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.0.1",
-            "requested": "6.0.1"
+            "locked": "6.1.0",
+            "requested": "6.+"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
-            "locked": "1.1.0",
-            "requested": "1.1.0"
+            "locked": "1.1.2-4",
+            "requested": "1.1.2-4"
         },
         "org.jetbrains.kotlin:kotlin-stdlib-jre7": {
             "locked": "1.1.0",
@@ -252,21 +152,25 @@
             "locked": "2.7.5",
             "requested": "2.7.5"
         },
+        "com.netflix.nebula:gradle-dependency-lock-plugin": {
+            "locked": "4.9.4",
+            "requested": "4.9.4"
+        },
         "com.netflix.nebula:nebula-dependency-base-plugin": {
             "locked": "0.1.0",
             "requested": "0.1.0"
         },
         "com.netflix.nebula:nebula-gradle-interop": {
             "locked": "0.5.0",
-            "requested": "latest.release"
+            "requested": "0.5.0"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.0.1",
-            "requested": "6.0.1"
+            "locked": "6.1.0",
+            "requested": "6.+"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
-            "locked": "1.1.0",
-            "requested": "1.1.0"
+            "locked": "1.1.2-4",
+            "requested": "1.1.2-4"
         },
         "org.jetbrains.kotlin:kotlin-stdlib-jre7": {
             "locked": "1.1.0",
@@ -284,12 +188,6 @@
         }
     },
     "kapt": {
-        "org.jetbrains.kotlin:kotlin-annotation-processing": {
-            "locked": "1.1.0",
-            "requested": "1.1.0"
-        }
-    },
-    "kaptFunctionalTest": {
         "org.jetbrains.kotlin:kotlin-annotation-processing": {
             "locked": "1.1.0",
             "requested": "1.1.0"
@@ -318,11 +216,11 @@
         },
         "com.netflix.nebula:nebula-gradle-interop": {
             "locked": "0.5.0",
-            "requested": "latest.release"
+            "requested": "0.5.0"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
-            "locked": "1.1.0",
-            "requested": "1.1.0"
+            "locked": "1.1.2-4",
+            "requested": "1.1.2-4"
         },
         "org.jetbrains.kotlin:kotlin-stdlib-jre7": {
             "locked": "1.1.0",
@@ -340,11 +238,11 @@
         },
         "com.netflix.nebula:nebula-gradle-interop": {
             "locked": "0.5.0",
-            "requested": "latest.release"
+            "requested": "0.5.0"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
-            "locked": "1.1.0",
-            "requested": "1.1.0"
+            "locked": "1.1.2-4",
+            "requested": "1.1.2-4"
         },
         "org.jetbrains.kotlin:kotlin-stdlib-jre7": {
             "locked": "1.1.0",
@@ -362,15 +260,15 @@
         },
         "com.netflix.nebula:nebula-gradle-interop": {
             "locked": "0.5.0",
-            "requested": "latest.release"
+            "requested": "0.5.0"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.0.1",
-            "requested": "6.0.1"
+            "locked": "6.1.0",
+            "requested": "6.+"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
-            "locked": "1.1.0",
-            "requested": "1.1.0"
+            "locked": "1.1.2-4",
+            "requested": "1.1.2-4"
         },
         "org.jetbrains.kotlin:kotlin-stdlib-jre7": {
             "locked": "1.1.0",
@@ -388,15 +286,15 @@
         },
         "com.netflix.nebula:nebula-gradle-interop": {
             "locked": "0.5.0",
-            "requested": "latest.release"
+            "requested": "0.5.0"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.0.1",
-            "requested": "6.0.1"
+            "locked": "6.1.0",
+            "requested": "6.+"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
-            "locked": "1.1.0",
-            "requested": "1.1.0"
+            "locked": "1.1.2-4",
+            "requested": "1.1.2-4"
         },
         "org.jetbrains.kotlin:kotlin-stdlib-jre7": {
             "locked": "1.1.0",
@@ -408,21 +306,25 @@
             "locked": "2.7.5",
             "requested": "2.7.5"
         },
+        "com.netflix.nebula:gradle-dependency-lock-plugin": {
+            "locked": "4.9.4",
+            "requested": "4.9.4"
+        },
         "com.netflix.nebula:nebula-dependency-base-plugin": {
             "locked": "0.1.0",
             "requested": "0.1.0"
         },
         "com.netflix.nebula:nebula-gradle-interop": {
             "locked": "0.5.0",
-            "requested": "latest.release"
+            "requested": "0.5.0"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.0.1",
-            "requested": "6.0.1"
+            "locked": "6.1.0",
+            "requested": "6.+"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
-            "locked": "1.1.0",
-            "requested": "1.1.0"
+            "locked": "1.1.2-4",
+            "requested": "1.1.2-4"
         },
         "org.jetbrains.kotlin:kotlin-stdlib-jre7": {
             "locked": "1.1.0",
@@ -434,21 +336,25 @@
             "locked": "2.7.5",
             "requested": "2.7.5"
         },
+        "com.netflix.nebula:gradle-dependency-lock-plugin": {
+            "locked": "4.9.4",
+            "requested": "4.9.4"
+        },
         "com.netflix.nebula:nebula-dependency-base-plugin": {
             "locked": "0.1.0",
             "requested": "0.1.0"
         },
         "com.netflix.nebula:nebula-gradle-interop": {
             "locked": "0.5.0",
-            "requested": "latest.release"
+            "requested": "0.5.0"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.0.1",
-            "requested": "6.0.1"
+            "locked": "6.1.0",
+            "requested": "6.+"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
-            "locked": "1.1.0",
-            "requested": "1.1.0"
+            "locked": "1.1.2-4",
+            "requested": "1.1.2-4"
         },
         "org.jetbrains.kotlin:kotlin-stdlib-jre7": {
             "locked": "1.1.0",
