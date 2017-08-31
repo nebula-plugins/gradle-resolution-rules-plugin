@@ -164,14 +164,14 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
         def aResult = runTasksSuccessfully('dependencyInsightEnhanced', '--configuration', 'compile', '--dependency', 'a')
 
         then:
-        aResult.standardOutput.contains 'test.nebula:a:1.1.0 (aligned to 1.1.0 by testNebula)'
+        aResult.standardOutput.contains 'test.nebula:a:1.1.0 (aligned to 1.1.0 by dependencyInsightEnhanced-adds-extra-info-for-alignment)'
         aResult.standardOutput.contains 'nebula.resolution-rules uses: dependencyInsightEnhanced-adds-extra-info-for-alignment.json'
 
         when:
         def aResultCompileClasspath = runTasksSuccessfully('dependencyInsightEnhanced', '--configuration', 'compileClasspath', '--dependency', 'a')
 
         then:
-        aResultCompileClasspath.standardOutput.contains 'test.nebula:a:1.1.0 (aligned to 1.1.0 by testNebula)'
+        aResultCompileClasspath.standardOutput.contains 'test.nebula:a:1.1.0 (aligned to 1.1.0 by dependencyInsightEnhanced-adds-extra-info-for-alignment)'
 
         when:
         def bResult = runTasksSuccessfully('dependencyInsightEnhanced', '--configuration', 'compile', '--dependency', 'b')
@@ -183,7 +183,7 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
         def cResult = runTasksSuccessfully('dependencyInsightEnhanced', '--configuration', 'compile', '--dependency', 'c')
 
         then:
-        cResult.standardOutput.contains 'test.nebula:c:1.1.0 (aligned to 1.1.0 by testNebula)'
+        cResult.standardOutput.contains 'test.nebula:c:1.1.0 (aligned to 1.1.0 by dependencyInsightEnhanced-adds-extra-info-for-alignment)'
 
     }
 

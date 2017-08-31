@@ -27,6 +27,7 @@ class AlignRulesMultiprojectSpec extends IntegrationSpec {
     def bDir
 
     def setup() {
+        fork = false
         rulesJsonFile = new File(projectDir, "${moduleName}.json")
         buildFile << """\
             subprojects {

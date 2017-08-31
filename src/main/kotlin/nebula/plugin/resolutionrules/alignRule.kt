@@ -121,6 +121,7 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
                      * dynamic selector - but we'll have to live with that very small chance of inconsistency while
                      * we have to do alignment like this...
                      */
+                    // FIXME the requested version is the last seen, not the one that contributed the highest version
                     val selector = dependency.requested as ModuleComponentSelector
                     if (VersionWithSelector(selector.version).asSelector().isDynamic) {
                         selectedModuleVersion
@@ -139,10 +140,10 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
         val resolvedAligns = resolvedAligns(baselineAligns)
         val copy = copyConfiguration().applyAligns(resolvedAligns)
         val copyResolvedAligns = copy.resolvedAligns(baselineAligns)
-        if (resolvedAligns == copyResolvedAligns) {
-            return resolvedAligns
+        return if (resolvedAligns != copyResolvedAligns) {
+            copy.stableResolvedAligns(baselineAligns, pass.inc())
         } else {
-            return copy.stableResolvedAligns(baselineAligns, pass.inc())
+            resolvedAligns
         }
     }
 
@@ -168,13 +169,14 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
 
         if (unresolved.isNotEmpty()) {
             logger.warn("Resolution rules could not resolve all dependencies to align $source. This configuration will not be aligned (use --info to list unresolved dependencies)")
-            logger.info("Could not resolve:\n ${unresolved.distinct().map { " - $it" }.joinToString("\n")}")
+            logger.info("Could not resolve:\n ${unresolved.distinct().joinToString("\n") { " - $it" }}")
             return emptyList()
         }
         val resolvedDependencies = resolved
                 .filter { it.selectedId is ModuleComponentIdentifier }
-                .distinctBy { it.selectedModule }
-        val resolvedVersions = resolvedDependencies.map(versionSelector)
+        val resolvedVersions = resolvedDependencies
+                .map(versionSelector)
+                .distinct()
 
         val selectedVersions = ArrayList<AlignedVersionWithDependencies>()
         aligns.forEach { align ->
@@ -206,14 +208,14 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
     private fun CopiedConfiguration.applyAligns(alignedVersionsWithDependencies: List<AlignedVersionWithDependencies>)
             = (this as Configuration).applyAligns(alignedVersionsWithDependencies) as CopiedConfiguration
 
-    private fun Configuration.applyAligns(alignedVersionsWithDependencies: List<AlignedVersionWithDependencies>, shouldLog: Boolean = false): Configuration {
+    private fun Configuration.applyAligns(alignedVersionsWithDependencies: List<AlignedVersionWithDependencies>, finalConfiguration: Boolean = false): Configuration {
         alignedVersionsWithDependencies.map { it.alignedVersion }.let {
-            resolutionStrategy.eachDependency(ApplyAlignsAction(this, it, shouldLog))
+            resolutionStrategy.eachDependency(ApplyAlignsAction(this, it, finalConfiguration))
         }
         return this
     }
 
-    private inner class ApplyAlignsAction(val configuration: Configuration, val alignedVersions: List<AlignedVersion>, val shouldLog: Boolean) : Action<DependencyResolveDetails> {
+    private inner class ApplyAlignsAction(val configuration: Configuration, val alignedVersions: List<AlignedVersion>, val finalConfiguration: Boolean) : Action<DependencyResolveDetails> {
         override fun execute(details: DependencyResolveDetails) {
             val target = details.target
             val alignedVersion = alignedVersions.firstOrNull {
@@ -222,11 +224,11 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
             if (alignedVersion != null) {
                 val (rule, version) = alignedVersion
                 if (version.stringVersion != details.target.version) {
-                    if (shouldLog) {
+                    if (finalConfiguration) {
                         logger.debug("Resolution rule $rule aligning ${details.requested.group}:${details.requested.name} to $version")
+                        insight.addReason(configuration, "${details.requested.group}:${details.requested.name}", "aligned to $version by ${rule.ruleSet}")
                     }
                     details.useVersion("(,$version]")
-                    insight.addReason(configuration, "${details.requested.group}:${details.requested.name}", "aligned to $version by ${rule.name}")
                 }
             }
         }
@@ -256,7 +258,7 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
             val (dynamic, static) = forced
                     .mapToSet { VersionWithSelector(it.version) }
                     .partition { it.asSelector().isDynamic }
-            val forcedVersion = if (static.isNotEmpty()) {
+            return if (static.isNotEmpty()) {
                 val forcedVersion = static.min()!!
                 logger.debug("Found force(s) $forced that supersede resolution rule $rule. Will use $forcedVersion")
                 forcedVersion
@@ -277,7 +279,6 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
                 logger.debug("Found force(s) $forced that supersede resolution rule $rule. Will use highest dynamic version $forcedVersion that matches most specific selector $mostSpecific")
                 forcedVersion
             }
-            return forcedVersion
         }
 
         return highestVersion

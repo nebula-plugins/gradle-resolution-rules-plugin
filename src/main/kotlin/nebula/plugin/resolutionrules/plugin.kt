@@ -118,8 +118,7 @@ class ResolutionRulesPlugin : Plugin<Project> {
                 logger.debug("Unsupported rules file extension for $file")
             }
         }
-        val flatRules = rules.values.flatten()
-        return flatRules
+        return rules.values.flatten()
     }
 
     fun MutableMap<String, RuleSet>.putRules(ruleSet: RuleSet) {

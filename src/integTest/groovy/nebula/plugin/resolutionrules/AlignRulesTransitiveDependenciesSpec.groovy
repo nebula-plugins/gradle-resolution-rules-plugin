@@ -253,4 +253,48 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
         result.standardOutput.contains '\\--- test.nebula.a:a3:1.0.0 -> 2.0.0\n'
         result.standardOutput.contains '\\--- test.nebula.c:c1:1.0.0'
     }
+
+    def 'can align a transitive dependency with multiple versions contributed transitively'() {
+        def graph = new DependencyGraphBuilder()
+                .addModule(new ModuleBuilder('test.nebula:a:1.0.0').addDependency('test.nebula:d:2.0.0').build())
+                .addModule(new ModuleBuilder('test.nebula:b:1.0.0').addDependency('test.nebula:d:3.0.0').build())
+                .addModule(new ModuleBuilder('test.nebula:c:1.0.0').addDependency('test.nebula:d:1.0.0').build())
+                .addModule('test.nebula:d:1.0.0')
+                .addModule('test.nebula:d:2.0.0')
+                .addModule('test.nebula:d:3.0.0')
+                .build()
+        File mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
+
+        rulesJsonFile << '''\
+            {
+                "deny": [], "reject": [], "substitute": [], "replace": [],
+                "align": [
+                    {
+                        "name": "testNebula",
+                        "group": "test.nebula",
+                        "reason": "Align test.nebula dependencies",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    }
+                ]
+            }
+        '''.stripIndent()
+
+        buildFile << """\
+            repositories {
+                maven { url '${mavenrepo.absolutePath}' }
+            }
+            dependencies {
+                compile 'test.nebula:a:1.0.0'
+                compile 'test.nebula:b:1.0.0'
+                compile 'test.nebula:c:1.0.0'
+            }
+        """.stripIndent()
+
+        when:
+        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+
+        then:
+        result.standardOutput.contains '\\--- test.nebula:d:3.0.0\n'
+    }
 }
