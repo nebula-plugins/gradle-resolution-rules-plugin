@@ -33,20 +33,21 @@ import java.util.*
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 
+const val RESOLUTION_RULES_CONFIG_NAME = "resolutionRules"
+
 class ResolutionRulesPlugin : Plugin<Project> {
     private val logger: Logger = Logging.getLogger(ResolutionRulesPlugin::class.java)
     private val ruleSet: RuleSet by lazy {
-        rulesFromConfiguration(rulesConfiguration, extension)
+        rulesFromConfiguration(project, extension)
     }
 
+    private lateinit var project: Project
     private lateinit var configurations: ConfigurationContainer
-    private lateinit var rulesConfiguration: Configuration
     private lateinit var extension: NebulaResolutionRulesExtension
     private lateinit var mapper: ObjectMapper
     private lateinit var insight: DependencyManagement
 
     companion object Constants {
-        const val RESOLUTION_RULES_CONFIG_NAME = "resolutionRules"
         const val SPRING_VERSION_MANAGEMENT_CONFIG_NAME = "versionManagement"
         const val JSON_EXT = ".json"
         const val JAR_EXT = ".jar"
@@ -55,12 +56,18 @@ class ResolutionRulesPlugin : Plugin<Project> {
     }
 
     override fun apply(project: Project) {
+        this.project = project
         project.plugins.apply(DependencyBasePlugin::class.java)
         configurations = project.configurations
         insight = project.extensions.extraProperties.get("nebulaDependencyBase") as DependencyManagement
-        rulesConfiguration = project.rootProject.configurations.maybeCreate(RESOLUTION_RULES_CONFIG_NAME)
         extension = project.extensions.create("nebulaResolutionRules", NebulaResolutionRulesExtension::class.java)
         mapper = objectMapper()
+
+        val rootProject = project.rootProject
+        rootProject.configurations.maybeCreate(RESOLUTION_RULES_CONFIG_NAME)
+        if (rootProject.extensions.findByType(NebulaResolutionRulesExtension::class.java) == null) {
+            rootProject.extensions.create("nebulaResolutionRules", NebulaResolutionRulesExtension::class.java)
+        }
 
         project.configurations.all { config ->
             if (config.name == RESOLUTION_RULES_CONFIG_NAME || config.name == SPRING_VERSION_MANAGEMENT_CONFIG_NAME) {
@@ -95,12 +102,9 @@ class ResolutionRulesPlugin : Plugin<Project> {
         }
     }
 
-    private fun rulesFromConfiguration(configuration: Configuration, extension: NebulaResolutionRulesExtension): RuleSet {
+    private fun rulesFromConfiguration(project: Project, extension: NebulaResolutionRulesExtension): RuleSet {
         val rules = LinkedHashMap<String, RuleSet>()
-        val files = configurations.detachedConfiguration(*configuration.dependencies.toTypedArray()).resolve()
-        if (files.isEmpty()) {
-            logger.debug("No resolution rules have been added to the '{}' configuration", configuration.name)
-        }
+        val files = extension.ruleFiles(project)
         for (file in files) {
             insight.addPluginMessage("nebula.resolution-rules uses: ${file.name}")
             if (isIncludedRuleFile(file.name, extension)) {
@@ -162,4 +166,19 @@ open class NebulaResolutionRulesExtension {
     var include = ArrayList<String>()
     var optional = ArrayList<String>()
     var exclude = ArrayList<String>()
+
+    private lateinit var rootProject: Project
+    private val ruleFiles by lazy {
+        val configuration = rootProject.configurations.getByName(RESOLUTION_RULES_CONFIG_NAME)
+        rootProject.configurations.detachedConfiguration(*configuration.dependencies.toTypedArray()).resolve()
+    }
+
+    fun ruleFiles(project: Project): Set<File> {
+        return if (project == project.rootProject) {
+            rootProject = project
+            ruleFiles
+        } else {
+            project.rootProject.extensions.getByType(NebulaResolutionRulesExtension::class.java).ruleFiles(project.rootProject)
+        }
+    }
 }
