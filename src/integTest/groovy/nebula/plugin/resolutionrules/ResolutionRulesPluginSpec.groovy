@@ -142,25 +142,6 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
         result.standardError.isEmpty()
     }
 
-    def 'warning output when no rules source'() {
-        given:
-        buildFile.delete()
-        buildFile << """
-                     apply plugin: 'java'
-                     apply plugin: 'nebula.resolution-rules'
-                     
-                     dependencies {
-                        compile 'asm:asm:3.3.1'
-                     }
-                     """.stripIndent()
-
-        when:
-        def result = runTasksSuccessfully('dependencies')
-
-        then:
-        result.standardOutput.contains("No resolution rules have been added to the 'resolutionRules' configuration")
-    }
-
     def 'empty configuration'() {
         expect:
         runTasksSuccessfully()

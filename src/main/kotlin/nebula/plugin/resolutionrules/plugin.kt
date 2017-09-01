@@ -170,7 +170,7 @@ open class NebulaResolutionRulesExtension {
     private lateinit var rootProject: Project
     private val ruleFiles by lazy {
         val configuration = rootProject.configurations.getByName(RESOLUTION_RULES_CONFIG_NAME)
-        rootProject.configurations.detachedConfiguration(*configuration.dependencies.toTypedArray()).resolve()
+        rootProject.copyConfiguration(configuration).resolve()
     }
 
     fun ruleFiles(project: Project): Set<File> {
