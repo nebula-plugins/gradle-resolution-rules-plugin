@@ -25,6 +25,7 @@ import com.netflix.nebula.interop.onResolve
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.artifacts.ConfigurationContainer
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import java.io.File
@@ -38,7 +39,7 @@ class ResolutionRulesPlugin : Plugin<Project> {
         rulesFromConfiguration(rulesConfiguration, extension)
     }
 
-    private lateinit var project: Project
+    private lateinit var configurations: ConfigurationContainer
     private lateinit var rulesConfiguration: Configuration
     private lateinit var extension: NebulaResolutionRulesExtension
     private lateinit var mapper: ObjectMapper
@@ -54,9 +55,9 @@ class ResolutionRulesPlugin : Plugin<Project> {
     }
 
     override fun apply(project: Project) {
-        this.project = project
-        this.project.plugins.apply(DependencyBasePlugin::class.java)
-        insight = this.project.extensions.extraProperties.get("nebulaDependencyBase") as DependencyManagement
+        project.plugins.apply(DependencyBasePlugin::class.java)
+        configurations = project.configurations
+        insight = project.extensions.extraProperties.get("nebulaDependencyBase") as DependencyManagement
         rulesConfiguration = project.rootProject.configurations.maybeCreate(RESOLUTION_RULES_CONFIG_NAME)
         extension = project.extensions.create("nebulaResolutionRules", NebulaResolutionRulesExtension::class.java)
         mapper = objectMapper()
@@ -96,7 +97,7 @@ class ResolutionRulesPlugin : Plugin<Project> {
 
     private fun rulesFromConfiguration(configuration: Configuration, extension: NebulaResolutionRulesExtension): RuleSet {
         val rules = LinkedHashMap<String, RuleSet>()
-        val files = configuration.resolve()
+        val files = configurations.detachedConfiguration(*configuration.dependencies.toTypedArray()).resolve()
         if (files.isEmpty()) {
             logger.debug("No resolution rules have been added to the '{}' configuration", configuration.name)
         }
