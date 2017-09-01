@@ -33,16 +33,16 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 
 class ResolutionRulesPlugin : Plugin<Project> {
-    val logger: Logger = Logging.getLogger(ResolutionRulesPlugin::class.java)
-    val ruleSet: RuleSet by lazy {
+    private val logger: Logger = Logging.getLogger(ResolutionRulesPlugin::class.java)
+    private val ruleSet: RuleSet by lazy {
         rulesFromConfiguration(rulesConfiguration, extension)
     }
 
-    lateinit var project: Project
-    lateinit var rulesConfiguration: Configuration
-    lateinit var extension: NebulaResolutionRulesExtension
-    lateinit var mapper: ObjectMapper
-    lateinit var insight: DependencyManagement
+    private lateinit var project: Project
+    private lateinit var rulesConfiguration: Configuration
+    private lateinit var extension: NebulaResolutionRulesExtension
+    private lateinit var mapper: ObjectMapper
+    private lateinit var insight: DependencyManagement
 
     companion object Constants {
         const val RESOLUTION_RULES_CONFIG_NAME = "resolutionRules"
@@ -68,15 +68,15 @@ class ResolutionRulesPlugin : Plugin<Project> {
 
             var dependencyRulesApplied = false
             project.onExecute {
-                if (config.state != Configuration.State.UNRESOLVED) {
-                    logger.warn("Dependency resolution rules will not be applied to $config, it was resolved before the project was executed")
-                } else if (config.allDependencies.isEmpty()) {
-                    logger.debug("Skipping dependency rules for $config - No dependencies are configured")
-                } else {
-                    ruleSet.dependencyRules().forEach { rule ->
-                        rule.apply(project, config, config.resolutionStrategy, extension, insight)
+                when {
+                    config.state != Configuration.State.UNRESOLVED -> logger.warn("Dependency resolution rules will not be applied to $config, it was resolved before the project was executed")
+                    config.allDependencies.isEmpty() -> logger.debug("Skipping dependency rules for $config - No dependencies are configured")
+                    else -> {
+                        ruleSet.dependencyRules().forEach { rule ->
+                            rule.apply(project, config, config.resolutionStrategy, extension, insight)
+                        }
+                        dependencyRulesApplied = true
                     }
-                    dependencyRulesApplied = true
                 }
             }
 
@@ -94,7 +94,7 @@ class ResolutionRulesPlugin : Plugin<Project> {
         }
     }
 
-    fun rulesFromConfiguration(configuration: Configuration, extension: NebulaResolutionRulesExtension): RuleSet {
+    private fun rulesFromConfiguration(configuration: Configuration, extension: NebulaResolutionRulesExtension): RuleSet {
         val rules = LinkedHashMap<String, RuleSet>()
         val files = configuration.resolve()
         if (files.isEmpty()) {
@@ -121,36 +121,36 @@ class ResolutionRulesPlugin : Plugin<Project> {
         return rules.values.flatten()
     }
 
-    fun MutableMap<String, RuleSet>.putRules(ruleSet: RuleSet) {
+    private fun MutableMap<String, RuleSet>.putRules(ruleSet: RuleSet) {
         if (put(ruleSet.name!!, ruleSet) != null) {
             logger.info("Found rules with the same name. Overriding existing ruleset ${ruleSet.name}")
         }
     }
 
-    fun isIncludedRuleFile(filename: String, extension: NebulaResolutionRulesExtension): Boolean {
+    private fun isIncludedRuleFile(filename: String, extension: NebulaResolutionRulesExtension): Boolean {
         if (filename.endsWith(JSON_EXT)) {
             val ruleSet = ruleSetName(filename)
-            if (ruleSet.startsWith(OPTIONAL_PREFIX)) {
+            return if (ruleSet.startsWith(OPTIONAL_PREFIX)) {
                 val ruleSetWithoutPrefix = ruleSet.substring(OPTIONAL_PREFIX.length)
-                return extension.optional.contains(ruleSetWithoutPrefix)
+                extension.optional.contains(ruleSetWithoutPrefix)
             } else if (!extension.include.isEmpty()) {
-                return extension.include.contains(ruleSet)
+                extension.include.contains(ruleSet)
             } else {
-                return !extension.exclude.contains(ruleSet)
+                !extension.exclude.contains(ruleSet)
             }
         }
         return false
     }
 
-    fun ruleSetName(filename: String) = filename.substring(0, filename.lastIndexOf(JSON_EXT))
+    private fun ruleSetName(filename: String) = filename.substring(0, filename.lastIndexOf(JSON_EXT))
 
-    fun parseJsonFile(file: File): RuleSet {
+    private fun parseJsonFile(file: File): RuleSet {
         val ruleSetName = ruleSetName(file.name)
         logger.debug("Using $ruleSetName (${file.name}) a dependency rules source")
         return mapper.readValue<RuleSet>(file).withName(ruleSetName)
     }
 
-    fun parseJsonStream(zip: ZipFile, entry: ZipEntry): RuleSet {
+    private fun parseJsonStream(zip: ZipFile, entry: ZipEntry): RuleSet {
         val ruleSetName = ruleSetName(File(entry.name).name)
         logger.debug("Using $ruleSetName (${zip.name}) a dependency rules source")
         return mapper.readValue<RuleSet>(zip.getInputStream(entry)).withName(ruleSetName)
