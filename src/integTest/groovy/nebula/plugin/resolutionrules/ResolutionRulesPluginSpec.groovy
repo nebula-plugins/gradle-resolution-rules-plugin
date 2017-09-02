@@ -189,7 +189,7 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
         result.standardOutput.contains('asm:asm:3.3.1 -> org.ow2.asm:asm:5.0.4')
     }
 
-    def 'replace module dependencyInsightEnhanced'() {
+    def 'replace moduled is shown by dependencyInsight'() {
         given:
         buildFile << """
                      dependencies {
@@ -199,7 +199,7 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
                      """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencyInsightEnhanced', '--configuration', 'compile', '--dependency', 'asm')
+        def result = runTasksSuccessfully('dependencyInsight', '--configuration', 'compile', '--dependency', 'asm')
 
         then:
         result.standardOutput.contains('org.ow2.asm:asm:5.0.4 (replacement asm:asm -> org.ow2.asm:asm)')
