@@ -659,17 +659,12 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
         """.stripIndent()
 
         when:
-        def results = runTasksSuccessfully('dependencies', '--configuration', 'resolutionRules')
+        def results = runTasksSuccessfully('dependencyInsight', '--dependency', 'a')
 
         then:
-        results.standardOutput.contains '\\--- test.rules:resolution-rules:1.+ -> 1.0.0\n'
-
-        when:
-        results = runTasksSuccessfully('dependencies', '--configuration', 'compile')
-
-        then:
-        results.standardOutput.contains '+--- test.nebula:a:1.41.5 -> 1.42.2\n'
-        results.standardOutput.contains '\\--- test.nebula:b:1.42.2\n'
+        results.standardOutput.contains 'test.nebula:a:1.41.5 -> 1.42.2\n'
+        results.standardOutput.contains 'nebula.dependency-lock locked with: dependencies.lock\n'
+        results.standardOutput.contains 'nebula.resolution-rules uses: resolution-rules-1.0.0.jar\n'
     }
 
     def 'dependency-lock when applied after wins out over new alignment rules'() {

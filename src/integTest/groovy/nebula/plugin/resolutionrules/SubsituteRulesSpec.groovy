@@ -66,7 +66,7 @@ class SubsituteRulesSpec extends IntegrationSpec {
         result.standardOutput.contains('bouncycastle:bcprov-jdk15:140 -> org.bouncycastle:bcprov-jdk15:latest.release')
     }
 
-    def 'substitute dependency dependencyInsightEnhanced'() {
+    def 'substitute details are shown by dependencyInsight'() {
         given:
         buildFile << """\
              dependencies {
@@ -75,7 +75,7 @@ class SubsituteRulesSpec extends IntegrationSpec {
              """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencyInsightEnhanced', '--configuration', 'compile', '--dependency', 'bcprov-jdk15')
+        def result = runTasksSuccessfully('dependencyInsight', '--configuration', 'compile', '--dependency', 'bcprov-jdk15')
 
         then:
         result.standardOutput.contains('org.bouncycastle:bcprov-jdk15:latest.release (substitution because The latest version of BC is required, using the new coordinate)')

@@ -120,7 +120,7 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
         result.standardOutput.contains '\\--- test.nebula:c:0.42.0'
     }
 
-    def 'dependencyInsightEnhanced adds extra info for alignment'() {
+    def 'dependencyInsight has extra info for alignment'() {
         def graph = new DependencyGraphBuilder()
                 .addModule('test.nebula:a:0.42.0')
                 .addModule('test.nebula:a:1.0.0')
@@ -161,29 +161,29 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def aResult = runTasksSuccessfully('dependencyInsightEnhanced', '--configuration', 'compile', '--dependency', 'a')
+        def aResult = runTasksSuccessfully('dependencyInsight', '--configuration', 'compile', '--dependency', 'a')
 
         then:
-        aResult.standardOutput.contains 'test.nebula:a:1.1.0 (aligned to 1.1.0 by dependencyInsightEnhanced-adds-extra-info-for-alignment)'
-        aResult.standardOutput.contains 'nebula.resolution-rules uses: dependencyInsightEnhanced-adds-extra-info-for-alignment.json'
+        aResult.standardOutput.contains 'test.nebula:a:1.1.0 (aligned to 1.1.0 by dependencyInsight-has-extra-info-for-alignment)'
+        aResult.standardOutput.contains 'nebula.resolution-rules uses: dependencyInsight-has-extra-info-for-alignment.json'
 
         when:
-        def aResultCompileClasspath = runTasksSuccessfully('dependencyInsightEnhanced', '--configuration', 'compileClasspath', '--dependency', 'a')
+        def aResultCompileClasspath = runTasksSuccessfully('dependencyInsight', '--configuration', 'compileClasspath', '--dependency', 'a')
 
         then:
-        aResultCompileClasspath.standardOutput.contains 'test.nebula:a:1.1.0 (aligned to 1.1.0 by dependencyInsightEnhanced-adds-extra-info-for-alignment)'
+        aResultCompileClasspath.standardOutput.contains 'test.nebula:a:1.1.0 (aligned to 1.1.0 by dependencyInsight-has-extra-info-for-alignment)'
 
         when:
-        def bResult = runTasksSuccessfully('dependencyInsightEnhanced', '--configuration', 'compile', '--dependency', 'b')
+        def bResult = runTasksSuccessfully('dependencyInsight', '--configuration', 'compile', '--dependency', 'b')
 
         then:
         !bResult.standardOutput.contains('test.nebula:b:1.1.0 (')
 
         when:
-        def cResult = runTasksSuccessfully('dependencyInsightEnhanced', '--configuration', 'compile', '--dependency', 'c')
+        def cResult = runTasksSuccessfully('dependencyInsight', '--configuration', 'compile', '--dependency', 'c')
 
         then:
-        cResult.standardOutput.contains 'test.nebula:c:1.1.0 (aligned to 1.1.0 by dependencyInsightEnhanced-adds-extra-info-for-alignment)'
+        cResult.standardOutput.contains 'test.nebula:c:1.1.0 (aligned to 1.1.0 by dependencyInsight-has-extra-info-for-alignment)'
 
     }
 
@@ -719,8 +719,8 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
         def output = result.standardOutput
         output.contains 'Resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-applies-to-versions-affected-by-resolution-strategies, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z) aligning test.nebula:a to 1.0.0'
         output.contains 'Resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-applies-to-versions-affected-by-resolution-strategies, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z) aligning test.nebula:b to 1.0.0'
-        output.contains 'test.nebula:a:1.0.0 (selected by rule)\n'
-        output.contains 'test.nebula:b:1.0.0 (selected by rule)\n'
+        output.contains 'test.nebula:a:1.0.0 (aligned to 1.0.0 by alignment-applies-to-versions-affected-by-resolution-strategies)\n'
+        output.contains 'test.nebula:b:1.0.0 (aligned to 1.0.0 by alignment-applies-to-versions-affected-by-resolution-strategies)\n'
         output.contains 'test.nebula:b:0.15.0 -> 1.0.0\n'
         output.contains 'test.nebula:c:1.0.0\n'
     }
