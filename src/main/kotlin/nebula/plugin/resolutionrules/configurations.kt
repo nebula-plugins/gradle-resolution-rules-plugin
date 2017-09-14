@@ -45,7 +45,7 @@ fun Project.copyConfiguration(configuration: Configuration): CopiedConfiguration
 }
 
 val Configuration.isCopy: Boolean
-    get() = if (description == null) false else description.endsWith(COPY_DESCRIPTION_SUFFIX)
+    get() = description?.endsWith(COPY_DESCRIPTION_SUFFIX) ?: false
 
 fun DependencyManagement.addReason(configuration: Configuration, coordinate: String, message: String) {
     if (!configuration.isCopy) {
