@@ -25,6 +25,7 @@ dependencies {
     compile 'com.netflix.nebula:nebula-gradle-interop:latest.release'
     compile 'com.fasterxml.jackson.module:jackson-module-kotlin:2.7.5'
     compile 'com.netflix.nebula:nebula-dependency-base-plugin:latest.release'
+    compile 'com.google.guava:guava:23.2-jre'
 
     testRuntime 'com.netflix.nebula:gradle-dependency-lock-plugin:4.9.4'
 }

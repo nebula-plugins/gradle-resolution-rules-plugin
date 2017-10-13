@@ -76,15 +76,13 @@ class ResolutionRulesPlugin : Plugin<Project> {
 
             var dependencyRulesApplied = false
             project.onExecute {
-                when {
-                    config.state != Configuration.State.UNRESOLVED -> logger.warn("Dependency resolution rules will not be applied to $config, it was resolved before the project was executed")
-                    config.allDependencies.isEmpty() -> logger.debug("Skipping dependency rules for $config - No dependencies are configured")
-                    else -> {
-                        ruleSet.dependencyRules().forEach { rule ->
-                            rule.apply(project, config, config.resolutionStrategy, extension, insight)
-                        }
-                        dependencyRulesApplied = true
-                    }
+                dependencyRulesApplied = applyRulesToDependencies(config, project)
+            }
+
+            // 2nd pass after taskGraph has been run to support Android manifest merge tasks
+            project.gradle.taskGraph.afterTask {
+                if (!dependencyRulesApplied) {
+                    dependencyRulesApplied = applyRulesToDependencies(config, project)
                 }
             }
 
@@ -98,8 +96,25 @@ class ResolutionRulesPlugin : Plugin<Project> {
                         rule.apply(project, config, config.resolutionStrategy, extension, insight)
                     }
                 }
+           }
+        }
+    }
+
+    private fun applyRulesToDependencies(config: Configuration, project: Project): Boolean {
+        var dependencyRulesApplied = false;
+
+        when {
+            config.state != Configuration.State.UNRESOLVED -> logger.warn("Dependency resolution rules will not be applied to $config, it was resolved before the project was executed")
+            config.allDependencies.isEmpty() -> logger.debug("Skipping dependency rules for $config - No dependencies are configured")
+            else -> {
+                ruleSet.dependencyRules().forEach { rule ->
+                    rule.apply(project, config, config.resolutionStrategy, extension, insight)
+                }
+                dependencyRulesApplied = true
             }
         }
+
+        return dependencyRulesApplied;
     }
 
     private fun rulesFromConfiguration(project: Project, extension: NebulaResolutionRulesExtension): RuleSet {

@@ -1,8 +1,19 @@
-language: java
+language: android
 sudo: false
 jdk: oraclejdk8
 install: true
 script: "./gradle/buildViaTravis.sh"
+android:
+  components:
+    - tools
+    - tools # Include again to work around travis not using the latest.
+            # https://github.com/travis-ci/travis-ci/issues/6193
+            # Required to get the newest platform-tools.
+    - platform-tools
+    - build-tools-26.0.1
+    - android-26
+  licenses:
+    - '.+'
 cache:
   directories:
     - $HOME/.gradle/caches/

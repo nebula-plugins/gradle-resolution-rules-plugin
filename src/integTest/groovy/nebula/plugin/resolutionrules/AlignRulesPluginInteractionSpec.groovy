@@ -390,6 +390,94 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
         result.standardOutput.contains('+--- com.amazonaws:aws-java-sdk-s3: -> 1.11.18')
     }
 
+    def 'transitive aligns with Android Support dependency management'() {
+        def rulesJsonFile = new File(projectDir, 'rules.json')
+
+        rulesJsonFile << '''\
+            {
+                "align": [
+                        {
+                            "name": "Android Support",
+                            "group": "com.android.support",
+                            "reason": "Align android support libraries",
+                            "author": "Josh Kasten <jkasten@gmail.com>",
+                            "date": "2017-10-13"
+                        }
+                ],
+                "replace": [],"substitute": [],"deny": [],"reject": []
+            }
+        '''.stripIndent()
+
+        def gradleProps = new File(projectDir, 'gradle.properties')
+        gradleProps <<'''\
+            android.enableAapt2=false
+        '''.stripIndent()
+
+
+        new File("${projectDir}/src/main/").mkdirs()
+        def androidManifest = new File("${projectDir}/src/main/", 'AndroidManifest.xml')
+        androidManifest << '''\
+            <?xml version="1.0" encoding="utf-8"?>
+            <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+            package="com.app.example">
+            </manifest>
+        '''.stripIndent()
+
+        buildFile << """\
+            buildscript {
+                repositories {
+                      jcenter()
+                      maven { url 'https://maven.google.com' }
+                }
+                dependencies {
+                   classpath 'com.android.tools.build:gradle:3.0.0-beta6'
+                }
+            }
+            
+            allprojects {
+                repositories {
+                    jcenter()
+                    maven { url 'https://maven.google.com' }
+                }
+            }
+
+            apply plugin: 'com.android.application'
+            ${applyPlugin(ResolutionRulesPlugin)}
+
+            android {
+                compileSdkVersion 26
+                buildToolsVersion '26.0.1'
+                 defaultConfig {
+                    applicationId 'com.app.example'
+
+                    minSdkVersion 15
+                    targetSdkVersion 26
+                    versionCode 1
+                    versionName "1.0"
+                }
+            }
+            
+            dependencies {
+                resolutionRules files('${rulesJsonFile.toString().replace("\\", "\\\\")}')
+
+                compile 'com.android.support:appcompat-v7:26.0.0'
+                compile 'com.android.support:support-v4:26.1.0'
+            }
+            
+            configurations.all { config ->
+               println 'configuration:' + config
+            }
+        """.stripIndent()
+
+        when:
+        def compileResult = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+        def processDebugResources = runTasks('processDebugResources')
+
+        then:
+        compileResult.standardOutput.contains('+--- com.android.support:appcompat-v7:26.0.0 -> 26.1.0')
+        processDebugResources.standardOutput.contains('Merging result: SUCCESS')
+    }
+
     def 'align rules work with extra-configurations and publishing'() {
         def graph = new DependencyGraphBuilder()
                 .addModule('test.a:a:1.42.2')
