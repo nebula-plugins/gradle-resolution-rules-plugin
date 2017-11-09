@@ -91,6 +91,10 @@ data class SubstituteRule(val module: String, val with: String, override var rul
         if (!withModuleId.hasVersion()) {
             throw SubstituteRuleMissingVersionException(withModuleId, this)
         }
+        if (resolutionStrategy.forcedModules.any { it.matchesModule(module) }) {
+            throw SubstituteRuleConflictsWithForceException(ModuleVersionIdentifier.valueOf(module), this)
+        }
+
         val withSelector = substitution.module(withModuleId.toString()) as ModuleComponentSelector
 
         if (selector is ModuleComponentSelector) {
@@ -157,6 +161,12 @@ class DependencyDeniedException(moduleId: ModuleVersionIdentifier, rule: DenyRul
 
 class SubstituteRuleMissingVersionException(moduleId: ModuleVersionIdentifier, rule: SubstituteRule) : Exception("The dependency to be substituted ($moduleId) must have a version. Invalid rule: $rule")
 
+class SubstituteRuleConflictsWithForceException(moduleId: ModuleVersionIdentifier, rule: SubstituteRule) : Exception("Build forces to $moduleId while rule '${rule.ruleSet}' substitutes away from same version (reason: ${rule.reason})")
+
 fun Configuration.exclude(group: String, module: String) {
     exclude(mapOf("group" to group, "module" to module))
+}
+
+fun ModuleVersionSelector.matchesModule(module: String): Boolean {
+    return "$group:$name:$version" == module
 }

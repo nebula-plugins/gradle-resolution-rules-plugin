@@ -157,4 +157,42 @@ class SubsituteRulesSpec extends IntegrationSpec {
         rootCause.class.simpleName == 'SubstituteRuleMissingVersionException'
         rootCause.message == "The dependency to be substituted (org.ow2.asm:asm) must have a version. Invalid rule: SubstituteRule(module=asm:asm, with=org.ow2.asm:asm, ruleSet=missing-version-in-substitution-rule, reason=The asm group id changed for 4.0 and later, author=Danny Thomas <dmthomas@gmail.com>, date=2015-10-07T20:21:20.368Z)"
     }
+
+    def 'fail on forced version that conflicts with substitution'() {
+        given:
+        rulesJsonFile.delete()
+        rulesJsonFile << """
+                         {
+                             "substitute": [
+                                 {
+                                     "module" : "com.netflix.genie:genie-core:3.2.3",
+                                     "with" : "com.netflix.genie:genie-core:3.2.4",
+                                     "reason" : "3.2.3 should not be used",
+                                     "author" : "Example User <user@example.com>",
+                                     "date" : "2017-10-07T20:21:20.368Z"
+                                 }
+                             ]
+                         }
+                         """.stripIndent()
+
+        buildFile << """
+                     configurations.all {
+                        resolutionStrategy {
+                            force 'com.netflix.genie:genie-core:3.2.3'
+                        }
+                     }
+                     dependencies {
+                        compile 'com.netflix.genie:genie-core:latest.release'
+                     }
+                     """.stripIndent()
+
+        when:
+        def result = runTasks('dependencies', '--configuration', 'compile')
+
+        then:
+        println result.standardError
+        def rootCause = StackTraceUtils.extractRootCause(result.failure)
+        rootCause.class.simpleName == 'SubstituteRuleConflictsWithForceException'
+        rootCause.message == "Build forces to com.netflix.genie:genie-core:3.2.3 while rule 'fail-on-forced-version-that-conflicts-with-substitution' substitutes away from same version (reason: 3.2.3 should not be used)"
+    }
 }
