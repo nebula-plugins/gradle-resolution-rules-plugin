@@ -2,6 +2,7 @@ package nebula.plugin.resolutionrules
 
 import nebula.test.IntegrationSpec
 import org.codehaus.groovy.runtime.StackTraceUtils
+import spock.lang.PendingFeature
 
 class SubsituteRulesSpec extends IntegrationSpec {
     File rulesJsonFile
@@ -158,31 +159,32 @@ class SubsituteRulesSpec extends IntegrationSpec {
         rootCause.message == "The dependency to be substituted (org.ow2.asm:asm) must have a version. Invalid rule: SubstituteRule(module=asm:asm, with=org.ow2.asm:asm, ruleSet=missing-version-in-substitution-rule, reason=The asm group id changed for 4.0 and later, author=Danny Thomas <dmthomas@gmail.com>, date=2015-10-07T20:21:20.368Z)"
     }
 
-    def 'fail on forced version that conflicts with substitution'() {
+    def 'fail on forced version that conflicts with substitution version'() {
         given:
+        def reason = UUID.randomUUID()
         rulesJsonFile.delete()
         rulesJsonFile << """
                          {
                              "substitute": [
                                  {
-                                     "module" : "com.netflix.genie:genie-core:3.2.3",
-                                     "with" : "com.netflix.genie:genie-core:3.2.4",
-                                     "reason" : "3.2.3 should not be used",
+                                     "module" : "commons-logging:commons-logging:1.1.2",
+                                     "with" : "commons-logging:commons-logging:1.1.3",
+                                     "reason" : "$reason",
                                      "author" : "Example User <user@example.com>",
-                                     "date" : "2017-10-07T20:21:20.368Z"
+                                     "date" : "2017-11-07T20:21:20.368Z"
                                  }
                              ]
                          }
                          """.stripIndent()
 
         buildFile << """
-                     configurations.all {
+                     configurations.compile {
                         resolutionStrategy {
-                            force 'com.netflix.genie:genie-core:3.2.3'
+                            force 'commons-logging:commons-logging:1.1.2'
                         }
                      }
                      dependencies {
-                        compile 'com.netflix.genie:genie-core:latest.release'
+                        compile 'commons-logging:commons-logging:latest.release'
                      }
                      """.stripIndent()
 
@@ -193,6 +195,111 @@ class SubsituteRulesSpec extends IntegrationSpec {
         println result.standardError
         def rootCause = StackTraceUtils.extractRootCause(result.failure)
         rootCause.class.simpleName == 'SubstituteRuleConflictsWithForceException'
-        rootCause.message == "Build forces to com.netflix.genie:genie-core:3.2.3 while rule 'fail-on-forced-version-that-conflicts-with-substitution' substitutes away from same version (reason: 3.2.3 should not be used)"
+        rootCause.message == String.format("CONFLICT: commons-logging:commons-logging:1.1.2 forced on configuration ':compile'%n\tsubstitution rule: fail-on-forced-version-that-conflicts-with-substitution-version (reason: $reason)%n\tRemove or update force to fix")
+    }
+
+    def 'fail on forced version that conflicts with substitution range'() {
+        given:
+        def reason = UUID.randomUUID()
+        rulesJsonFile.delete()
+        rulesJsonFile << """
+                         {
+                             "substitute": [
+                                 {
+                                     "module" : "commons-logging:commons-logging:[1.0,1.0.2]",
+                                     "with" : "commons-logging:commons-logging:1.0.4",
+                                     "reason" : "$reason",
+                                     "author" : "Example User <user@example.com>",
+                                     "date" : "2017-10-07T20:21:20.368Z"
+                                 }
+                             ]
+                         }
+                         """.stripIndent()
+        buildFile << """
+                     configurations.compile {
+                        resolutionStrategy {
+                            force 'commons-logging:commons-logging:1.0.1'
+                        }
+                     }
+                     dependencies {
+                        compile 'commons-logging:commons-logging:latest.release'
+                     }
+                     """.stripIndent()
+
+        when:
+        def result = runTasks('dependencies', '--configuration', 'compile')
+
+        then:
+        println result.standardError
+        def rootCause = StackTraceUtils.extractRootCause(result.failure)
+        rootCause.class.simpleName == 'SubstituteRuleConflictsWithForceException'
+        rootCause.message == String.format("CONFLICT: commons-logging:commons-logging:1.0.1 forced on configuration ':compile'%n\tsubstitution rule: fail-on-forced-version-that-conflicts-with-substitution-range (reason: $reason)%n\tRemove or update force to fix")
+    }
+
+    def 'fail on inline forced version that conflicts with substitution version'() {
+        given:
+        def reason = UUID.randomUUID()
+        rulesJsonFile.delete()
+        rulesJsonFile << """
+                         {
+                             "substitute": [
+                                 {
+                                     "module" : "commons-logging:commons-logging:1.1.2",
+                                     "with" : "commons-logging:commons-logging:1.1.3",
+                                     "reason" : "$reason",
+                                     "author" : "Example User <user@example.com>",
+                                     "date" : "2017-11-07T20:21:20.368Z"
+                                 }
+                             ]
+                         }
+                         """.stripIndent()
+
+        buildFile << """
+                     dependencies {
+                        compile('commons-logging:commons-logging:1.1.2') { force = true }
+                     }
+                     """.stripIndent()
+
+        when:
+        def result = runTasks('dependencies', '--configuration', 'compile')
+
+        then:
+        println result.standardError
+        def rootCause = StackTraceUtils.extractRootCause(result.failure)
+        rootCause.class.simpleName == 'SubstituteRuleConflictsWithForceException'
+        rootCause.message == String.format("CONFLICT: commons-logging:commons-logging:1.1.2 forced on configuration ':compile'%n\tsubstitution rule: fail-on-inline-forced-version-that-conflicts-with-substitution-version (reason: $reason)%n\tRemove or update force to fix")
+    }
+
+    def 'fail on inline forced version that conflicts with substitution range'() {
+        given:
+        def reason = UUID.randomUUID()
+        rulesJsonFile.delete()
+        rulesJsonFile << """
+                         {
+                             "substitute": [
+                                 {
+                                     "module" : "commons-logging:commons-logging:[1.0,1.0.2]",
+                                     "with" : "commons-logging:commons-logging:1.0.4",
+                                     "reason" : "$reason",
+                                     "author" : "Example User <user@example.com>",
+                                     "date" : "2017-10-07T20:21:20.368Z"
+                                 }
+                             ]
+                         }
+                         """.stripIndent()
+        buildFile << """
+                     dependencies {
+                        compile('commons-logging:commons-logging:1.0.1') { force = true }
+                     }
+                     """.stripIndent()
+
+        when:
+        def result = runTasks('dependencies', '--configuration', 'compile')
+
+        then:
+        println result.standardError
+        def rootCause = StackTraceUtils.extractRootCause(result.failure)
+        rootCause.class.simpleName == 'SubstituteRuleConflictsWithForceException'
+        rootCause.message == String.format("CONFLICT: commons-logging:commons-logging:1.0.1 forced on configuration ':compile'%n\tsubstitution rule: fail-on-inline-forced-version-that-conflicts-with-substitution-range (reason: $reason)%n\tRemove or update force to fix")
     }
 }
