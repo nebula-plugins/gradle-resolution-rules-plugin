@@ -92,7 +92,8 @@ data class SubstituteRule(val module: String, val with: String, override var rul
         if (!withModuleId.hasVersion()) {
             throw SubstituteRuleMissingVersionException(withModuleId, this)
         }
-        val forceConflicts: List<ModuleVersionSelector> = ConfigurationService.forces(configuration).filter { it.matchesSelector(selector) }
+        val forces = ConfigurationService.forces(configuration)
+        val forceConflicts: List<ModuleVersionSelector> = forces.filter { it.matchesSelector(selector) }
         if (forceConflicts.isNotEmpty()) {
             throw SubstituteRuleConflictsWithForceException(forceConflicts.map { ModuleVersionIdentifier.valueOf(it.toString()) to configuration }.toSet(), configuration, this)
         }
@@ -103,6 +104,9 @@ data class SubstituteRule(val module: String, val with: String, override var rul
             resolutionStrategy.dependencySubstitution.all(action {
                 if (requested is ModuleComponentSelector) {
                     val requestedSelector = requested as ModuleComponentSelector
+                    if (forces.any { it.group == requestedSelector.group && it.name == requestedSelector.module }) {
+                        return@action
+                    }
                     if (requestedSelector.group == selector.group && requestedSelector.module == selector.module) {
                         val versionSelector = VersionWithSelector(selector.version).asSelector()
                         if (versionSelector.accept(requestedSelector.version)) {

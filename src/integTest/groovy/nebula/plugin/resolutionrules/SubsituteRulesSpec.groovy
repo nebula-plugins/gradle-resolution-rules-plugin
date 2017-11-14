@@ -1,6 +1,9 @@
 package nebula.plugin.resolutionrules
 
 import nebula.test.IntegrationSpec
+import nebula.test.dependencies.DependencyGraphBuilder
+import nebula.test.dependencies.GradleDependencyGenerator
+import nebula.test.dependencies.ModuleBuilder
 import org.codehaus.groovy.runtime.StackTraceUtils
 import spock.lang.PendingFeature
 
@@ -301,5 +304,62 @@ class SubsituteRulesSpec extends IntegrationSpec {
         def rootCause = StackTraceUtils.extractRootCause(result.failure)
         rootCause.class.simpleName == 'SubstituteRuleConflictsWithForceException'
         rootCause.message == String.format("CONFLICT: commons-logging:commons-logging:1.0.1 forced on configuration ':compile'%n\tsubstitution rule: fail-on-inline-forced-version-that-conflicts-with-substitution-range (reason: $reason)%n\tRemove or update force to fix")
+    }
+
+    def 'allow force to version that is not substituted away from'() {
+        given:
+        def graph = new DependencyGraphBuilder()
+                .addModule(new ModuleBuilder('test.example:foo:1.0.0')
+                    .addDependency('commons-logging:commons-logging:1.0.1')
+                    .build())
+                .addModule(new ModuleBuilder('test.example:bar:2.0.0')
+                    .addDependency('commons-logging:commons-logging:1.1')
+                    .build())
+                .build()
+        def generator = new GradleDependencyGenerator(graph, "$projectDir/repo")
+        generator.generateTestMavenRepo()
+        def reason = UUID.randomUUID()
+        rulesJsonFile.delete()
+        rulesJsonFile << """
+                         {
+                             "substitute": [
+                                 {
+                                     "module" : "commons-logging:commons-logging:[1.0,1.0.2]",
+                                     "with" : "commons-logging:commons-logging:1.1.3",
+                                     "reason" : "$reason",
+                                     "author" : "Example User <user@example.com>",
+                                     "date" : "2017-10-07T20:21:20.368Z"
+                                 },
+                                 {
+                                     "module" : "commons-logging:commons-logging:[1.1,1.1.2]",
+                                     "with" : "commons-logging:commons-logging:1.1.3",
+                                     "reason" : "$reason-2",
+                                     "author" : "Example User <user@example.com>",
+                                     "date" : "2017-10-08T20:21:20.368Z"
+                                 }
+                             ]
+                         }
+                         """.stripIndent()
+        buildFile << """
+                     repositories {
+                        ${generator.mavenRepositoryBlock}
+                     }
+                     configurations.all {
+                        resolutionStrategy {
+                            force 'commons-logging:commons-logging:1.0.4'
+                        }
+                     }
+                     dependencies {
+                        compile 'test.example:foo:1.0.0' // transitive on commons-logging:1.0.1
+                        compile 'test.example:bar:2.0.0' // transitive on commons-logging:1.1
+                     }
+                     """.stripIndent()
+
+        when:
+        def result = runTasks('dependencies', '--configuration', 'compile')
+
+        then:
+        result.standardOutput.contains('commons-logging:commons-logging:1.0.1 -> 1.0.4\n')
+        result.standardOutput.contains('commons-logging:commons-logging:1.1 -> 1.0.4\n')
     }
 }
