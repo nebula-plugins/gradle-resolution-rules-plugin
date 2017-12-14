@@ -123,8 +123,8 @@
             "requested": "2.7.5"
         },
         "com.netflix.nebula:gradle-dependency-lock-plugin": {
-            "locked": "4.9.4",
-            "requested": "4.9.4"
+            "locked": "5.0.0",
+            "requested": "5.0.0"
         },
         "com.netflix.nebula:nebula-dependency-base-plugin": {
             "locked": "0.3.0",
@@ -143,7 +143,7 @@
             "requested": "1.1.4-3"
         },
         "org.jetbrains.kotlin:kotlin-stdlib-jre7": {
-            "locked": "1.1.4-3",
+            "locked": "1.1.51",
             "requested": "1.1.4-3"
         }
     },
@@ -153,8 +153,8 @@
             "requested": "2.7.5"
         },
         "com.netflix.nebula:gradle-dependency-lock-plugin": {
-            "locked": "4.9.4",
-            "requested": "4.9.4"
+            "locked": "5.0.0",
+            "requested": "5.0.0"
         },
         "com.netflix.nebula:nebula-dependency-base-plugin": {
             "locked": "0.3.0",
@@ -173,18 +173,20 @@
             "requested": "1.1.4-3"
         },
         "org.jetbrains.kotlin:kotlin-stdlib-jre7": {
-            "locked": "1.1.4-3",
+            "locked": "1.1.51",
             "requested": "1.1.4-3"
         }
     },
     "jacocoAgent": {
         "org.jacoco:org.jacoco.agent": {
-            "locked": "0.7.8"
+            "locked": "0.7.9",
+            "requested": "0.7.9"
         }
     },
     "jacocoAnt": {
         "org.jacoco:org.jacoco.ant": {
-            "locked": "0.7.8"
+            "locked": "0.7.9",
+            "requested": "0.7.9"
         }
     },
     "kapt": {
@@ -307,8 +309,8 @@
             "requested": "2.7.5"
         },
         "com.netflix.nebula:gradle-dependency-lock-plugin": {
-            "locked": "4.9.4",
-            "requested": "4.9.4"
+            "locked": "5.0.0",
+            "requested": "5.0.0"
         },
         "com.netflix.nebula:nebula-dependency-base-plugin": {
             "locked": "0.3.0",
@@ -327,7 +329,7 @@
             "requested": "1.1.4-3"
         },
         "org.jetbrains.kotlin:kotlin-stdlib-jre7": {
-            "locked": "1.1.4-3",
+            "locked": "1.1.51",
             "requested": "1.1.4-3"
         }
     },
@@ -337,8 +339,8 @@
             "requested": "2.7.5"
         },
         "com.netflix.nebula:gradle-dependency-lock-plugin": {
-            "locked": "4.9.4",
-            "requested": "4.9.4"
+            "locked": "5.0.0",
+            "requested": "5.0.0"
         },
         "com.netflix.nebula:nebula-dependency-base-plugin": {
             "locked": "0.3.0",
@@ -357,7 +359,7 @@
             "requested": "1.1.4-3"
         },
         "org.jetbrains.kotlin:kotlin-stdlib-jre7": {
-            "locked": "1.1.4-3",
+            "locked": "1.1.51",
             "requested": "1.1.4-3"
         }
     }

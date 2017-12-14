@@ -250,7 +250,7 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
                 it is ExternalDependency && it.isForce && it.group == moduleVersion.group && it.name == moduleVersion.name
             }
         }.map {
-            DefaultModuleVersionSelector(it.group, it.name, it.version)
+            DefaultModuleVersionSelector.newSelector(it.group, it.name, it.version)
         }
 
         val forced = forcedModules + forcedDependencies
