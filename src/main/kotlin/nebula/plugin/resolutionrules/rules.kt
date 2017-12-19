@@ -44,12 +44,12 @@ interface ModuleRule : BasicRule {
 
 data class RuleSet(
         var name: String?,
-        val replace: List<ReplaceRule>,
-        val substitute: List<SubstituteRule>,
-        val reject: List<RejectRule>,
-        val deny: List<DenyRule>,
-        val exclude: List<ExcludeRule>,
-        val align: List<AlignRule>) {
+        val replace: List<ReplaceRule> = emptyList(),
+        val substitute: List<SubstituteRule> = emptyList(),
+        val reject: List<RejectRule> = emptyList(),
+        val deny: List<DenyRule> = emptyList(),
+        val exclude: List<ExcludeRule> = emptyList(),
+        val align: List<AlignRule> = emptyList()) {
 
     fun dependencyRules() = listOf(replace, substitute, reject, deny, exclude).flatten()
 
