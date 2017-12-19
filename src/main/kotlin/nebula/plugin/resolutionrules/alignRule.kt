@@ -21,8 +21,8 @@ import java.util.regex.Matcher
 
 data class AlignRule(val name: String?,
                      val group: Regex,
-                     val includes: List<Regex>,
-                     val excludes: List<Regex>,
+                     val includes: List<Regex> = emptyList(),
+                     val excludes: List<Regex> = emptyList(),
                      val match: String?,
                      override var ruleSet: String?,
                      override val reason: String,
