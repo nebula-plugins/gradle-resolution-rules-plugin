@@ -953,4 +953,66 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
         then:
         noExceptionThrown()
     }
+
+    def 'aligning with circular dependencies'() {
+        def graph = new DependencyGraphBuilder()
+                .addModule(new ModuleBuilder('test.nebula:a:1.0.0').addDependency('example.nebula:aligntest:1.0.0').build())
+                .addModule(new ModuleBuilder('test.nebula:a:1.1.0').addDependency('example.nebula:aligntest:1.0.0').build())
+                .addModule(new ModuleBuilder('test.nebula:b:1.0.0').addDependency('example.nebula:aligntest:1.0.0').build())
+                .addModule(new ModuleBuilder('test.nebula:b:1.1.0').addDependency('example.nebula:aligntest:1.0.0').build())
+                .build()
+        def generator = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen")
+        generator.generateTestMavenRepo()
+
+        rulesJsonFile << '''\
+            {
+                "deny": [], "reject": [], "substitute": [], "replace": [],
+                "align": []
+            }
+        '''.stripIndent()
+
+//        rulesJsonFile << '''\
+//            {
+//                "deny": [], "reject": [], "substitute": [], "replace": [],
+//                "align": [
+//                    {
+//                        "name": "testNebula",
+//                        "group": "test.nebula",
+//                        "includes": [ "a", "b" ],
+//                        "reason": "Align test.nebula dependencies",
+//                        "author": "Example Person <person@example.org>",
+//                        "date": "2016-03-17T20:21:20.368Z"
+//                    }
+//                ]
+//            }
+//        '''.stripIndent()
+
+        buildFile << """\
+//            buildscript {
+//                repositories { jcenter() }
+//                dependencies {
+//                    classpath 'com.netflix.nebula:nebula-publishing-plugin:6.1.0'
+//                }
+//            }
+//            apply plugin: 'nebula.maven-publish'
+            group = 'example.nebula'
+            version = '1.1.0'
+            repositories {
+                ${generator.mavenRepositoryBlock}
+            }
+            dependencies {
+                compile 'test.nebula:a:1.0.0'
+                compile 'test.nebula:b:1.1.0'
+            }
+        """.stripIndent()
+
+        when:
+        def result = runTasks('dependencies')
+
+        then:
+        println result?.standardOutput
+        println result?.standardError
+        result.standardOutput.contains '+--- test.nebula:a:1.0.0 -> 1.1.0'
+//        result.standardOutput.contains '+--- test.nebula:b:1.1.0'
+    }
 }
