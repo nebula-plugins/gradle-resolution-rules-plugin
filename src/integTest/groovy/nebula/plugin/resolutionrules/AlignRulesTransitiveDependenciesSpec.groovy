@@ -42,12 +42,12 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+        def result = runTasks('dependencies', '--configuration', 'compile')
 
         then:
-        result.standardOutput.contains '+--- test.nebula:a:1.0.0 -> 1.1.0\n'
-        result.standardOutput.contains '\\--- test.other:c:1.0.0\n'
-        result.standardOutput.contains '     \\--- test.nebula:b:1.1.0\n'
+        result.output.contains '+--- test.nebula:a:1.0.0 -> 1.1.0\n'
+        result.output.contains '\\--- test.other:c:1.0.0\n'
+        result.output.contains '     \\--- test.nebula:b:1.1.0\n'
     }
 
     def 'can align deeper transitive dependencies'() {
@@ -87,13 +87,13 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+        def result = runTasks('dependencies', '--configuration', 'compile')
 
         then:
-        result.standardOutput.contains '+--- test.nebula:a:1.0.0 -> 1.1.0\n'
-        result.standardOutput.contains '\\--- test.other:d:1.0.0\n'
-        result.standardOutput.contains '     \\--- test.other:c:1.0.0\n'
-        result.standardOutput.contains '          \\--- test.nebula:b:1.1.0\n'
+        result.output.contains '+--- test.nebula:a:1.0.0 -> 1.1.0\n'
+        result.output.contains '\\--- test.other:d:1.0.0\n'
+        result.output.contains '     \\--- test.other:c:1.0.0\n'
+        result.output.contains '          \\--- test.nebula:b:1.1.0\n'
     }
 
     def 'dependencies with cycles do not lead to infinite loops'() {
@@ -132,14 +132,14 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+        def result = runTasks('dependencies', '--configuration', 'compile')
 
         then:
-        result.standardOutput.contains '+--- test.nebula:a:1.1.0\n'
-        result.standardOutput.contains '|    \\--- test.other:b:1.0.0\n'
-        result.standardOutput.contains '|         \\--- test.nebula:b:1.0.0 -> 1.1.0\n'
-        result.standardOutput.contains '|              \\--- test.other:b:1.0.0 (*)\n'
-        result.standardOutput.contains '\\--- test.nebula:b:1.0.0 -> 1.1.0 (*)\n'
+        result.output.contains '+--- test.nebula:a:1.1.0\n'
+        result.output.contains '|    \\--- test.other:b:1.0.0\n'
+        result.output.contains '|         \\--- test.nebula:b:1.0.0 -> 1.1.0\n'
+        result.output.contains '|              \\--- test.other:b:1.0.0 (*)\n'
+        result.output.contains '\\--- test.nebula:b:1.0.0 -> 1.1.0 (*)\n'
     }
 
     def 'able to omit dependency versions to take what is given transitively'() {
@@ -175,12 +175,12 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+        def result = runTasks('dependencies', '--configuration', 'compile')
 
         then:
-        result.standardOutput.contains '+--- test.nebula:a:1.0.0\n'
-        result.standardOutput.contains '|    \\--- test.nebula:b:1.0.0\n'
-        result.standardOutput.contains '\\--- test.nebula:b: -> 1.0.0\n'
+        result.output.contains '+--- test.nebula:a:1.0.0\n'
+        result.output.contains '|    \\--- test.nebula:b:1.0.0\n'
+        result.output.contains '\\--- test.nebula:b: -> 1.0.0\n'
     }
 
     @Issue('#48')
@@ -243,15 +243,15 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+        def result = runTasks('dependencies', '--configuration', 'compile')
 
         then:
-        result.standardOutput.contains '+--- test.nebula.a:a1:1.+ -> 2.0.0\n'
-        result.standardOutput.contains '|    \\--- test.nebula.b:b1:2.0.0\n'
-        result.standardOutput.contains '+--- test.nebula.a:a2:latest.release -> 2.0.0\n'
-        result.standardOutput.contains '+--- test.nebula.b:b2:1.0.0 -> 2.0.0\n'
-        result.standardOutput.contains '\\--- test.nebula.a:a3:1.0.0 -> 2.0.0\n'
-        result.standardOutput.contains '\\--- test.nebula.c:c1:1.0.0'
+        result.output.contains '+--- test.nebula.a:a1:1.+ -> 2.0.0\n'
+        result.output.contains '|    \\--- test.nebula.b:b1:2.0.0\n'
+        result.output.contains '+--- test.nebula.a:a2:latest.release -> 2.0.0\n'
+        result.output.contains '+--- test.nebula.b:b2:1.0.0 -> 2.0.0\n'
+        result.output.contains '\\--- test.nebula.a:a3:1.0.0 -> 2.0.0\n'
+        result.output.contains '\\--- test.nebula.c:c1:1.0.0'
     }
 
     def 'can align a transitive dependency with multiple versions contributed transitively'() {
@@ -292,9 +292,9 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+        def result = runTasks('dependencies', '--configuration', 'compile')
 
         then:
-        result.standardOutput.contains '\\--- test.nebula:d:3.0.0\n'
+        result.output.contains '\\--- test.nebula:d:3.0.0\n'
     }
 }

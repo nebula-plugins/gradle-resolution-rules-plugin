@@ -122,11 +122,15 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
                      * we have to do alignment like this...
                      */
                     // FIXME the requested version is the last seen, not the one that contributed the highest version
-                    val selector = dependency.requested as ModuleComponentSelector
-                    if (VersionWithSelector(selector.version).asSelector().isDynamic) {
-                        selectedModuleVersion
+                    val selector = dependency.requested
+                    if (selector is ModuleComponentSelector) {
+                        if (VersionWithSelector(selector.version).asSelector().isDynamic) {
+                            selectedModuleVersion
+                        } else {
+                            DefaultModuleVersionIdentifier(selector.group, selector.module, selector.version)
+                        }
                     } else {
-                        DefaultModuleVersionIdentifier(selector.group, selector.module, selector.version)
+                        selectedModuleVersion
                     }
                 } else {
                     selectedModuleVersion

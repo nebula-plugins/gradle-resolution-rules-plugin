@@ -16,8 +16,9 @@
  */
 
 plugins {
-    id 'nebula.plugin-plugin' version '6.1.1'
-    id 'nebula.kotlin' version '1.2.10'
+    id 'nebula.plugin-plugin' version '6.3.0'
+    id 'nebula.kotlin' version '1.2.21'
+    id 'java-gradle-plugin'
 }
 
 dependencies {
@@ -26,6 +27,7 @@ dependencies {
     compile 'com.fasterxml.jackson.module:jackson-module-kotlin:2.9.2'
     compile 'com.netflix.nebula:nebula-dependency-base-plugin:latest.release'
 
+    testImplementation gradleTestKit()
     testRuntime 'com.netflix.nebula:gradle-dependency-lock-plugin:5.0.0'
 }
 
@@ -45,6 +47,15 @@ contacts {
     'rob.spieldenner@gmail.com' {
         moniker 'Rob Spieldenner'
         github 'rspieldenner'
+    }
+}
+
+gradlePlugin {
+    plugins {
+        resolutionRules {
+            id = 'nebubla.resolution-rules'
+            implementationClass = 'nebula.plugin.resolutionrules.ResolutionRulesPlugin'
+        }
     }
 }
 

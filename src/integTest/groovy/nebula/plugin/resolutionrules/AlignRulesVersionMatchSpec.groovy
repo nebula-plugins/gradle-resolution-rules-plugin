@@ -38,11 +38,11 @@ class AlignRulesVersionMatchSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def standardOutput = runTasksSuccessfully('dependencies', '--configuration', 'compile').standardOutput
+        def output = runTasks('dependencies', '--configuration', 'compile').output
 
         then:
-        standardOutput.contains '\\--- test.nebula:b:1.0.0-1\n'
-        standardOutput.contains '\\--- test.nebula:a:1.0.0\n'
+        output.contains '\\--- test.nebula:b:1.0.0-1\n'
+        output.contains '\\--- test.nebula:a:1.0.0\n'
     }
 
     def 'match regex version alignment'() {
@@ -78,10 +78,10 @@ class AlignRulesVersionMatchSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def standardOutput = runTasksSuccessfully('dependencies', '--configuration', 'compile').standardOutput
+        def output = runTasks('dependencies', '--configuration', 'compile').output
 
         then:
-        standardOutput.contains '\\--- test.nebula:b:1.0.0-1\n'
-        standardOutput.contains '\\--- test.nebula:a:1.0.0\n'
+        output.contains '\\--- test.nebula:b:1.0.0-1\n'
+        output.contains '\\--- test.nebula:a:1.0.0\n'
     }
 }
