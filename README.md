@@ -19,11 +19,15 @@ These rule types solve the most common cause of dependency issues in projects, i
 
 Refer to the [Gradle Plugin Portal](https://plugins.gradle.org/plugin/nebula.resolution-rules) for instructions on how to apply the plugin.
 
-## Rules
+## Open Source Rules
 
-We produce a rules for dependencies found in Maven Central and other public repositories, to use those rules in your project add:
+We produce a rules for dependencies found in Maven Central and other public repositories, to use those rules in your project add the following to your root project:
 
 ```groovy
+allprojects {
+    apply plugin: 'nebula.resolution-rules'
+}
+
 dependencies {
     resolutionRules 'com.netflix.nebula:gradle-resolution-rules:latest.release'
 }
