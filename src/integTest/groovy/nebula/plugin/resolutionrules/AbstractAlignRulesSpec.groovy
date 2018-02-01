@@ -1,16 +1,17 @@
 package nebula.plugin.resolutionrules
 
-import nebula.test.IntegrationSpec
-import org.gradle.api.logging.LogLevel
+import nebula.test.IntegrationTestKitSpec
 
-abstract class AbstractAlignRulesSpec extends IntegrationSpec {
+abstract class AbstractAlignRulesSpec extends IntegrationTestKitSpec {
     def rulesJsonFile
 
     def setup() {
         rulesJsonFile = new File(projectDir, "${moduleName}.json")
         buildFile << """\
-            ${applyPlugin(ResolutionRulesPlugin)}
-            apply plugin: 'java'
+            plugins {
+                id 'nebula.resolution-rules'
+                id 'java'
+            }
 
             dependencies {
                 resolutionRules files('$rulesJsonFile')
@@ -20,7 +21,5 @@ abstract class AbstractAlignRulesSpec extends IntegrationSpec {
         settingsFile << '''\
             rootProject.name = 'aligntest'
         '''.stripIndent()
-
-        logLevel = LogLevel.DEBUG
     }
 }

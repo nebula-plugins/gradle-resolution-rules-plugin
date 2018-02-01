@@ -42,11 +42,11 @@ class AlignRulesDirectDependenciesSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+        def result = runTasks('dependencies', '--configuration', 'compile')
 
         then:
-        result.standardOutput.contains '+--- test.nebula:a:1.0.0\n'
-        result.standardOutput.contains '\\--- test.nebula:b:0.15.0 -> 1.0.0\n'
+        result.output.contains '+--- test.nebula:a:1.0.0\n'
+        result.output.contains '\\--- test.nebula:b:0.15.0 -> 1.0.0\n'
     }
 
     def 'can align direct dependencies from ivy repositories'() {
@@ -85,11 +85,11 @@ class AlignRulesDirectDependenciesSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+        def result = runTasks('dependencies', '--configuration', 'compile')
 
         then:
-        result.standardOutput.contains '+--- test.nebula:a:1.0.0\n'
-        result.standardOutput.contains '\\--- test.nebula:b:0.15.0 -> 1.0.0\n'
+        result.output.contains '+--- test.nebula:a:1.0.0\n'
+        result.output.contains '\\--- test.nebula:b:0.15.0 -> 1.0.0\n'
     }
 
     def 'can align dynamic dependencies'() {
@@ -124,10 +124,10 @@ class AlignRulesDirectDependenciesSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+        def result = runTasks('dependencies', '--configuration', 'compile')
 
         then:
-        result.standardOutput.contains '\\--- test.nebula:a:1.+ -> 1.0.1\n'
+        result.output.contains '\\--- test.nebula:a:1.+ -> 1.0.1\n'
     }
 
     def 'can align dynamic range dependencies'() {
@@ -162,10 +162,10 @@ class AlignRulesDirectDependenciesSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+        def result = runTasks('dependencies', '--configuration', 'compile')
 
         then:
-        result.standardOutput.contains '\\--- test.nebula:a:[1.0.0, 2.0.0) -> 1.0.1\n'
+        result.output.contains '\\--- test.nebula:a:[1.0.0, 2.0.0) -> 1.0.1\n'
     }
 
     def 'unresolvable dependencies cause assemble to fail'() {
@@ -195,11 +195,11 @@ class AlignRulesDirectDependenciesSpec extends AbstractAlignRulesSpec {
         writeHelloWorld('com.netflix.nebula')
 
         when:
-        def result = runTasks('assemble')
+        org.gradle.testkit.runner.BuildResult result = runTasksAndFail('assemble')
 
         then:
-        def cause = Throwables.getRootCause(result.failure)
-        cause.message.startsWith("Could not find com.google.guava:guava:oops")
+        result.output.contains 'Could not resolve all files for configuration \':compileClasspath\'.\n' +
+                '> Could not find com.google.guava:guava:oops.'
     }
 
     @Unroll('unresolvable dependencies do not cause #tasks to fail')
@@ -217,7 +217,7 @@ class AlignRulesDirectDependenciesSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        runTasksSuccessfully(*tasks)
+        runTasks(*tasks)
 
         then:
         noExceptionThrown()
@@ -254,11 +254,11 @@ class AlignRulesDirectDependenciesSpec extends AbstractAlignRulesSpec {
         """
 
         when:
-        def result = runTasksSuccessfully(*tasks)
+        def result = runTasks(*tasks)
 
         then:
         noExceptionThrown()
-        result.standardOutput.contains("Resolution rules could not resolve all dependencies to align configuration ':compile'. This configuration will not be aligned (use --info to list unresolved dependencies)")
+        result.output.contains("Resolution rules could not resolve all dependencies to align configuration ':compile'. This configuration will not be aligned (use --info to list unresolved dependencies)")
 
         where:
         tasks | _

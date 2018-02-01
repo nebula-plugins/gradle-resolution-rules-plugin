@@ -18,6 +18,7 @@ package nebula.plugin.resolutionrules
 import nebula.test.dependencies.DependencyGraphBuilder
 import nebula.test.dependencies.GradleDependencyGenerator
 import nebula.test.dependencies.ModuleBuilder
+import org.gradle.api.logging.LogLevel
 
 class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
     def 'align rules do not replace changes made by other rules'() {
@@ -64,10 +65,10 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+        def result = runTasks('dependencies', '--configuration', 'compile')
 
         then:
-        result.standardOutput.contains '\\--- test.nebula:b:1.0.0 -> test.nebula.ext:b:2.0.0\n'
+        result.output.contains '\\--- test.nebula:b:1.0.0 -> test.nebula.ext:b:2.0.0\n'
     }
 
     def 'can align some dependencies in a group'() {
@@ -112,12 +113,12 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+        def result = runTasks('dependencies', '--configuration', 'compile')
 
         then:
-        result.standardOutput.contains '+--- test.nebula:a:1.0.0 -> 1.1.0'
-        result.standardOutput.contains '+--- test.nebula:b:1.1.0'
-        result.standardOutput.contains '\\--- test.nebula:c:0.42.0'
+        result.output.contains '+--- test.nebula:a:1.0.0 -> 1.1.0'
+        result.output.contains '+--- test.nebula:b:1.1.0'
+        result.output.contains '\\--- test.nebula:c:0.42.0'
     }
 
     def 'dependencyInsight has extra info for alignment'() {
@@ -161,29 +162,29 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def aResult = runTasksSuccessfully('dependencyInsight', '--configuration', 'compile', '--dependency', 'a')
+        def aResult = runTasks('dependencyInsight', '--configuration', 'compile', '--dependency', 'a')
 
         then:
-        aResult.standardOutput.contains 'test.nebula:a:1.1.0 (aligned to 1.1.0 by dependencyInsight-has-extra-info-for-alignment)'
-        aResult.standardOutput.contains 'nebula.resolution-rules uses: dependencyInsight-has-extra-info-for-alignment.json'
+        aResult.output.contains 'test.nebula:a:1.1.0 (aligned to 1.1.0 by dependencyInsight-has-extra-info-for-alignment)'
+        aResult.output.contains 'nebula.resolution-rules uses: dependencyInsight-has-extra-info-for-alignment.json'
 
         when:
-        def aResultCompileClasspath = runTasksSuccessfully('dependencyInsight', '--configuration', 'compileClasspath', '--dependency', 'a')
+        def aResultCompileClasspath = runTasks('dependencyInsight', '--configuration', 'compileClasspath', '--dependency', 'a')
 
         then:
-        aResultCompileClasspath.standardOutput.contains 'test.nebula:a:1.1.0 (aligned to 1.1.0 by dependencyInsight-has-extra-info-for-alignment)'
+        aResultCompileClasspath.output.contains 'test.nebula:a:1.1.0 (aligned to 1.1.0 by dependencyInsight-has-extra-info-for-alignment)'
 
         when:
-        def bResult = runTasksSuccessfully('dependencyInsight', '--configuration', 'compile', '--dependency', 'b')
+        def bResult = runTasks('dependencyInsight', '--configuration', 'compile', '--dependency', 'b')
 
         then:
-        !bResult.standardOutput.contains('test.nebula:b:1.1.0 (')
+        !bResult.output.contains('test.nebula:b:1.1.0 (')
 
         when:
-        def cResult = runTasksSuccessfully('dependencyInsight', '--configuration', 'compile', '--dependency', 'c')
+        def cResult = runTasks('dependencyInsight', '--configuration', 'compile', '--dependency', 'c')
 
         then:
-        cResult.standardOutput.contains 'test.nebula:c:1.1.0 (aligned to 1.1.0 by dependencyInsight-has-extra-info-for-alignment)'
+        cResult.output.contains 'test.nebula:c:1.1.0 (aligned to 1.1.0 by dependencyInsight-has-extra-info-for-alignment)'
 
     }
 
@@ -229,12 +230,12 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+        def result = runTasks('dependencies', '--configuration', 'compile')
 
         then:
-        result.standardOutput.contains '+--- test.nebula:a:1.0.0\n'
-        result.standardOutput.contains '+--- test.nebula:b:1.1.0\n'
-        result.standardOutput.contains '\\--- test.nebula:c:0.42.0 -> 1.1.0'
+        result.output.contains '+--- test.nebula:a:1.0.0\n'
+        result.output.contains '+--- test.nebula:b:1.1.0\n'
+        result.output.contains '\\--- test.nebula:c:0.42.0 -> 1.1.0'
     }
 
     def 'a project can build in presence of align rules for jars it produces'() {
@@ -276,7 +277,7 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
         '''.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+        def result = runTasks('dependencies', '--configuration', 'compile')
 
         then:
         noExceptionThrown()
@@ -331,13 +332,13 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+        def result = runTasks('dependencies', '--configuration', 'compile')
 
         then:
-        result.standardOutput.contains 'test.nebula:a:1.0.0 -> 1.1.0\n'
-        result.standardOutput.contains 'test.nebula:b:1.1.0\n'
-        result.standardOutput.contains 'test.other:c:1.0.0\n'
-        result.standardOutput.contains 'test.other:d:0.12.+ -> 1.0.0\n'
+        result.output.contains 'test.nebula:a:1.0.0 -> 1.1.0\n'
+        result.output.contains 'test.nebula:b:1.1.0\n'
+        result.output.contains 'test.other:c:1.0.0\n'
+        result.output.contains 'test.other:d:0.12.+ -> 1.0.0\n'
     }
 
     def 'substitute and align work together'() {
@@ -388,12 +389,12 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+        def result = runTasks('dependencies', '--configuration', 'compile')
 
         then:
-        result.standardOutput.contains '+--- test.nebula:a:1.0.0\n'
-        result.standardOutput.contains '+--- test.nebula:b:0.15.0 -> 1.0.0\n'
-        result.standardOutput.contains '\\--- old.org:sub:latest.release -> new.org:sub:0.2.0\n'
+        result.output.contains '+--- test.nebula:a:1.0.0\n'
+        result.output.contains '+--- test.nebula:b:0.15.0 -> 1.0.0\n'
+        result.output.contains '\\--- old.org:sub:latest.release -> new.org:sub:0.2.0\n'
     }
 
     def 'jcenter align'() {
@@ -420,7 +421,7 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
         """
 
         when:
-        runTasksSuccessfully('dependencies', '--configuration', 'compile')
+        runTasks('dependencies', '--configuration', 'compile')
 
         then:
         noExceptionThrown()
@@ -480,14 +481,14 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+        def result = runTasks('dependencies', '--configuration', 'compile')
 
         then:
-        result.standardOutput.contains '+--- test.nebula:a:1.0.0\n'
-        result.standardOutput.contains '+--- test.nebula:b:0.15.0 -> 1.0.0\n'
-        result.standardOutput.contains '+--- test.example:c:latest.release -> 0.1.0\n'
-        result.standardOutput.contains '+--- test:x:1.+ -> 1.0.0\n'
-        result.standardOutput.contains '\\--- test:y:1.+ -> 1.0.0\n'
+        result.output.contains '+--- test.nebula:a:1.0.0\n'
+        result.output.contains '+--- test.nebula:b:0.15.0 -> 1.0.0\n'
+        result.output.contains '+--- test.example:c:latest.release -> 0.1.0\n'
+        result.output.contains '+--- test:x:1.+ -> 1.0.0\n'
+        result.output.contains '\\--- test:y:1.+ -> 1.0.0\n'
     }
 
     def 'regular expressions supported in groups'() {
@@ -525,11 +526,11 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+        def result = runTasks('dependencies', '--configuration', 'compile')
 
         then:
-        result.standardOutput.contains '+--- test.nebula.one:a:1.0.0\n'
-        result.standardOutput.contains '\\--- test.nebula.two:b:0.15.0 -> 1.0.0\n'
+        result.output.contains '+--- test.nebula.one:a:1.0.0\n'
+        result.output.contains '\\--- test.nebula.two:b:0.15.0 -> 1.0.0\n'
     }
 
     def 'regular expressions supported in includes'() {
@@ -571,12 +572,12 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+        def result = runTasks('dependencies', '--configuration', 'compile')
 
         then:
-        result.standardOutput.contains '+--- test.nebula:a:1.0.0\n'
-        result.standardOutput.contains '+--- test.nebula:b:0.15.0 -> 1.0.0\n'
-        result.standardOutput.contains '\\--- test.nebula:c:0.15.0\n'
+        result.output.contains '+--- test.nebula:a:1.0.0\n'
+        result.output.contains '+--- test.nebula:b:0.15.0 -> 1.0.0\n'
+        result.output.contains '\\--- test.nebula:c:0.15.0\n'
     }
 
     def 'regular expressions supported in excludes'() {
@@ -618,12 +619,12 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+        def result = runTasks('dependencies', '--configuration', 'compile')
 
         then:
-        result.standardOutput.contains '+--- test.nebula:a:1.0.0\n'
-        result.standardOutput.contains '+--- test.nebula:b:0.15.0\n'
-        result.standardOutput.contains '\\--- test.nebula:c:0.15.0\n'
+        result.output.contains '+--- test.nebula:a:1.0.0\n'
+        result.output.contains '+--- test.nebula:b:0.15.0\n'
+        result.output.contains '\\--- test.nebula:c:0.15.0\n'
     }
 
     def 'alignment does not apply to dependencies that already have the expected version'() {
@@ -660,14 +661,16 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
             }
         """.stripIndent()
 
+        logLevel = LogLevel.DEBUG
+
         when:
-        def result = runTasksSuccessfully('dependencyInsight', '--configuration', 'compile', '--dependency', 'test.nebula')
+        def result = runTasks('dependencyInsight', '--configuration', 'compile', '--dependency', 'test.nebula')
 
         then:
-        !result.standardOutput.contains('Resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-does-not-apply-to-dependencies-that-already-have-the-expected-version, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z) aligning test.nebula:a to 1.0.0')
-        result.standardOutput.contains 'Resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-does-not-apply-to-dependencies-that-already-have-the-expected-version, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z) aligning test.nebula:b to 1.0.0'
-        result.standardOutput.contains 'test.nebula:a:1.0.0\n'
-        result.standardOutput.contains 'test.nebula:b:0.15.0 -> 1.0.0\n'
+        !result.output.contains('Resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-does-not-apply-to-dependencies-that-already-have-the-expected-version, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z) aligning test.nebula:a to 1.0.0')
+        result.output.contains 'Resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-does-not-apply-to-dependencies-that-already-have-the-expected-version, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z) aligning test.nebula:b to 1.0.0'
+        result.output.contains 'test.nebula:a:1.0.0\n'
+        result.output.contains 'test.nebula:b:0.15.0 -> 1.0.0\n'
     }
 
     def 'alignment applies to versions affected by resolution strategies'() {
@@ -712,11 +715,13 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
             }
         """.stripIndent()
 
+        logLevel = LogLevel.DEBUG
+
         when:
-        def result = runTasksSuccessfully('dependencyInsight', '--configuration', 'compile', '--dependency', 'test.nebula')
+        def result = runTasks('dependencyInsight', '--configuration', 'compile', '--dependency', 'test.nebula')
 
         then:
-        def output = result.standardOutput
+        def output = result.output
         output.contains 'Resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-applies-to-versions-affected-by-resolution-strategies, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z) aligning test.nebula:a to 1.0.0'
         output.contains 'Resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-applies-to-versions-affected-by-resolution-strategies, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z) aligning test.nebula:b to 1.0.0'
         output.contains 'test.nebula:a:1.0.0 (aligned to 1.0.0 by alignment-applies-to-versions-affected-by-resolution-strategies)\n'
@@ -757,7 +762,7 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
         """
 
         when:
-        runTasksSuccessfully('dependencies', '--configuration', 'compile')
+        runTasks('dependencies', '--configuration', 'compile')
 
         then:
         noExceptionThrown()
@@ -786,7 +791,7 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
         """
 
         when:
-        runTasksSuccessfully('dependencies', '--configuration', 'compile')
+        runTasks('dependencies', '--configuration', 'compile')
 
         then:
         noExceptionThrown()
@@ -822,11 +827,13 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
             }
         """.stripIndent()
 
+        logLevel = LogLevel.DEBUG
+
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+        def result = runTasks('dependencies', '--configuration', 'compile')
 
         then:
-        result.standardOutput.contains('Short-circuiting alignment for configuration \':compile\' - No align rules matched the configured configurations')
+        result.output.contains('Short-circuiting alignment for configuration \':compile\' - No align rules matched the configured configurations')
     }
 
     def 'alignment is short-circuited for configurations that are already aligned'() {
@@ -861,11 +868,13 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
             }
         """.stripIndent()
 
+        logLevel = LogLevel.DEBUG
+
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+        def result = runTasks('dependencies', '--configuration', 'compile')
 
         then:
-        result.standardOutput.contains('Short-circuiting alignment for configuration \':compile\' - No align rules matched the configured configurations')
+        result.output.contains('Short-circuiting alignment for configuration \':compile\' - No align rules matched the configured configurations')
     }
 
     def 'non-transitive configurations are skipped'() {
@@ -900,10 +909,10 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+        def result = runTasks('dependencies', '--configuration', 'compile', '--debug')
 
         then:
-        result.standardOutput.contains('Skipping alignment for configuration \':compile\' - Configuration is not transitive')
+        result.output.contains('Skipping alignment for configuration \':compile\' - Configuration is not transitive')
     }
 
     def 'configurations with artifacts can be aligned'() {
@@ -948,9 +957,122 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencies')
+        def result = runTasks('dependencies')
 
         then:
         noExceptionThrown()
+    }
+
+    def 'aligning with circular dependencies'() {
+        def graph = new DependencyGraphBuilder()
+                .addModule(new ModuleBuilder('test.nebula:a:1.0.0').addDependency('example.nebula:aligntest:1.0.0').build())
+                .addModule(new ModuleBuilder('test.nebula:a:1.1.0').addDependency('example.nebula:aligntest:1.0.0').build())
+                .addModule(new ModuleBuilder('test.nebula:b:1.0.0').addDependency('example.nebula:aligntest:1.0.0').build())
+                .addModule(new ModuleBuilder('test.nebula:b:1.1.0').addDependency('example.nebula:aligntest:1.0.0').build())
+                .build()
+        def generator = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen")
+        generator.generateTestMavenRepo()
+
+        rulesJsonFile << '''\
+            {
+                "deny": [], "reject": [], "substitute": [], "replace": [],
+                "align": [
+                    {
+                        "name": "testNebula",
+                        "group": "test.nebula",
+                        "includes": [ "a", "b" ],
+                        "reason": "Align test.nebula dependencies",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    }
+                ]
+            }
+        '''.stripIndent()
+
+        buildFile << """\
+            group = 'example.nebula'
+            version = '1.1.0'
+            repositories {
+                ${generator.mavenRepositoryBlock}
+            }
+            dependencies {
+                implementation 'test.nebula:a:1.0.0'
+                implementation 'test.nebula:b:1.1.0'
+            }
+        """.stripIndent()
+
+        when:
+        def result = runTasks('dependencies')
+
+        then:
+        result.output.contains '+--- test.nebula:a:1.0.0 -> 1.1.0'
+        result.output.contains '\\--- test.nebula:b:1.1.0'
+    }
+
+    def 'align ourselves via circular dependency'() {
+        def graph = new DependencyGraphBuilder()
+                .addModule(new ModuleBuilder('test.nebula:a:1.0.0').addDependency('example.nebula:sub0:1.0.0').build())
+                .addModule(new ModuleBuilder('test.nebula:a:1.1.0').addDependency('example.nebula:sub0:1.1.0').build())
+                .addModule(new ModuleBuilder('test.nebula:b:1.0.0').addDependency('example.nebula:sub1:1.0.0').build())
+                .addModule(new ModuleBuilder('test.nebula:b:1.1.0').addDependency('example.nebula:sub1:1.1.0').build())
+                .addModule('test:foo:1.0.0')
+                .build()
+        def generator = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen")
+        generator.generateTestMavenRepo()
+
+        rulesJsonFile << '''\
+            {
+                "deny": [], "reject": [], "substitute": [], "replace": [],
+                "align": [
+                    {
+                        "name": "testNebula",
+                        "group": "example.nebula",
+                        "reason": "Align example.nebula dependencies",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2018-01-30T20:21:20.368Z"
+                    }
+                ]
+            }
+        '''.stripIndent()
+
+        buildFile.text = """\
+            plugins {
+                id 'nebula.resolution-rules'
+            }
+            allprojects {
+                group = 'example.nebula'
+                version = '1.2.0'
+            }
+            subprojects {
+                apply plugin: 'nebula.resolution-rules'
+                apply plugin: 'java'
+                repositories {
+                    ${generator.mavenRepositoryBlock}
+                }
+            }
+            dependencies {
+                resolutionRules files('$rulesJsonFile')
+            }
+        """.stripIndent()
+
+        addSubproject('sub0', '''\
+            dependencies {
+                implementation 'test.nebula:a:1.0.0'
+                implementation 'test.nebula:b:1.1.0'
+                implementation project(':sub1')
+            }
+            '''.stripIndent())
+        addSubproject('sub1', '''\
+            dependencies {
+                implementation 'test:foo:1.0.0'
+            }
+            '''.stripIndent())
+
+        when:
+        def result = runTasks(':sub0:dependencies', '--configuration', 'compileClasspath', ':sub1:dependencies', '--configuration', 'compileClasspath')
+
+        then:
+        result.output.contains 'example.nebula:sub0:1.0.0 -> project :sub0'
+        result.output.contains 'example.nebula:sub1:1.1.0 -> project :sub1'
     }
 }
