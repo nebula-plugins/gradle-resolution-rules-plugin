@@ -739,7 +739,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
         """.stripIndent()
 
         when:
-        def results = runTasksSuccessfully('dependencies', '--configuration', 'compile', '--debug')
+        def results = runTasksSuccessfully('dependencies', '--configuration', 'compile')
 
         then:
         !results.standardOutput.contains('aligning test.nebula:a to [1.41.5,1.42.2]')
