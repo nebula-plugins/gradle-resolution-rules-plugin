@@ -180,7 +180,7 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
         then:
         result.output.contains '+--- test.nebula:a:1.0.0\n'
         result.output.contains '|    \\--- test.nebula:b:1.0.0\n'
-        result.output.contains '\\--- test.nebula:b: -> 1.0.0\n'
+        result.output.contains '\\--- test.nebula:b -> 1.0.0\n'
     }
 
     @Issue('#48')

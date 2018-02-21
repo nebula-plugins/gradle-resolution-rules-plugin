@@ -84,7 +84,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
         def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
 
         then:
-        result.standardOutput.contains '\\--- test.a:a: -> 1.42.2\n'
+        result.standardOutput.contains '\\--- test.a:a -> 1.42.2\n'
     }
 
     def 'alignment interaction with dependency-recommender reverse order of application'() {
@@ -143,7 +143,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
         def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
 
         then:
-        result.standardOutput.contains '\\--- test.a:a: -> 1.42.2\n'
+        result.standardOutput.contains '\\--- test.a:a -> 1.42.2\n'
     }
 
     def 'alignment interaction with dependency-recommender transitive project dependencies'() {
@@ -218,7 +218,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
         def result = runTasksSuccessfully(':a:dependencies', '--configuration', 'compile')
 
         then:
-        result.standardOutput.contains '\\--- test.a:a: -> 1.42.2\n'
+        result.standardOutput.contains '\\--- test.a:a -> 1.42.2\n'
     }
 
     @Unroll
@@ -387,7 +387,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
         def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
 
         then:
-        result.standardOutput.contains('+--- com.amazonaws:aws-java-sdk-s3: -> 1.11.18')
+        result.standardOutput.contains('+--- com.amazonaws:aws-java-sdk-s3 -> 1.11.18')
     }
 
     def 'align rules work with extra-configurations and publishing'() {
@@ -506,8 +506,8 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
         def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
 
         then:
-        result.standardOutput.contains '+--- test.a:a: -> 1.42.2\n'
-        result.standardOutput.contains '\\--- test.a:b: -> 1.2.1\n'
+        result.standardOutput.contains '+--- test.a:a -> 1.42.2\n'
+        result.standardOutput.contains '\\--- test.a:b -> 1.2.1\n'
     }
 
     def 'cycle like behavior'() {
@@ -868,8 +868,8 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
         def result = runTasksSuccessfully(':app:dependencies', '--configuration', 'compile')
 
         then:
-        result.standardOutput.contains '|    +--- test.nebula:b: FAILED'
-        result.standardOutput.contains '|    \\--- test.nebula:c: -> 1.0.0 FAILED'
+        result.standardOutput.contains '|    +--- test.nebula:b FAILED'
+        result.standardOutput.contains '|    \\--- test.nebula:c -> 1.0.0 FAILED'
     }
 
     @Issue('#55')
@@ -956,8 +956,8 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
         def result = runTasks(':app:dependencies', '--configuration', 'compile')
 
         then:
-        result.standardOutput.contains '|    +--- test.nebula:b: FAILED'
-        result.standardOutput.contains '|    \\--- test.nebula:c: -> 1.0.0 FAILED'
+        result.standardOutput.contains '|    +--- test.nebula:b FAILED'
+        result.standardOutput.contains '|    \\--- test.nebula:c -> 1.0.0 FAILED'
         result.standardError.contains 'Dependency test.nebula:a omitted version with no recommended version. General causes include a dependency being removed from the recommendation source or not applying a recommendation source to a project that depends on another project using a recommender.'
     }
 
