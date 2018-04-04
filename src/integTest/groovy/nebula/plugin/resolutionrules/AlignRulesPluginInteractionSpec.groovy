@@ -958,7 +958,10 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
         then:
         result.standardOutput.contains '|    +--- test.nebula:b FAILED'
         result.standardOutput.contains '|    \\--- test.nebula:c -> 1.0.0 FAILED'
-        result.standardError.contains 'Dependency test.nebula:a omitted version with no recommended version. General causes include a dependency being removed from the recommendation source or not applying a recommendation source to a project that depends on another project using a recommender.'
+        def expectedMessage = 'Dependency test.nebula:a omitted version with no recommended version. General causes include a dependency being removed from the recommendation source or not applying a recommendation source to a project that depends on another project using a recommender.'
+        //Gradle 4.7 started to print error log messages into standard output
+        //we run build with version lower then 4.7 as well higher so we check both places
+        result.standardError.contains(expectedMessage) || result.standardOutput.contains(expectedMessage)
     }
 
     @Ignore
