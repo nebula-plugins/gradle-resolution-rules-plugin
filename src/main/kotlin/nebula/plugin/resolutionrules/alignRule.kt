@@ -9,6 +9,7 @@ import org.gradle.api.artifacts.ModuleVersionIdentifier
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ModuleComponentSelector
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
+import org.gradle.api.artifacts.result.UnresolvedDependencyResult
 import org.gradle.api.internal.artifacts.DefaultModuleVersionIdentifier
 import org.gradle.api.internal.artifacts.DefaultModuleVersionSelector
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.LatestVersionSelector
@@ -137,17 +138,17 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
                 }
             })
 
-    tailrec private fun CopiedConfiguration.stableResolvedAligns(baselineAligns: List<AlignedVersionWithDependencies>, pass: Int = 1): List<AlignedVersionWithDependencies> {
+    private tailrec fun CopiedConfiguration.stableResolvedAligns(baselineAligns: List<AlignedVersionWithDependencies>, pass: Int = 1): List<AlignedVersionWithDependencies> {
         check(pass <= MAX_PASSES) {
             "The maximum number of alignment passes were attempted ($MAX_PASSES) for $source"
         }
         val resolvedAligns = resolvedAligns(baselineAligns)
         val copy = copyConfiguration().applyAligns(resolvedAligns)
         val copyResolvedAligns = copy.resolvedAligns(baselineAligns)
-        return if (resolvedAligns != copyResolvedAligns) {
-            copy.stableResolvedAligns(baselineAligns, pass.inc())
-        } else {
-            resolvedAligns
+        return when {
+            resolvedAligns.isEmpty() -> copyResolvedAligns // Alignment caused the configuration to be unresolvable, apply the broken alignments so that failures bubble up
+            resolvedAligns != copyResolvedAligns -> copy.stableResolvedAligns(baselineAligns, pass.inc())
+            else -> resolvedAligns
         }
     }
 
@@ -164,18 +165,20 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
 
     private fun AlignedVersionWithDependencies.ruleMatches(dep: ModuleVersionIdentifier) = alignedVersion.rule.ruleMatches(dep)
 
+    @Suppress("UNCHECKED_CAST")
     private fun CopiedConfiguration.selectedVersions(versionSelector: (ResolvedDependencyResult) -> ModuleVersionIdentifier): List<AlignedVersionWithDependencies> {
         val partitioned = incoming.resolutionResult.allDependencies
                 .partition { it is ResolvedDependencyResult }
-        @Suppress("UNCHECKED_CAST")
         val resolved = partitioned.first as List<ResolvedDependencyResult>
-        val unresolved = partitioned.second
+        val unresolved = partitioned.second as List<UnresolvedDependencyResult>
 
         if (unresolved.isNotEmpty()) {
-            logger.warn("Resolution rules could not resolve all dependencies to align $source. This configuration will not be aligned (use --info to list unresolved dependencies)")
-            logger.info("Could not resolve:\n ${unresolved.distinct().joinToString("\n") { " - $it" }}")
+            val unresolvedDetails = unresolved.distinct().joinToString("\n") { " - $it" }
+            val message = "Resolution rules could not resolve all dependencies to align $source:\n$unresolvedDetails"
+            logger.error(message)
             return emptyList()
         }
+
         val resolvedDependencies = resolved
                 .filter { it.selectedId is ModuleComponentIdentifier }
         val resolvedVersions = resolvedDependencies

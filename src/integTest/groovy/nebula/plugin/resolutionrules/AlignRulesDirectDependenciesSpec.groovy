@@ -258,7 +258,53 @@ class AlignRulesDirectDependenciesSpec extends AbstractAlignRulesSpec {
 
         then:
         noExceptionThrown()
-        result.output.contains("Resolution rules could not resolve all dependencies to align configuration ':compile'. This configuration will not be aligned (use --info to list unresolved dependencies)")
+        result.output.contains("Resolution rules could not resolve all dependencies to align configuration ':compile'")
+
+        where:
+        tasks | _
+        ['dependencies', '--configuration', 'compile'] | _
+        ['dependencyInsight', '--dependency', 'guava', '--configuration', 'compile'] | _
+    }
+
+    @Unroll('unresolvable dependencies caused by alignment do not cause #tasks to fail')
+    def 'unresolvable dependencies caused by alignment do not cause the build to fail'() {
+        debug = true
+
+        rulesJsonFile << '''\
+            {
+                "deny": [], "reject": [], "substitute": [], "replace": [],
+                "align": [
+                    {
+                        "group": "io.netty",
+                        "reason": "Align Netty",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    }
+                ]
+            }
+        '''.stripIndent()
+
+        buildFile << """\
+            configurations.all {
+                resolutionStrategy {
+                    force 'io.netty:netty-all:4.0.43.Final'
+                }
+            }
+
+            repositories { jcenter() }
+
+            dependencies {
+                compile 'io.grpc:grpc-netty:1.3.0' // grpc-netty brings in dependencies added in Netty 4.1, and will be broken by the force
+                compile 'io.netty:netty-all:4.0.43.Final'
+            }
+        """
+
+        when:
+        def result = runTasks(*tasks)
+
+        then:
+        noExceptionThrown()
+        result.output.contains("Resolution rules could not resolve all dependencies to align configuration ':compile'")
 
         where:
         tasks | _
