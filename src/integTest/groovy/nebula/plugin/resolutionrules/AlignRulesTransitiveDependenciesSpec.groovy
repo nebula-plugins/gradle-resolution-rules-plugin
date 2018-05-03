@@ -297,4 +297,65 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
         then:
         result.output.contains '\\--- test.nebula:d:3.0.0\n'
     }
+
+    def 'can align a transitive dependency with direct and use substitution to downgrade'() {
+        given:
+        debug = true
+        def graph = new DependencyGraphBuilder()
+                .addModule(new ModuleBuilder('test.nebula:a:1.0.0').addDependency('test.nebula:b:1.0.0').build())
+                .addModule(new ModuleBuilder('test.nebula:a:1.1.0').addDependency('test.nebula:b:1.1.0').build())
+                .addModule(new ModuleBuilder('test.nebula:a:1.2.0').addDependency('test.nebula:b:1.2.0').build())
+                .build()
+
+        File mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
+
+        rulesJsonFile << '''\
+            {
+                "deny": [], "reject": [],
+                "substitute": [
+                    {
+                        "module": "test.nebula:a:[1.2.0,)",
+                        "with": "test.nebula:a:1.1.0",
+                        "reason": "Downgrade",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    },
+                    {
+                        "module": "test.nebula:b:[1.2.0,)",
+                        "with": "test.nebula:b:1.1.0",
+                        "reason": "Downgrade",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    }
+             
+                ], "replace": [],
+                "align": [
+                    {
+                        "name": "testNebula",
+                        "group": "test.nebula",
+                        "reason": "Align test.nebula dependencies",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    }
+                ]
+            }
+        '''.stripIndent()
+
+        buildFile << """\
+            repositories {
+                maven { url '${mavenrepo.absolutePath}' }
+            }
+            dependencies {
+                compile 'test.nebula:a:1.0.0'
+                compile 'test.nebula:b:1.2.0'
+            }
+        """.stripIndent()
+
+        when:
+        def result = runTasks('dependencies', '--configuration', 'compile')
+
+        then:
+        result.output.contains '+--- test.nebula:a:1.0.0 -> 1.1.0'
+        result.output.contains '\\--- test.nebula:b:1.2.0 -> 1.1.0'
+    }
 }
