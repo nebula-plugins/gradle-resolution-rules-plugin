@@ -8,6 +8,7 @@ import org.gradle.api.artifacts.*
 import org.gradle.api.artifacts.ModuleVersionIdentifier
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ModuleComponentSelector
+import org.gradle.api.artifacts.result.ComponentSelectionCause
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.artifacts.result.UnresolvedDependencyResult
 import org.gradle.api.internal.artifacts.DefaultModuleVersionIdentifier
@@ -113,7 +114,7 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
                 val alignedVersion = baselineAligns.singleOrNull {
                     it.ruleMatches(selectedModuleVersion)
                 }
-                if (alignedVersion.useRequestedVersion(selectedModuleVersion)) {
+                if (alignedVersion.useRequestedVersion(dependency)) {
                     /**
                      * If the selected version for an aligned dependency was unaffected by resolutionStrategies etc.,
                      * then we choose the requested version so we can reflect the requested dependency pre-alignment.
@@ -152,15 +153,21 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
         }
     }
 
-    private fun AlignedVersionWithDependencies?.useRequestedVersion(moduleVersion: ModuleVersionIdentifier): Boolean {
+    private fun AlignedVersionWithDependencies?.useRequestedVersion(newRoundDependency: ResolvedDependencyResult): Boolean {
         if (this == null) {
             return false
         }
+        //resolved dependencies contain the same dependency multiple times based on who brought it when we compare it
+        //with a newly resolved dependency from the next alignment run we need to much the same from
         val dependency = resolvedDependencies
+                .filter { it.from.moduleVersion?.module == newRoundDependency.from.moduleVersion?.module }
                 .map { it.selected }
-                .singleOrNull { it.moduleVersion?.module == moduleVersion.module } ?: return true
+                .singleOrNull { it.moduleVersion?.module == newRoundDependency.selectedModuleVersion.module } ?: return true
         val selectionReason = dependency.selectionReason
-        return selectionReason.isExpected || selectionReason.isConflictResolution
+        return selectionReason
+                .descriptions
+                .map { it.cause }
+                .all { it == ComponentSelectionCause.REQUESTED || it == ComponentSelectionCause.CONFLICT_RESOLUTION }
     }
 
     private fun AlignedVersionWithDependencies.ruleMatches(dep: ModuleVersionIdentifier) = alignedVersion.rule.ruleMatches(dep)
