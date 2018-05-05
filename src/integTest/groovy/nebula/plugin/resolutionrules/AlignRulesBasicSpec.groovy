@@ -1069,7 +1069,7 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
             '''.stripIndent())
 
         when:
-        def result = runTasks(':sub0:dependencies', '--configuration', 'compileClasspath', ':sub1:dependencies', '--configuration', 'compileClasspath')
+        def result = runTasks(':sub0:dependencies', '--configuration', 'compileClasspath', ':sub1:dependencies', '--configuration', 'compileClasspath', '--warning-mode=none')
 
         then:
         result.output.contains 'example.nebula:sub0:1.0.0 -> project :sub0'

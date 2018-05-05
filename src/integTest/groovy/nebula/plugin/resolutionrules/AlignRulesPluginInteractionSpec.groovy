@@ -215,7 +215,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
         """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully(':a:dependencies', '--configuration', 'compile')
+        def result = runTasksSuccessfully(':a:dependencies', '--configuration', 'compile', '--warning-mode=none')
 
         then:
         result.standardOutput.contains '\\--- test.a:a -> 1.42.2\n'
@@ -572,7 +572,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
         '''.stripIndent())
 
         when:
-        def results = runTasksSuccessfully(':a:dependencies', ':b:dependencies', 'assemble')
+        def results = runTasksSuccessfully(':a:dependencies', ':b:dependencies', 'assemble', '--warning-mode=none')
 
         then:
         noExceptionThrown()
@@ -659,7 +659,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
         """.stripIndent()
 
         when:
-        def results = runTasksSuccessfully('dependencyInsight', '--dependency', 'a')
+        def results = runTasksSuccessfully('dependencyInsight', '--dependency', 'a', '--configuration', 'compile')
 
         then:
         results.standardOutput.contains 'test.nebula:a:1.41.5 -> 1.42.2\n'
@@ -865,7 +865,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
         """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully(':app:dependencies', '--configuration', 'compile')
+        def result = runTasksSuccessfully(':app:dependencies', '--configuration', 'compile', '--warning-mode=none')
 
         then:
         result.standardOutput.contains '|    +--- test.nebula:b FAILED'
@@ -953,7 +953,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
         """.stripIndent()
 
         when:
-        def result = runTasks(':app:dependencies', '--configuration', 'compile')
+        def result = runTasks(':app:dependencies', '--configuration', 'compile', '--warning-mode=none')
 
         then:
         result.standardOutput.contains '|    +--- test.nebula:b FAILED'
