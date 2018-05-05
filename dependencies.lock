@@ -5,7 +5,7 @@
             "requested": "2.9.2"
         },
         "com.netflix.nebula:nebula-dependency-base-plugin": {
-            "locked": "0.3.0",
+            "locked": "0.3.2",
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-gradle-interop": {
@@ -27,7 +27,7 @@
             "requested": "2.9.2"
         },
         "com.netflix.nebula:nebula-dependency-base-plugin": {
-            "locked": "0.3.0",
+            "locked": "0.3.2",
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-gradle-interop": {
@@ -49,7 +49,7 @@
             "requested": "2.9.2"
         },
         "com.netflix.nebula:nebula-dependency-base-plugin": {
-            "locked": "0.3.0",
+            "locked": "0.3.2",
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-gradle-interop": {
@@ -71,7 +71,7 @@
             "requested": "2.9.2"
         },
         "com.netflix.nebula:nebula-dependency-base-plugin": {
-            "locked": "0.3.0",
+            "locked": "0.3.2",
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-gradle-interop": {
@@ -79,7 +79,7 @@
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.4.0",
+            "locked": "6.4.4",
             "requested": "6.+"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
@@ -97,7 +97,7 @@
             "requested": "2.9.2"
         },
         "com.netflix.nebula:nebula-dependency-base-plugin": {
-            "locked": "0.3.0",
+            "locked": "0.3.2",
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-gradle-interop": {
@@ -105,7 +105,7 @@
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.4.0",
+            "locked": "6.4.4",
             "requested": "6.+"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
@@ -127,7 +127,7 @@
             "requested": "5.0.0"
         },
         "com.netflix.nebula:nebula-dependency-base-plugin": {
-            "locked": "0.3.0",
+            "locked": "0.3.2",
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-gradle-interop": {
@@ -135,7 +135,7 @@
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.4.0",
+            "locked": "6.4.4",
             "requested": "6.+"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
@@ -157,7 +157,7 @@
             "requested": "5.0.0"
         },
         "com.netflix.nebula:nebula-dependency-base-plugin": {
-            "locked": "0.3.0",
+            "locked": "0.3.2",
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-gradle-interop": {
@@ -165,7 +165,7 @@
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.4.0",
+            "locked": "6.4.4",
             "requested": "6.+"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
@@ -211,7 +211,7 @@
             "requested": "2.9.2"
         },
         "com.netflix.nebula:nebula-dependency-base-plugin": {
-            "locked": "0.3.0",
+            "locked": "0.3.2",
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-gradle-interop": {
@@ -233,7 +233,7 @@
             "requested": "2.9.2"
         },
         "com.netflix.nebula:nebula-dependency-base-plugin": {
-            "locked": "0.3.0",
+            "locked": "0.3.2",
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-gradle-interop": {
@@ -255,7 +255,7 @@
             "requested": "2.9.2"
         },
         "com.netflix.nebula:nebula-dependency-base-plugin": {
-            "locked": "0.3.0",
+            "locked": "0.3.2",
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-gradle-interop": {
@@ -263,7 +263,7 @@
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.4.0",
+            "locked": "6.4.4",
             "requested": "6.+"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
@@ -281,7 +281,7 @@
             "requested": "2.9.2"
         },
         "com.netflix.nebula:nebula-dependency-base-plugin": {
-            "locked": "0.3.0",
+            "locked": "0.3.2",
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-gradle-interop": {
@@ -289,7 +289,7 @@
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.4.0",
+            "locked": "6.4.4",
             "requested": "6.+"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
@@ -311,7 +311,7 @@
             "requested": "5.0.0"
         },
         "com.netflix.nebula:nebula-dependency-base-plugin": {
-            "locked": "0.3.0",
+            "locked": "0.3.2",
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-gradle-interop": {
@@ -319,7 +319,7 @@
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.4.0",
+            "locked": "6.4.4",
             "requested": "6.+"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
@@ -341,7 +341,7 @@
             "requested": "5.0.0"
         },
         "com.netflix.nebula:nebula-dependency-base-plugin": {
-            "locked": "0.3.0",
+            "locked": "0.3.2",
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-gradle-interop": {
@@ -349,7 +349,7 @@
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.4.0",
+            "locked": "6.4.4",
             "requested": "6.+"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {

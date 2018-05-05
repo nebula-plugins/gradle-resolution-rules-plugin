@@ -19,7 +19,6 @@ package nebula.plugin.resolutionrules
 import nebula.test.IntegrationSpec
 import nebula.test.dependencies.DependencyGraphBuilder
 import nebula.test.dependencies.GradleDependencyGenerator
-import nebula.test.dependencies.ModuleBuilder
 
 class AlignRulesMultiprojectSpec extends IntegrationSpec {
     def rulesJsonFile
@@ -95,7 +94,7 @@ class AlignRulesMultiprojectSpec extends IntegrationSpec {
         '''.stripIndent()
 
         when:
-        def results = runTasksSuccessfully(':b:dependencies', '--configuration', 'compile')
+        def results = runTasksSuccessfully(':b:dependencies', '--configuration', 'compile', '--warning-mode=none')
 
         then:
         results.standardOutput.contains('\\--- project :a\n')
@@ -130,7 +129,7 @@ class AlignRulesMultiprojectSpec extends IntegrationSpec {
         '''.stripIndent()
 
         when:
-        def results = runTasksSuccessfully(':a:dependencies', ':b:dependencies', 'assemble')
+        def results = runTasksSuccessfully(':a:dependencies', ':b:dependencies', 'assemble', '--warning-mode=none')
 
         then:
         noExceptionThrown()
@@ -188,7 +187,7 @@ class AlignRulesMultiprojectSpec extends IntegrationSpec {
         """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully(':a:dependencies', '--configuration', 'compile')
+        def result = runTasksSuccessfully(':a:dependencies', '--configuration', 'compile', '--warning-mode=none')
 
         then:
         result.standardOutput.contains '+--- other.nebula:a:1.0.0 -> 1.1.0'
@@ -255,7 +254,7 @@ class AlignRulesMultiprojectSpec extends IntegrationSpec {
         """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully(':a:dependencies', '--configuration', 'compile')
+        def result = runTasksSuccessfully(':a:dependencies', '--configuration', 'compile', '--warning-mode=none')
 
         then:
         result.standardOutput.contains '+--- other.nebula:a:1.0.0 -> 1.1.0'
