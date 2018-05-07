@@ -215,7 +215,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
         """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully(':a:dependencies', '--configuration', 'compile', '--warning-mode=none')
+        def result = runTasksSuccessfully(':a:dependencies', '--configuration', 'compile')
 
         then:
         result.standardOutput.contains '\\--- test.a:a -> 1.42.2\n'
@@ -572,7 +572,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
         '''.stripIndent())
 
         when:
-        def results = runTasksSuccessfully(':a:dependencies', ':b:dependencies', 'assemble', '--warning-mode=none')
+        def results = runTasksSuccessfully(':a:dependencies', ':b:dependencies', 'assemble')
 
         then:
         noExceptionThrown()
@@ -865,7 +865,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
         """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully(':app:dependencies', '--configuration', 'compile', '--warning-mode=none')
+        def result = runTasksSuccessfully(':app:dependencies', '--configuration', 'compile')
 
         then:
         result.standardOutput.contains '|    +--- test.nebula:b FAILED'
@@ -953,7 +953,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
         """.stripIndent()
 
         when:
-        def result = runTasks(':app:dependencies', '--configuration', 'compile', '--warning-mode=none')
+        def result = runTasks(':app:dependencies', '--configuration', 'compile')
 
         then:
         result.standardOutput.contains '|    +--- test.nebula:b FAILED'
