@@ -94,7 +94,7 @@ class AlignRulesMultiprojectSpec extends IntegrationSpec {
         '''.stripIndent()
 
         when:
-        def results = runTasksSuccessfully(':b:dependencies', '--configuration', 'compile', '--warning-mode=none')
+        def results = runTasksSuccessfully(':b:dependencies', '--configuration', 'compile')
 
         then:
         results.standardOutput.contains('\\--- project :a\n')
@@ -129,7 +129,7 @@ class AlignRulesMultiprojectSpec extends IntegrationSpec {
         '''.stripIndent()
 
         when:
-        def results = runTasksSuccessfully(':a:dependencies', ':b:dependencies', 'assemble', '--warning-mode=none')
+        def results = runTasksSuccessfully(':a:dependencies', ':b:dependencies', 'assemble')
 
         then:
         noExceptionThrown()
@@ -187,7 +187,7 @@ class AlignRulesMultiprojectSpec extends IntegrationSpec {
         """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully(':a:dependencies', '--configuration', 'compile', '--warning-mode=none')
+        def result = runTasksSuccessfully(':a:dependencies', '--configuration', 'compile')
 
         then:
         result.standardOutput.contains '+--- other.nebula:a:1.0.0 -> 1.1.0'
@@ -254,7 +254,7 @@ class AlignRulesMultiprojectSpec extends IntegrationSpec {
         """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully(':a:dependencies', '--configuration', 'compile', '--warning-mode=none')
+        def result = runTasksSuccessfully(':a:dependencies', '--configuration', 'compile')
 
         then:
         result.standardOutput.contains '+--- other.nebula:a:1.0.0 -> 1.1.0'
