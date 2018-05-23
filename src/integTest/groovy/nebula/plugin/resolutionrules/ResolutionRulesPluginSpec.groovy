@@ -419,15 +419,6 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
         result.standardOutput.contains("Selection of com.google.guava:guava:16.0.1 rejected by component selection rule: Rejected by resolution rule reject-dependency-with-selector - Just a Guava release that happens to have a patch release")
     }
 
-    def 'configurations with no dependencies are skipped'() {
-        when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
-
-        then:
-        result.standardOutput.contains('Skipping dependency rules for configuration \':compile\' - No dependencies are configured')
-        result.standardOutput.contains('Skipping resolve rules for configuration \':compile\' - No dependencies are configured')
-    }
-
     def 'rules apply to detached configurations that have been added to the configurations container'() {
         given:
         buildFile << """

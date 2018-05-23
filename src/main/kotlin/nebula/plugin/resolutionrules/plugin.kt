@@ -78,7 +78,6 @@ class ResolutionRulesPlugin : Plugin<Project> {
             project.onExecute {
                 when {
                     config.state != Configuration.State.UNRESOLVED -> logger.warn("Dependency resolution rules will not be applied to $config, it was resolved before the project was executed")
-                    config.allDependencies.isEmpty() -> logger.debug("Skipping dependency rules for $config - No dependencies are configured")
                     else -> {
                         ruleSet.dependencyRules().forEach { rule ->
                             rule.apply(project, config, config.resolutionStrategy, extension, insight)
@@ -89,9 +88,7 @@ class ResolutionRulesPlugin : Plugin<Project> {
             }
 
             config.onResolve {
-                if (config.allDependencies.isEmpty()) {
-                    logger.debug("Skipping resolve rules for $config - No dependencies are configured")
-                } else if (!dependencyRulesApplied) {
+                if (!dependencyRulesApplied) {
                     logger.debug("Skipping resolve rules for $config - dependency rules have not been applied")
                 } else {
                     ruleSet.resolveRules().forEach { rule ->
