@@ -16,3 +16,4 @@
  */
 
 rootProject.name = 'gradle-resolution-rules-plugin'
+enableFeaturePreview("STABLE_PUBLISHING")
