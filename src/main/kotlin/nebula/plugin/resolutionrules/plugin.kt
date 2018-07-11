@@ -46,6 +46,7 @@ class ResolutionRulesPlugin : Plugin<Project> {
     private lateinit var extension: NebulaResolutionRulesExtension
     private lateinit var mapper: ObjectMapper
     private lateinit var insight: DependencyManagement
+    private var reasons: MutableSet<String> = mutableSetOf()
 
     companion object Constants {
         const val SPRING_VERSION_MANAGEMENT_CONFIG_NAME = "versionManagement"
@@ -80,7 +81,7 @@ class ResolutionRulesPlugin : Plugin<Project> {
                     config.state != Configuration.State.UNRESOLVED -> logger.warn("Dependency resolution rules will not be applied to $config, it was resolved before the project was executed")
                     else -> {
                         ruleSet.dependencyRules().forEach { rule ->
-                            rule.apply(project, config, config.resolutionStrategy, extension, insight)
+                            rule.apply(project, config, config.resolutionStrategy, extension, insight, reasons)
                         }
                         dependencyRulesApplied = true
                     }
@@ -92,7 +93,7 @@ class ResolutionRulesPlugin : Plugin<Project> {
                     logger.debug("Skipping resolve rules for $config - dependency rules have not been applied")
                 } else {
                     ruleSet.resolveRules().forEach { rule ->
-                        rule.apply(project, config, config.resolutionStrategy, extension, insight)
+                        rule.apply(project, config, config.resolutionStrategy, extension, insight, reasons)
                     }
                 }
             }
@@ -103,7 +104,9 @@ class ResolutionRulesPlugin : Plugin<Project> {
         val rules = LinkedHashMap<String, RuleSet>()
         val files = extension.ruleFiles(project)
         for (file in files) {
-            insight.addPluginMessage("nebula.resolution-rules uses: ${file.name}")
+            val message = "nebula.resolution-rules uses: ${file.name}"
+            insight.addPluginMessage(message)
+            reasons.add(message)
             if (isIncludedRuleFile(file.name, extension)) {
                 rules.putRules(parseJsonFile(file))
             } else if (file.name.endsWith(JAR_EXT) || file.name.endsWith(ZIP_EXT)) {
