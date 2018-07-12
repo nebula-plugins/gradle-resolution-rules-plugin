@@ -638,7 +638,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
             buildscript {
                 repositories { jcenter() }
                 dependencies {
-                    classpath 'com.netflix.nebula:gradle-dependency-lock-plugin:4.3.0' // TODO: update this with the newest version
+                    classpath 'com.netflix.nebula:gradle-dependency-lock-plugin:6.0.0-rc.1'
                 }
             }
 

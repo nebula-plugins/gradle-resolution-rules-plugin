@@ -103,8 +103,8 @@
             "requested": "2.9.2"
         },
         "com.netflix.nebula:gradle-dependency-lock-plugin": {
-            "locked": "5.0.0",
-            "requested": "5.0.0"
+            "locked": "6.0.0-rc.1",
+            "requested": "6.0.0-rc.1"
         },
         "com.netflix.nebula:nebula-gradle-interop": {
             "locked": "0.5.0",
@@ -129,8 +129,8 @@
             "requested": "2.9.2"
         },
         "com.netflix.nebula:gradle-dependency-lock-plugin": {
-            "locked": "5.0.0",
-            "requested": "5.0.0"
+            "locked": "6.0.0-rc.1",
+            "requested": "6.0.0-rc.1"
         },
         "com.netflix.nebula:nebula-gradle-interop": {
             "locked": "0.5.0",
@@ -263,8 +263,8 @@
             "requested": "2.9.2"
         },
         "com.netflix.nebula:gradle-dependency-lock-plugin": {
-            "locked": "5.0.0",
-            "requested": "5.0.0"
+            "locked": "6.0.0-rc.1",
+            "requested": "6.0.0-rc.1"
         },
         "com.netflix.nebula:nebula-gradle-interop": {
             "locked": "0.5.0",
@@ -289,8 +289,8 @@
             "requested": "2.9.2"
         },
         "com.netflix.nebula:gradle-dependency-lock-plugin": {
-            "locked": "5.0.0",
-            "requested": "5.0.0"
+            "locked": "6.0.0-rc.1",
+            "requested": "6.0.0-rc.1"
         },
         "com.netflix.nebula:nebula-gradle-interop": {
             "locked": "0.5.0",
