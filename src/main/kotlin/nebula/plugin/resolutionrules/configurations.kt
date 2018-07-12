@@ -1,6 +1,5 @@
 package nebula.plugin.resolutionrules
 
-import com.netflix.nebula.dependencybase.DependencyManagement
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
@@ -35,8 +34,8 @@ fun Project.copyConfiguration(configuration: Configuration): CopiedConfiguration
     // Apply container register actions, without risking concurrently modifying the configuration container
     val eventRegister = configurations.javaClass.getDeclaredMethod("getEventRegister").invoke(configurations)
     @Suppress("UNCHECKED_CAST")
-    val addAction = eventRegister.javaClass.getDeclaredMethod("getAddAction").invoke(eventRegister) as Action<Configuration>
-    addAction.execute(copy)
+    val addActions = eventRegister.javaClass.getDeclaredMethod("getAddActions").invoke(eventRegister) as Action<Configuration>
+    addActions.execute(copy)
 
     // Hacky workaround to prevent Gradle from attempting to resolve a project dependency as an external dependency
     copy.exclude(this.group.toString(), this.name)
@@ -46,12 +45,6 @@ fun Project.copyConfiguration(configuration: Configuration): CopiedConfiguration
 
 val Configuration.isCopy: Boolean
     get() = description?.endsWith(COPY_DESCRIPTION_SUFFIX) ?: false
-
-fun DependencyManagement.addReason(configuration: Configuration, coordinate: String, message: String) {
-    if (!configuration.isCopy) {
-        addReason(configuration.name, coordinate, message, "nebula.resolution-rules")
-    }
-}
 
 fun Configuration.setName(name: String) {
     setField("name", name)

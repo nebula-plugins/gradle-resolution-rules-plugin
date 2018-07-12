@@ -18,8 +18,6 @@ package nebula.plugin.resolutionrules
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.netflix.nebula.dependencybase.DependencyBasePlugin
-import com.netflix.nebula.dependencybase.DependencyManagement
 import com.netflix.nebula.interop.onExecute
 import com.netflix.nebula.interop.onResolve
 import org.gradle.api.Plugin
@@ -45,7 +43,7 @@ class ResolutionRulesPlugin : Plugin<Project> {
     private lateinit var configurations: ConfigurationContainer
     private lateinit var extension: NebulaResolutionRulesExtension
     private lateinit var mapper: ObjectMapper
-    private lateinit var insight: DependencyManagement
+    private var reasons: MutableSet<String> = mutableSetOf()
 
     companion object Constants {
         const val SPRING_VERSION_MANAGEMENT_CONFIG_NAME = "versionManagement"
@@ -57,9 +55,7 @@ class ResolutionRulesPlugin : Plugin<Project> {
 
     override fun apply(project: Project) {
         this.project = project
-        project.plugins.apply(DependencyBasePlugin::class.java)
         configurations = project.configurations
-        insight = project.extensions.extraProperties.get("nebulaDependencyBase") as DependencyManagement
         extension = project.extensions.create("nebulaResolutionRules", NebulaResolutionRulesExtension::class.java)
         mapper = objectMapper()
 
@@ -80,7 +76,7 @@ class ResolutionRulesPlugin : Plugin<Project> {
                     config.state != Configuration.State.UNRESOLVED -> logger.warn("Dependency resolution rules will not be applied to $config, it was resolved before the project was executed")
                     else -> {
                         ruleSet.dependencyRules().forEach { rule ->
-                            rule.apply(project, config, config.resolutionStrategy, extension, insight)
+                            rule.apply(project, config, config.resolutionStrategy, extension, reasons)
                         }
                         dependencyRulesApplied = true
                     }
@@ -92,7 +88,7 @@ class ResolutionRulesPlugin : Plugin<Project> {
                     logger.debug("Skipping resolve rules for $config - dependency rules have not been applied")
                 } else {
                     ruleSet.resolveRules().forEach { rule ->
-                        rule.apply(project, config, config.resolutionStrategy, extension, insight)
+                        rule.apply(project, config, config.resolutionStrategy, extension, reasons)
                     }
                 }
             }
@@ -103,7 +99,8 @@ class ResolutionRulesPlugin : Plugin<Project> {
         val rules = LinkedHashMap<String, RuleSet>()
         val files = extension.ruleFiles(project)
         for (file in files) {
-            insight.addPluginMessage("nebula.resolution-rules uses: ${file.name}")
+            val message = "nebula.resolution-rules uses: ${file.name}"
+            reasons.add(message)
             if (isIncludedRuleFile(file.name, extension)) {
                 rules.putRules(parseJsonFile(file))
             } else if (file.name.endsWith(JAR_EXT) || file.name.endsWith(ZIP_EXT)) {

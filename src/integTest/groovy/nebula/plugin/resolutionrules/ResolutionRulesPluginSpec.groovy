@@ -202,7 +202,7 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
         def result = runTasksSuccessfully('dependencyInsight', '--configuration', 'compile', '--dependency', 'asm')
 
         then:
-        result.standardOutput.contains('org.ow2.asm:asm:5.0.4 (replacement asm:asm -> org.ow2.asm:asm)')
+        result.standardOutput.contains('org.ow2.asm:asm:5.0.4') // (replacement asm:asm -> org.ow2.asm:asm)') FIXME: update this with Gradle 4.9.1
     }
 
     def "module is not replaced if the replacement isn't in the configuration"() {
@@ -344,7 +344,8 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
         then:
         def rootCause = StackTraceUtils.extractRootCause(result.failure)
         rootCause.class.simpleName == 'DependencyDeniedException'
-        rootCause.message == "Dependency com.google.guava:guava:19.0-rc2 denied by dependency rule: Guava 19.0-rc2 is not permitted"
+        rootCause.message.contains("Dependency com.google.guava:guava:19.0-rc2 denied by dependency rule: Guava 19.0-rc2 is not permitted")
+        rootCause.message.findAll("with reasons: nebula.resolution-rules uses: .*.json, nebula.resolution-rules uses: .*.json").size() > 0
 
         where:
         configuration      | inherited
@@ -367,7 +368,8 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
         then:
         def rootCause = StackTraceUtils.extractRootCause(result.failure)
         rootCause.class.simpleName == 'DependencyDeniedException'
-        rootCause.message == "Dependency com.sun.jersey:jersey-bundle denied by dependency rule: jersey-bundle is a fat jar that includes non-relocated (shaded) third party classes, which can cause duplicated classes on the classpath. Please specify the jersey- libraries you need directly"
+        rootCause.message.contains("Dependency com.sun.jersey:jersey-bundle denied by dependency rule: jersey-bundle is a fat jar that includes non-relocated (shaded) third party classes, which can cause duplicated classes on the classpath. Please specify the jersey- libraries you need directly")
+        rootCause.message.findAll("with reasons: nebula.resolution-rules uses: .*.json, nebula.resolution-rules uses: .*.json").size() > 0
 
         where:
         configuration      | inherited

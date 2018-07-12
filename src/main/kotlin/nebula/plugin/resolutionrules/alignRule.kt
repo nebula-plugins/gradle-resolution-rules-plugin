@@ -1,7 +1,9 @@
 package nebula.plugin.resolutionrules
 
-import com.netflix.nebula.dependencybase.DependencyManagement
-import com.netflix.nebula.interop.*
+import com.netflix.nebula.interop.VersionWithSelector
+import com.netflix.nebula.interop.selectedId
+import com.netflix.nebula.interop.selectedModuleVersion
+import com.netflix.nebula.interop.selectedVersion
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.artifacts.*
@@ -11,6 +13,7 @@ import org.gradle.api.artifacts.component.ModuleComponentSelector
 import org.gradle.api.artifacts.result.ComponentSelectionCause
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.artifacts.result.UnresolvedDependencyResult
+import org.gradle.api.internal.artifacts.DefaultModuleIdentifier
 import org.gradle.api.internal.artifacts.DefaultModuleVersionIdentifier
 import org.gradle.api.internal.artifacts.DefaultModuleVersionSelector
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.LatestVersionSelector
@@ -38,7 +41,7 @@ data class AlignRule(val name: String?,
                        configuration: Configuration,
                        resolutionStrategy: ResolutionStrategy,
                        extension: NebulaResolutionRulesExtension,
-                       insight: DependencyManagement) {
+                       reasons: MutableSet<String>) {
         throw UnsupportedOperationException("Align rules are not applied directly")
     }
 
@@ -58,7 +61,7 @@ data class AlignRule(val name: String?,
 }
 
 data class AlignRules(val aligns: List<AlignRule>) : Rule {
-    lateinit var insight: DependencyManagement
+    lateinit var reasons: MutableSet<String>
 
     companion object {
         val logger: Logger = Logging.getLogger(AlignRules::class.java)
@@ -66,8 +69,8 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
         const val MAX_PASSES = 5
     }
 
-    override fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension, insight: DependencyManagement) {
-        this.insight = insight
+    override fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension, reasons: MutableSet<String>) {
+        this.reasons = reasons
         if (configuration.isCopy) {
             // Don't attempt to align one of our copied configurations
             return
@@ -129,7 +132,7 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
                         if (VersionWithSelector(selector.version).asSelector().isDynamic) {
                             selectedModuleVersion
                         } else {
-                            DefaultModuleVersionIdentifier(selector.group, selector.module, selector.version)
+                            DefaultModuleVersionIdentifier.newId(selector.group, selector.module, selector.version)
                         }
                     } else {
                         selectedModuleVersion
@@ -240,9 +243,10 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
                 if (version.stringVersion != details.target.version) {
                     if (finalConfiguration) {
                         logger.debug("Resolution rule $rule aligning ${details.requested.group}:${details.requested.name} to $version")
-                        insight.addReason(configuration, "${details.requested.group}:${details.requested.name}", "aligned to $version by ${rule.ruleSet}")
                     }
-                    details.useVersion("(,$version]")
+                    details.because("aligned to $version by ${rule.ruleSet}\n" +
+                            "\twith reasons: ${reasons.joinToString()}")
+                            .useVersion("(,$version]")
                 }
             }
         }
@@ -264,7 +268,8 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
                 it is ExternalDependency && it.isForce && it.group == moduleVersion.group && it.name == moduleVersion.name
             }
         }.map {
-            DefaultModuleVersionSelector.newSelector(it.group, it.name, it.version)
+            val moduleIdentifier = DefaultModuleIdentifier.newId(it.group, it.name)
+            DefaultModuleVersionSelector.newSelector(moduleIdentifier, it.version)
         }
 
         val forced = forcedModules + forcedDependencies
@@ -274,7 +279,7 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
                     .partition { it.asSelector().isDynamic }
             return if (static.isNotEmpty()) {
                 val forcedVersion = static.min()!!
-                logger.debug("Found force(s) $forced that supersede resolution rule $rule. Will use $forcedVersion")
+                logger.debug("Found force(s) $forced that supersede resolution rule $rule. Will use $forcedVersion") // FIXME: What about locks?
                 forcedVersion
             } else {
                 val mostSpecific = dynamic.minBy {
@@ -290,7 +295,7 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
                 } else {
                     versions.filter { mostSpecific.asSelector().accept(it.stringVersion) }.max()!!
                 }
-                logger.debug("Found force(s) $forced that supersede resolution rule $rule. Will use highest dynamic version $forcedVersion that matches most specific selector $mostSpecific")
+                logger.debug("Found force(s) $forced that supersede resolution rule $rule. Will use highest dynamic version $forcedVersion that matches most specific selector $mostSpecific") // FIXME: What about locks?
                 forcedVersion
             }
         }
