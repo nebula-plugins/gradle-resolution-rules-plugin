@@ -13,6 +13,7 @@ import org.gradle.api.artifacts.component.ModuleComponentSelector
 import org.gradle.api.artifacts.result.ComponentSelectionCause
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.artifacts.result.UnresolvedDependencyResult
+import org.gradle.api.internal.artifacts.DefaultModuleIdentifier
 import org.gradle.api.internal.artifacts.DefaultModuleVersionIdentifier
 import org.gradle.api.internal.artifacts.DefaultModuleVersionSelector
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.LatestVersionSelector
@@ -267,7 +268,8 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
                 it is ExternalDependency && it.isForce && it.group == moduleVersion.group && it.name == moduleVersion.name
             }
         }.map {
-            DefaultModuleVersionSelector.newSelector(it.group, it.name, it.version)
+            val moduleIdentifier = DefaultModuleIdentifier.newId(it.group, it.name)
+            DefaultModuleVersionSelector.newSelector(moduleIdentifier, it.version)
         }
 
         val forced = forcedModules + forcedDependencies
