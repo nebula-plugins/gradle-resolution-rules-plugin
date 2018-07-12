@@ -1,6 +1,5 @@
 package nebula.plugin.resolutionrules
 
-import com.netflix.nebula.dependencybase.DependencyManagement
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
@@ -46,12 +45,6 @@ fun Project.copyConfiguration(configuration: Configuration): CopiedConfiguration
 
 val Configuration.isCopy: Boolean
     get() = description?.endsWith(COPY_DESCRIPTION_SUFFIX) ?: false
-
-fun DependencyManagement.addReason(configuration: Configuration, coordinate: String, message: String) {
-    if (!configuration.isCopy) {
-        addReason(configuration.name, coordinate, message, "nebula.resolution-rules")
-    }
-}
 
 fun Configuration.setName(name: String) {
     setField("name", name)

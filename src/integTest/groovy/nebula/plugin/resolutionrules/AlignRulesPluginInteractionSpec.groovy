@@ -638,7 +638,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
             buildscript {
                 repositories { jcenter() }
                 dependencies {
-                    classpath 'com.netflix.nebula:gradle-dependency-lock-plugin:4.3.0'
+                    classpath 'com.netflix.nebula:gradle-dependency-lock-plugin:4.3.0' // TODO: update this with the newest version
                 }
             }
 
@@ -663,8 +663,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
 
         then:
         results.standardOutput.contains 'test.nebula:a:1.41.5 -> 1.42.2\n'
-        results.standardOutput.contains 'nebula.dependency-lock locked with: dependencies.lock\n'
-        results.standardOutput.contains 'nebula.resolution-rules uses: resolution-rules-1.0.0.jar\n'
+        results.standardOutput.contains 'nebula.resolution-rules uses: resolution-rules-1.0.0.jar'
     }
 
     def 'dependency-lock when applied after wins out over new alignment rules'() {

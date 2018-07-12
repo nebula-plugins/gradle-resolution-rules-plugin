@@ -1,6 +1,5 @@
 package nebula.plugin.resolutionrules
 
-import com.netflix.nebula.dependencybase.DependencyManagement
 import com.netflix.nebula.interop.VersionWithSelector
 import com.netflix.nebula.interop.selectedId
 import com.netflix.nebula.interop.selectedModuleVersion
@@ -41,7 +40,6 @@ data class AlignRule(val name: String?,
                        configuration: Configuration,
                        resolutionStrategy: ResolutionStrategy,
                        extension: NebulaResolutionRulesExtension,
-                       insight: DependencyManagement,
                        reasons: MutableSet<String>) {
         throw UnsupportedOperationException("Align rules are not applied directly")
     }
@@ -62,7 +60,6 @@ data class AlignRule(val name: String?,
 }
 
 data class AlignRules(val aligns: List<AlignRule>) : Rule {
-    lateinit var insight: DependencyManagement
     lateinit var reasons: MutableSet<String>
 
     companion object {
@@ -71,8 +68,7 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
         const val MAX_PASSES = 5
     }
 
-    override fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension, insight: DependencyManagement, reasons: MutableSet<String>) {
-        this.insight = insight
+    override fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension, reasons: MutableSet<String>) {
         this.reasons = reasons
         if (configuration.isCopy) {
             // Don't attempt to align one of our copied configurations
