@@ -2,8 +2,6 @@ package nebula.plugin.resolutionrules
 
 import nebula.test.dependencies.DependencyGraphBuilder
 import nebula.test.dependencies.GradleDependencyGenerator
-import org.gradle.internal.impldep.com.amazonaws.util.Throwables
-import org.gradle.internal.resolve.ModuleVersionNotFoundException
 import spock.lang.Unroll
 
 class AlignRulesDirectDependenciesSpec extends AbstractAlignRulesSpec {
@@ -268,8 +266,6 @@ class AlignRulesDirectDependenciesSpec extends AbstractAlignRulesSpec {
 
     @Unroll('unresolvable dependencies caused by alignment do not cause #tasks to fail')
     def 'unresolvable dependencies caused by alignment do not cause the build to fail'() {
-        debug = true
-
         rulesJsonFile << '''\
             {
                 "deny": [], "reject": [], "substitute": [], "replace": [],

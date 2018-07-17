@@ -78,7 +78,8 @@ class SubsituteRulesSpec extends IntegrationSpec {
         def result = runTasksSuccessfully('dependencyInsight', '--configuration', 'compile', '--dependency', 'bcprov-jdk15')
 
         then:
-        result.standardOutput.contains('org.bouncycastle:bcprov-jdk15:latest.release') // (substitution because The latest version of BC is required, using the new coordinate)') FIXME: update this with Gradle 4.9.1
+        result.standardOutput.contains('org.bouncycastle:bcprov-jdk15:latest.release')
+        result.standardOutput.contains('substitution because The latest version of BC is required, using the new coordinate')
     }
 
     def 'substitute dependency with version'() {

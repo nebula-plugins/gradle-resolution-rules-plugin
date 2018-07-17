@@ -300,7 +300,6 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
 
     def 'can align a transitive dependency with direct and use substitution to downgrade'() {
         given:
-        debug = true
         def graph = new DependencyGraphBuilder()
                 .addModule(new ModuleBuilder('test.nebula:a:1.0.0').addDependency('test.nebula:b:1.0.0').build())
                 .addModule(new ModuleBuilder('test.nebula:a:1.1.0').addDependency('test.nebula:b:1.1.0').build())

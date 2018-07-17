@@ -19,7 +19,6 @@ package nebula.plugin.resolutionrules
 
 import nebula.test.IntegrationSpec
 import org.codehaus.groovy.runtime.StackTraceUtils
-import org.gradle.api.logging.LogLevel
 import spock.lang.Issue
 import spock.lang.Unroll
 
@@ -130,8 +129,6 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
                                         ]
                                     }
                                  """
-
-        logLevel = LogLevel.DEBUG
     }
 
     def 'plugin applies'() {
@@ -163,6 +160,7 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
                      """.stripIndent()
 
         when:
+        logLevel = logLevel.DEBUG
         def result = runTasksSuccessfully('dependencies')
 
         then:
@@ -189,7 +187,7 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
         result.standardOutput.contains('asm:asm:3.3.1 -> org.ow2.asm:asm:5.0.4')
     }
 
-    def 'replace moduled is shown by dependencyInsight'() {
+    def 'replaced module is shown by dependencyInsight'() {
         given:
         buildFile << """
                      dependencies {
@@ -202,7 +200,13 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
         def result = runTasksSuccessfully('dependencyInsight', '--configuration', 'compile', '--dependency', 'asm')
 
         then:
-        result.standardOutput.contains('org.ow2.asm:asm:5.0.4') // (replacement asm:asm -> org.ow2.asm:asm)') FIXME: update this with Gradle 4.9.1
+        // reasons
+        result.standardOutput.contains('replacement asm:asm -> org.ow2.asm:asm')
+        result.standardOutput.contains('asm:asm:3.3.1 -> org.ow2.asm:asm:5.0.4')
+        result.standardOutput.contains('with reasons: nebula.resolution-rules uses:')
+
+        // final result
+        result.standardOutput.findAll('Task.*\n.*org.ow2.asm:asm:5.0.4').size() > 0
     }
 
     def "module is not replaced if the replacement isn't in the configuration"() {
