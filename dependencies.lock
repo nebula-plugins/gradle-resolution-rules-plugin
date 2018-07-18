@@ -63,7 +63,7 @@
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.4.5",
+            "locked": "6.7.1",
             "requested": "6.+"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
@@ -85,7 +85,7 @@
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.4.5",
+            "locked": "6.7.1",
             "requested": "6.+"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
@@ -111,7 +111,7 @@
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.4.5",
+            "locked": "6.7.1",
             "requested": "6.+"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
@@ -137,7 +137,7 @@
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.4.5",
+            "locked": "6.7.1",
             "requested": "6.+"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
@@ -223,7 +223,7 @@
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.4.5",
+            "locked": "6.7.1",
             "requested": "6.+"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
@@ -245,7 +245,7 @@
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.4.5",
+            "locked": "6.7.1",
             "requested": "6.+"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
@@ -271,7 +271,7 @@
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.4.5",
+            "locked": "6.7.1",
             "requested": "6.+"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
@@ -297,7 +297,7 @@
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "6.4.5",
+            "locked": "6.7.1",
             "requested": "6.+"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
