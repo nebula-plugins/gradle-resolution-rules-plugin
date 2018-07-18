@@ -638,7 +638,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
             buildscript {
                 repositories { jcenter() }
                 dependencies {
-                    classpath 'com.netflix.nebula:gradle-dependency-lock-plugin:6.0.0-rc.1'
+                    classpath 'com.netflix.nebula:gradle-dependency-lock-plugin:6.0.0'
                 }
             }
 
@@ -673,7 +673,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
             buildscript {
                 repositories { jcenter() }
                 dependencies {
-                    classpath 'com.netflix.nebula:gradle-dependency-lock-plugin:4.3.0'
+                    classpath 'com.netflix.nebula:gradle-dependency-lock-plugin:6.0.0'
                 }
             }
 
@@ -718,7 +718,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
             buildscript {
                 repositories { jcenter() }
                 dependencies {
-                    classpath 'com.netflix.nebula:gradle-dependency-lock-plugin:4.9.4'
+                    classpath 'com.netflix.nebula:gradle-dependency-lock-plugin:6.0.0'
                 }
             }
 
@@ -971,7 +971,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
             buildscript {
                 repositories { jcenter() }
                 dependencies {
-                    classpath 'com.netflix.nebula:gradle-dependency-lock-plugin:4.3.0'
+                    classpath 'com.netflix.nebula:gradle-dependency-lock-plugin:6.0.0'
                 }
             }
 
