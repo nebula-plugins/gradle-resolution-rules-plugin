@@ -3,6 +3,7 @@ package nebula.plugin.resolutionrules
 import nebula.test.dependencies.DependencyGraphBuilder
 import nebula.test.dependencies.GradleDependencyGenerator
 import nebula.test.dependencies.ModuleBuilder
+import spock.lang.Ignore
 import spock.lang.Issue
 
 class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
@@ -356,5 +357,159 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
         then:
         result.output.contains '+--- test.nebula:a:1.0.0 -> 1.1.0'
         result.output.contains '\\--- test.nebula:b:1.2.0 -> 1.1.0'
+    }
+
+    def 'alignment of group 1 upgrades and introduces a new dependencies contributing to alignment of group 2'() {
+        given:
+        debug = true
+        def graph = new DependencyGraphBuilder()
+                .addModule(new ModuleBuilder("test.another:newlyIntroducedParentModule:1.0.0")
+                .addDependency("test.group2:module1:3.0.0").build())
+                .addModule("test.group2:module2:3.0.0")
+                .addModule(new ModuleBuilder("test.another2:module1:1.0.0")
+                .addDependency("test.group2:module2:2.0.0").build())
+                .addModule(new ModuleBuilder('test.group1:module1:2.0.0').build())
+                .addModule(new ModuleBuilder('test.group1:module2:1.0.0')
+                .addDependency("test.group2:module1:1.0.0").build())
+                .addModule(new ModuleBuilder('test.group1:module3:1.0.0')
+                .addDependency("test.group2:module2:2.0.0").build())
+                .addModule(new ModuleBuilder('test.group1:module2:2.0.0')
+                .addDependency("test.group2:module1:1.0.0")
+                .addDependency("test.another2:module1:1.0.0").build())
+                .addModule(new ModuleBuilder('test.group1:module3:2.0.0')
+                .addDependency("test.another:newlyIntroducedParentModule:1.0.0").build())
+                .build()
+
+        File mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
+
+        rulesJsonFile << '''\
+            {
+                "deny": [], "reject": [],
+                "substitute": [], "replace": [],
+                "align": [
+                    {
+                        "name": "testGroup1",
+                        "group": "test.group1",
+                        "reason": "Align test.group1 dependencies",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    },
+                    {
+                        "name": "testGroup2",
+                        "group": "test.group2",
+                        "reason": "Align test.group2 dependencies",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    }
+                ]
+            }
+        '''.stripIndent()
+
+        buildFile << """\
+            repositories {
+                maven { url '${mavenrepo.absolutePath}' }
+            }
+            dependencies {
+                compile 'test.group1:module1:2.0.0'
+                compile 'test.group1:module2:1.0.0'
+                compile 'test.group1:module3:1.0.0'
+            }
+        """.stripIndent()
+
+        when:
+        def result = runTasks('dependencies', '--configuration', 'compile')
+
+        then:
+        result.output.contains '|    +--- test.group2:module1:1.0.0 -> 3.0.0'
+        result.output.contains '|         \\--- test.group2:module2:2.0.0 -> 3.0.0'
+        result.output.contains '          \\--- test.group2:module1:3.0.0'
+    }
+
+    /* This test is currently failing due unfixed bug in alignment rule implementation. We decided not to invest into
+     * fix because the problem is a relative edge case and we will rather focus on migration to Gradle core alignment
+     * implementation. The test is kept here so we can try this case on top of the new implementation.
+     * */
+    @Ignore
+    def 'alignment of group 1 upgrades and introduces a new dependencies contributing to alignment of group 2 and substitution still takes effect'() {
+        given:
+        debug = true
+        def graph = new DependencyGraphBuilder()
+                .addModule(new ModuleBuilder("test.another:newlyIntroducedParentModule:1.0.0")
+                .addDependency("test.group2:module1:3.0.0").build())
+                .addModule("test.group2:module1:1.1.0")
+                .addModule("test.group2:module1:2.0.0")
+                .addModule(new ModuleBuilder("test.another2:module1:1.0.0")
+                .addDependency("test.group2:module2:2.0.0").build())
+                .addModule(new ModuleBuilder('test.group1:module1:2.0.0').build())
+                .addModule(new ModuleBuilder('test.group1:module2:1.0.0')
+                .addDependency("test.group2:module1:1.0.0").build())
+                .addModule(new ModuleBuilder('test.group1:module3:1.0.0')
+                .addDependency("test.group2:module2:1.1.0").build())
+                .addModule(new ModuleBuilder('test.group1:module2:2.0.0')
+                .addDependency("test.group2:module1:1.0.0")
+                .addDependency("test.another2:module1:1.0.0").build())
+                .addModule(new ModuleBuilder('test.group1:module3:2.0.0')
+                .addDependency("test.another:newlyIntroducedParentModule:1.0.0").build())
+                .build()
+
+        File mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
+
+        rulesJsonFile << '''\
+            {
+                "deny": [], "reject": [],
+                "substitute": [
+                    {
+                        "module": "test.group2:module1:[3.0.0,)",
+                        "with": "test.group2:module1:2.0.0",
+                        "reason": "Downgrade",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    },
+                    {
+                        "module": "test.group2:module2:[3.0.0,)",
+                        "with": "test.group2:module2:2.0.0",
+                        "reason": "Downgrade",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    }
+             
+                ], "replace": [],
+                "align": [
+                    {
+                        "name": "testGroup1",
+                        "group": "test.group1",
+                        "reason": "Align test.group1 dependencies",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    },
+                    {
+                        "name": "testGroup2",
+                        "group": "test.group2",
+                        "reason": "Align test.group2 dependencies",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    }
+                ]
+            }
+        '''.stripIndent()
+
+        buildFile << """\
+            repositories {
+                maven { url '${mavenrepo.absolutePath}' }
+            }
+            dependencies {
+                compile 'test.group1:module1:2.0.0'
+                compile 'test.group1:module2:1.0.0'
+                compile 'test.group1:module3:1.0.0'
+            }
+        """.stripIndent()
+
+        when:
+        def result = runTasks('dependencies', '--configuration', 'compile')
+
+        then:
+        result.output.contains '|    +--- test.group2:module1:1.0.0 -> 2.0.0'
+        result.output.contains '|         \\--- test.group2:module2:2.0.0'
+        result.output.contains '          \\--- test.group2:module1:3.0.0 -> 2.0.0'
     }
 }
