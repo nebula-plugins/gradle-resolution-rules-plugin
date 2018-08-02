@@ -42,7 +42,13 @@ data class AlignRule(val name: String?,
                        resolutionStrategy: ResolutionStrategy,
                        extension: NebulaResolutionRulesExtension,
                        reasons: MutableSet<String>) {
-        throw UnsupportedOperationException("Align rules are not applied directly")
+        //TODO this rule is applied repeatedly for each configuration. Ideally it should be taken out and
+        //applied only once per project
+        project.dependencies.components.all { details: ComponentMetadataDetails ->
+            if (ruleMatches(details.id)) {
+                details.belongsTo("$name:aligned-platform:${details.id.version}")
+            }
+        }
     }
 
     fun ruleMatches(dep: ModuleVersionIdentifier) = ruleMatches(dep.group, dep.name)
@@ -275,7 +281,7 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
         val forced = forcedModules + forcedDependencies
         if (forced.isNotEmpty()) {
             val (dynamic, static) = forced
-                    .mapToSet { VersionWithSelector(it.version) }
+                    .mapToSet { VersionWithSelector(it.version !!) }
                     .partition { it.asSelector().isDynamic }
             return if (static.isNotEmpty()) {
                 val forcedVersion = static.min()!!
