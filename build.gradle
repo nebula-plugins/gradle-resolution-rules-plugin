@@ -58,6 +58,10 @@ gradlePlugin {
     }
 }
 
+tasks.integrationTest {
+    forkEvery = 1
+}
+
 pluginBundle {
     plugins {
         resolutionRules {

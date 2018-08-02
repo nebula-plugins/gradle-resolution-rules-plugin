@@ -46,6 +46,7 @@ class ResolutionRulesPlugin : Plugin<Project> {
     private var reasons: MutableSet<String> = mutableSetOf()
 
     companion object Constants {
+        val CORE_ALIGNMENT_SUPPORT_ENABLED = java.lang.Boolean.getBoolean("nebula.features.coreAlignmentSupport")
         const val SPRING_VERSION_MANAGEMENT_CONFIG_NAME = "versionManagement"
         const val JSON_EXT = ".json"
         const val JAR_EXT = ".jar"

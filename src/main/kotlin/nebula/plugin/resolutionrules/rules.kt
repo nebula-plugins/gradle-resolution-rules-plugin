@@ -50,9 +50,17 @@ data class RuleSet(
         val exclude: List<ExcludeRule> = emptyList(),
         val align: List<AlignRule> = emptyList()) {
 
-    fun dependencyRules() = listOf(replace, substitute, reject, deny, exclude).flatten()
+    fun dependencyRules() =
+            if (ResolutionRulesPlugin.CORE_ALIGNMENT_SUPPORT_ENABLED)
+                listOf(replace, substitute, reject, deny, exclude, align).flatten()
+            else
+                listOf(replace, substitute, reject, deny, exclude).flatten()
 
-    fun resolveRules() = listOf(AlignRules(align))
+    fun resolveRules() =
+            if (ResolutionRulesPlugin.CORE_ALIGNMENT_SUPPORT_ENABLED)
+                emptyList()
+            else
+                listOf(AlignRules(align))
 }
 
 fun RuleSet.withName(ruleSetName: String): RuleSet {
