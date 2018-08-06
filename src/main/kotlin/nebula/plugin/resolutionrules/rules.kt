@@ -61,11 +61,18 @@ data class RuleSet(
                 emptyList()
             else
                 listOf(AlignRules(align))
+
+    fun generateAlignmentBelongsToName() {
+        align.forEachIndexed { index, alignRule ->
+            alignRule.belongsToName = "$name-$index"
+        }
+    }
 }
 
 fun RuleSet.withName(ruleSetName: String): RuleSet {
     name = ruleSetName
     listOf(replace, substitute, reject, deny, exclude, align).flatten().forEach { it.ruleSet = ruleSetName }
+    generateAlignmentBelongsToName()
     return this
 }
 

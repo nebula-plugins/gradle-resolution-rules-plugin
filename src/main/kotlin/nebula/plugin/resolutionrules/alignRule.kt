@@ -32,7 +32,9 @@ data class AlignRule(val name: String?,
                      override var ruleSet: String?,
                      override val reason: String,
                      override val author: String,
-                     override val date: String) : BasicRule {
+                     override val date: String,
+                     var belongsToName: String?) : BasicRule {
+
     private var groupMatcher: Matcher? = null
     private lateinit var includesMatchers: List<Matcher>
     private lateinit var excludesMatchers: List<Matcher>
@@ -46,7 +48,7 @@ data class AlignRule(val name: String?,
         //applied only once per project
         project.dependencies.components.all { details: ComponentMetadataDetails ->
             if (ruleMatches(details.id)) {
-                details.belongsTo("$name:aligned-platform:${details.id.version}")
+                details.belongsTo("aligned-platform:$belongsToName:${details.id.version}")
             }
         }
     }
