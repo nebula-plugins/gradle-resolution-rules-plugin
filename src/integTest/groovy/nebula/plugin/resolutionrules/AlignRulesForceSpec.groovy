@@ -54,7 +54,7 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
 
         then:
         result.output.contains "Found force(s) [test.nebula:a:0.15.0] that supersede resolution rule"
-        result.output.contains "reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z). Will use 0.15.0"
+        result.output.contains "reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z, belongsToName=alignment-uses-$name-forced-version-0). Will use 0.15.0"
         result.output.contains '+--- test.nebula:a:1.0.0 -> 0.15.0\n'
         result.output.contains '+--- test.nebula:b:1.0.0 -> 0.15.0\n'
         result.output.contains '+--- test.nebula:c:0.15.0\n'
@@ -174,7 +174,7 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
         def output = runTasks('dependencies', '--configuration', 'compile').output
 
         then:
-        output.contains('Found force(s) [test.nebula:a:latest.release, test.nebula:b:1.+, test.nebula:c:0.15.0] that supersede resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-outputs-warnings-and-honors-static-force-when-dynamic-forces-are-present, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z). Will use 0.15.0')
+        output.contains('Found force(s) [test.nebula:a:latest.release, test.nebula:b:1.+, test.nebula:c:0.15.0] that supersede resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-outputs-warnings-and-honors-static-force-when-dynamic-forces-are-present, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z, belongsToName=alignment-outputs-warnings-and-honors-static-force-when-dynamic-forces-are-present-0). Will use 0.15.0')
         output.contains '+--- test.nebula:a:2.0.0 -> 0.15.0\n'
         output.contains '+--- test.nebula:b:2.0.0 -> 0.15.0\n'
         output.contains '\\--- test.nebula:c:1.0.0 -> 0.15.0\n'
@@ -229,7 +229,7 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
         def output = runTasks('dependencies', '--configuration', 'compile').output
 
         then:
-        output.contains 'Found force(s) [test.nebula:a:latest.release] that supersede resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-with-latest-release-force, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z). Will use highest dynamic version 2.0.0 that matches most specific selector latest.release'
+        output.contains 'Found force(s) [test.nebula:a:latest.release] that supersede resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-with-latest-release-force, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z, belongsToName=alignment-with-latest-release-force-0). Will use highest dynamic version 2.0.0 that matches most specific selector latest.release'
         output.contains '+--- test.nebula:a:2.0.0\n'
         output.contains '+--- test.nebula:b:1.0.0 -> 2.0.0\n'
         output.contains '\\--- test.nebula:c:0.15.0 -> 2.0.0\n'
@@ -284,7 +284,7 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
         def output = runTasks('dependencies', '--configuration', 'compile').output
 
         then:
-        output.contains 'Found force(s) [test.nebula:a:1.+] that supersede resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-with-sub-version-force, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z). Will use highest dynamic version 1.0.0 that matches most specific selector 1.+'
+        output.contains 'Found force(s) [test.nebula:a:1.+] that supersede resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-with-sub-version-force, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z, belongsToName=alignment-with-sub-version-force-0). Will use highest dynamic version 1.0.0 that matches most specific selector 1.+'
         output.contains '+--- test.nebula:a:2.0.0 -> 1.0.0\n'
         output.contains '+--- test.nebula:b:1.0.0\n'
         output.contains '\\--- test.nebula:c:0.15.0 -> 1.0.0\n'
@@ -342,7 +342,7 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
         def output = runTasks('dependencies', '--configuration', 'compile').output
 
         then:
-        output.contains 'Found force(s) [test.nebula:a:latest.release, test.nebula:b:1.+, test.nebula:c:[1.0, 2.0)] that supersede resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-uses-most-specific-dynamic-version, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z). Will use highest dynamic version 1.0.0 that matches most specific selector [1.0, 2.0)'
+        output.contains 'Found force(s) [test.nebula:a:latest.release, test.nebula:b:1.+, test.nebula:c:[1.0, 2.0)] that supersede resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-uses-most-specific-dynamic-version, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z, belongsToName=alignment-uses-most-specific-dynamic-version-0). Will use highest dynamic version 1.0.0 that matches most specific selector [1.0, 2.0)'
         output.contains '+--- test.nebula:a:2.0.0 -> 1.0.0\n'
         output.contains '+--- test.nebula:b:1.0.0\n'
         output.contains '\\--- test.nebula:c:0.15.0 -> 1.0.0\n'
