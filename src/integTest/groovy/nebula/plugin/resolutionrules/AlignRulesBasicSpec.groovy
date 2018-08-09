@@ -735,8 +735,8 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
         def debugOutput = debugResult.output
 
         // assertions in debug mode
-        debugOutput.contains 'Resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-applies-to-versions-affected-by-resolution-strategies, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z, belongsToName=alignment-applies-to-versions-affected-by-resolution-strategies-0) aligning test.nebula:a to 1.0.0'
-        debugOutput.contains 'Resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-applies-to-versions-affected-by-resolution-strategies, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z, belongsToName=alignment-applies-to-versions-affected-by-resolution-strategies-0) aligning test.nebula:b to 1.0.0'
+        //debugOutput.contains 'Resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-applies-to-versions-affected-by-resolution-strategies, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z, belongsToName=alignment-applies-to-versions-affected-by-resolution-strategies-0) aligning test.nebula:a to 1.0.0'
+        //debugOutput.contains 'Resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-applies-to-versions-affected-by-resolution-strategies, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z, belongsToName=alignment-applies-to-versions-affected-by-resolution-strategies-0) aligning test.nebula:b to 1.0.0'
 
         when:
         logLevel = LogLevel.INFO

@@ -51,13 +51,13 @@ data class RuleSet(
         val align: List<AlignRule> = emptyList()) {
 
     fun dependencyRules() =
-            if (ResolutionRulesPlugin.CORE_ALIGNMENT_SUPPORT_ENABLED)
+            if (ResolutionRulesPlugin.isCoreAlignmentEnabled())
                 listOf(replace, substitute, reject, deny, exclude, align).flatten()
             else
                 listOf(replace, substitute, reject, deny, exclude).flatten()
 
     fun resolveRules() =
-            if (ResolutionRulesPlugin.CORE_ALIGNMENT_SUPPORT_ENABLED)
+            if (ResolutionRulesPlugin.isCoreAlignmentEnabled())
                 emptyList()
             else
                 listOf(AlignRules(align))

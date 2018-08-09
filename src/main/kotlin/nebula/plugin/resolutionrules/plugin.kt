@@ -46,7 +46,7 @@ class ResolutionRulesPlugin : Plugin<Project> {
     private var reasons: MutableSet<String> = mutableSetOf()
 
     companion object Constants {
-        val CORE_ALIGNMENT_SUPPORT_ENABLED = java.lang.Boolean.getBoolean("nebula.features.coreAlignmentSupport")
+        fun isCoreAlignmentEnabled() = java.lang.Boolean.getBoolean("nebula.features.coreAlignmentSupport")
         const val SPRING_VERSION_MANAGEMENT_CONFIG_NAME = "versionManagement"
         const val JSON_EXT = ".json"
         const val JAR_EXT = ".jar"
@@ -60,7 +60,7 @@ class ResolutionRulesPlugin : Plugin<Project> {
         extension = project.extensions.create("nebulaResolutionRules", NebulaResolutionRulesExtension::class.java)
         mapper = objectMapper()
 
-        if (CORE_ALIGNMENT_SUPPORT_ENABLED) {
+        if (isCoreAlignmentEnabled()) {
             logger.warn("${project.name}: coreAlignmentSupport feature enabled")
         }
 
