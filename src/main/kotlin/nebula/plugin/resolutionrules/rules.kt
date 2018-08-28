@@ -21,6 +21,7 @@ import com.netflix.nebula.interop.action
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.artifacts.*
+import org.gradle.api.artifacts.component.ComponentSelector
 import org.gradle.api.artifacts.component.ModuleComponentSelector
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
@@ -106,12 +107,21 @@ data class SubstituteRule(val module: String, val with: String, override var rul
         if (!withModuleId.hasVersion()) {
             throw SubstituteRuleMissingVersionException(withModuleId, this, reasons)
         }
+        val forces = ConfigurationService.forces(configuration)
+        val forceConflicts: List<ModuleVersionSelector> = forces.filter { it.matchesSelector(selector) }
+        if (forceConflicts.isNotEmpty()) {
+            throw SubstituteRuleConflictsWithForceException(forceConflicts.map { ModuleVersionIdentifier.valueOf(it.toString()) to configuration }.toSet(), configuration, this)
+        }
+
         val withSelector = substitution.module(withModuleId.toString()) as ModuleComponentSelector
 
         if (selector is ModuleComponentSelector) {
             resolutionStrategy.dependencySubstitution.all(action {
                 if (requested is ModuleComponentSelector) {
                     val requestedSelector = requested as ModuleComponentSelector
+                    if (forces.any { it.group == requestedSelector.group && it.name == requestedSelector.module }) {
+                        return@action
+                    }
                     if (requestedSelector.group == selector.group && requestedSelector.module == selector.module) {
                         val versionSelector = VersionWithSelector(selector.version).asSelector()
                         if (versionSelector.accept(requestedSelector.version)) {
@@ -192,6 +202,16 @@ class DependencyDeniedException(moduleId: ModuleVersionIdentifier, rule: DenyRul
 class SubstituteRuleMissingVersionException(moduleId: ModuleVersionIdentifier, rule: SubstituteRule, reasons: MutableSet<String>) : Exception("The dependency to be substituted ($moduleId) must have a version. Invalid rule: $rule\n" +
         "\twith reasons: ${reasons.joinToString()}")
 
+class SubstituteRuleConflictsWithForceException(conflicts: Set<Pair<ModuleVersionIdentifier, Configuration>>, configuration: Configuration, rule: SubstituteRule) :
+        Exception("CONFLICT: ${conflicts.map { it.first }.joinToString(",")} forced on $configuration%n\tsubstitution rule: ${rule.ruleSet} (reason: ${rule.reason})%n\tRemove or update force to fix".format())
+
 fun Configuration.exclude(group: String, module: String) {
     exclude(mapOf("group" to group, "module" to module))
+}
+
+fun ModuleVersionSelector.matchesSelector(selector: ComponentSelector): Boolean {
+    return when(selector) {
+        is ModuleComponentSelector -> group == selector.group && name == selector.module && VersionWithSelector(selector.version).asSelector().accept(version)
+        else -> false
+    }
 }

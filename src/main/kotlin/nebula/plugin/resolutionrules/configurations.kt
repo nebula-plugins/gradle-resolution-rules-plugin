@@ -3,6 +3,9 @@ package nebula.plugin.resolutionrules
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.artifacts.ExternalDependency
+import org.gradle.api.artifacts.ModuleVersionSelector
+import org.gradle.api.internal.artifacts.DefaultModuleVersionSelector
 import org.gradle.api.internal.artifacts.configurations.ConfigurationInternal
 import org.gradle.util.Path
 import java.lang.reflect.Field
@@ -82,3 +85,11 @@ tailrec fun <T> Class<T>.findDeclaredField(name: String): Field {
     throw IllegalArgumentException("Could not find field $name")
 }
 
+object ConfigurationService {
+    fun forces(configuration: Configuration): Set<ModuleVersionSelector> {
+        val resolutionStrategyForces = configuration.resolutionStrategy.forcedModules
+        val inlineForces = configuration.dependencies.filter { it is ExternalDependency && it.isForce }
+                .map { DefaultModuleVersionSelector(it.group, it.name, it.version) }
+        return resolutionStrategyForces + inlineForces
+    }
+}
