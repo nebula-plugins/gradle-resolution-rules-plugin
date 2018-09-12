@@ -18,6 +18,12 @@
 package nebula.plugin.resolutionrules
 
 import nebula.test.IntegrationSpec
+import nebula.test.dependencies.DependencyGraph
+import nebula.test.dependencies.DependencyGraphBuilder
+import nebula.test.dependencies.GradleDependencyGenerator
+import nebula.test.dependencies.maven.ArtifactType
+import nebula.test.dependencies.maven.Pom
+import nebula.test.dependencies.repositories.MavenRepo
 import org.codehaus.groovy.runtime.StackTraceUtils
 import spock.lang.Issue
 import spock.lang.Unroll
@@ -442,5 +448,99 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
 
         then:
         result.standardOutput.contains('FILES: 1')
+    }
+
+    def 'warning logged when configuration has been resolved'() {
+        given:
+        buildFile.text = """\
+             apply plugin: 'java'
+             apply plugin: 'nebula.resolution-rules'
+             repositories {
+                 jcenter()
+             }
+             dependencies {
+                 resolutionRules files("$rulesJsonFile", "$optionalRulesJsonFile")
+                 
+                 compile 'com.google.guava:guava:19.0'
+             }
+             
+             configurations.compile.resolve()
+             """.stripIndent()
+
+        when:
+        def result = runTasksSuccessfully()
+
+        then:
+        result.standardOutput.contains("Dependency resolution rules will not be applied to configuration ':compile', it was resolved before the project was executed")
+    }
+
+    def 'warning should not be logged when using nebulaRecommenderBom'() {
+        setup:
+        def nebulaBomResolutionRulesFile =  new File(projectDir, "nebulaRecommenderBom-test-rules.json")
+        nebulaBomResolutionRulesFile << """
+                        {
+                            "align": [
+                                {
+                                    "name": "foo",
+                                    "group": "example",
+                                    "reason": "Align foo",
+                                    "author": "Example Person <person@example.org>",
+                                    "date": "2018-02-17T20:21:20.368Z"
+                                },
+                                {
+                                    "name": "bar",
+                                    "group": "example",
+                                    "reason": "Align bar",
+                                    "author": "Example Person <person@example.org>",
+                                    "date": "2018-02-17T20:21:20.368Z"
+                                }
+                            ]
+                        }
+                        """.stripIndent()
+        MavenRepo repo = new MavenRepo()
+        repo.root = new File(projectDir, 'build/bomrepo')
+        Pom pom = new Pom('test.nebula.bom', 'testbom', '1.0.0', ArtifactType.POM)
+        pom.addManagementDependency('example', 'foo', '1.0.0')
+        pom.addManagementDependency('example', 'bar', '1.0.0')
+        repo.poms.add(pom)
+        repo.generate()
+        DependencyGraph depGraph = new DependencyGraphBuilder()
+                .addModule('example:foo:1.0.0')
+                .addModule('example:bar:1.0.0')
+                .build()
+        GradleDependencyGenerator generator = new GradleDependencyGenerator(depGraph)
+        generator.generateTestMavenRepo()
+
+        buildFile.text = """\
+             buildscript {
+                repositories { jcenter() }
+
+                dependencies {
+                    classpath 'com.netflix.nebula:nebula-dependency-recommender:7.0.1'
+                }
+             }
+
+             apply plugin: 'java'
+             apply plugin: 'nebula.dependency-recommender'
+             apply plugin: 'nebula.resolution-rules'
+             repositories {
+                 jcenter()
+                 maven { url '${repo.root.absoluteFile.toURI()}' }
+                 ${generator.mavenRepositoryBlock}                 
+             }
+             dependencies {
+                 resolutionRules files("$nebulaBomResolutionRulesFile")
+                 nebulaRecommenderBom 'test.nebula.bom:testbom:1.0.0@pom'
+                 compile group: 'com.google.guava', name: 'guava', version: '19.0'
+             }
+             
+             configurations.nebulaRecommenderBom.resolve()
+             """.stripIndent()
+
+        when:
+        def result = runTasksSuccessfully()
+
+        then:
+        !result.standardOutput.contains("Dependency resolution rules will not be applied to configuration ':nebulaRecommenderBom', it was resolved before the project was executed")
     }
 }
