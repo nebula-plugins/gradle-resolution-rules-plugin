@@ -38,7 +38,7 @@ class ResolutionRulesPlugin : Plugin<Project> {
     private val ruleSet: RuleSet by lazy {
         rulesFromConfiguration(project, extension)
     }
-
+    private val NEBULA_RECOMMENDER_BOM_CONFIG_NAME: String = "nebulaRecommenderBom"
     private lateinit var project: Project
     private lateinit var configurations: ConfigurationContainer
     private lateinit var extension: NebulaResolutionRulesExtension
@@ -76,9 +76,11 @@ class ResolutionRulesPlugin : Plugin<Project> {
             }
 
             var dependencyRulesApplied = false
+            var isNebulaRecommenderBom = config.name.contains(NEBULA_RECOMMENDER_BOM_CONFIG_NAME)
+
             project.onExecute {
                 when {
-                    config.state != Configuration.State.UNRESOLVED -> logger.warn("Dependency resolution rules will not be applied to $config, it was resolved before the project was executed")
+                    config.state != Configuration.State.UNRESOLVED && !isNebulaRecommenderBom -> logger.warn("Dependency resolution rules will not be applied to $config, it was resolved before the project was executed")
                     else -> {
                         ruleSet.dependencyRules().forEach { rule ->
                             rule.apply(project, config, config.resolutionStrategy, extension, reasons)
