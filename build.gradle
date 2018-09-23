@@ -16,8 +16,8 @@
  */
 
 plugins {
-    id 'nebula.plugin-plugin' version '8.1.0'
-    id 'nebula.kotlin' version '1.2.61'
+    id 'nebula.plugin-plugin' version '8.1.2'
+    id 'nebula.kotlin' version '1.2.70-3'
     id 'java-gradle-plugin'
 }
 
@@ -27,7 +27,7 @@ dependencies {
     compile 'com.fasterxml.jackson.module:jackson-module-kotlin:2.9.2'
 
     testImplementation gradleTestKit()
-    testRuntime 'com.netflix.nebula:gradle-dependency-lock-plugin:6.0.0'
+    testRuntime 'com.netflix.nebula:gradle-dependency-lock-plugin:6.+'
 }
 
 apply from: 'gradle/idea.gradle'
