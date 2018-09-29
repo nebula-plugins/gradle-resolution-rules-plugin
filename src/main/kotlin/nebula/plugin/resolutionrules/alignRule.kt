@@ -50,7 +50,6 @@ data class AlignRule(val name: String?,
                     details.belongsTo("aligned-platform:$belongsToName:${details.id.version}")
                 }
             }
-
         } else {
             project.dependencies.components.all(AlignedPlatformMetadataRule::class.java) {
                 it.params(this, belongsToName)
