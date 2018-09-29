@@ -44,7 +44,7 @@ data class AlignRule(val name: String?,
                        reasons: MutableSet<String>) {
         //TODO this rule is applied repeatedly for each configuration. Ideally it should be taken out and
         //applied only once per project
-        if(project.gradle.versionLessThan("4.10")) {
+        if(project.gradle.versionLessThan("5.0")) {
             project.dependencies.components.all(AlignedPlatformMetadataRule::class.java) {
                 it.params(this, belongsToName)
             }
