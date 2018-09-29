@@ -1,9 +1,6 @@
 package nebula.plugin.resolutionrules
 
-import com.netflix.nebula.interop.VersionWithSelector
-import com.netflix.nebula.interop.selectedId
-import com.netflix.nebula.interop.selectedModuleVersion
-import com.netflix.nebula.interop.selectedVersion
+import com.netflix.nebula.interop.*
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.artifacts.*
@@ -23,6 +20,7 @@ import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import java.util.*
 import java.util.regex.Matcher
+import javax.inject.Inject
 
 data class AlignRule(val name: String?,
                      val group: Regex,
@@ -46,9 +44,15 @@ data class AlignRule(val name: String?,
                        reasons: MutableSet<String>) {
         //TODO this rule is applied repeatedly for each configuration. Ideally it should be taken out and
         //applied only once per project
-        project.dependencies.components.all { details: ComponentMetadataDetails ->
-            if (ruleMatches(details.id)) {
-                details.belongsTo("aligned-platform:$belongsToName:${details.id.version}")
+        if(project.gradle.versionLessThan("4.10")) {
+            project.dependencies.components.all(AlignedPlatformMetadataRule::class.java) {
+                it.params(this, belongsToName)
+            }
+        } else {
+            project.dependencies.components.all { details: ComponentMetadataDetails ->
+                if (ruleMatches(details.id)) {
+                    details.belongsTo("aligned-platform:$belongsToName:${details.id.version}")
+                }
             }
         }
     }
@@ -65,6 +69,28 @@ data class AlignRule(val name: String?,
         return groupMatcher!!.matches(inputGroup) &&
                 (includes.isEmpty() || includesMatchers.any { it.matches(inputName) }) &&
                 (excludes.isEmpty() || excludesMatchers.none { it.matches(inputName) })
+    }
+}
+
+@CacheableRule
+class AlignedPlatformMetadataRule: ComponentMetadataRule {
+    val belongsToName : String?
+    val rule : AlignRule
+
+    @Inject
+    constructor(rule: AlignRule, belongsToName: String?) {
+        this.rule = rule
+        this.belongsToName = belongsToName
+    }
+
+    override fun execute(componentMetadataContext: ComponentMetadataContext?) {
+        modifyDetails(componentMetadataContext!!.details)
+    }
+
+    fun modifyDetails(details: ComponentMetadataDetails) {
+        if (rule.ruleMatches(details.id)) {
+            details.belongsTo("aligned-platform:$belongsToName:${details.id.version}")
+        }
     }
 }
 
