@@ -18,6 +18,7 @@ import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.SubVersi
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.VersionRangeSelector
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
+import java.io.Serializable
 import java.util.*
 import java.util.regex.Matcher
 import javax.inject.Inject
@@ -31,7 +32,7 @@ data class AlignRule(val name: String?,
                      override val reason: String,
                      override val author: String,
                      override val date: String,
-                     var belongsToName: String?) : BasicRule {
+                     var belongsToName: String?) : BasicRule, Serializable {
 
     private var groupMatcher: Matcher? = null
     private lateinit var includesMatchers: List<Matcher>
@@ -45,7 +46,7 @@ data class AlignRule(val name: String?,
         //TODO this rule is applied repeatedly for each configuration. Ideally it should be taken out and
         //applied only once per project
         project.dependencies.components.all(AlignedPlatformMetadataRule::class.java) {
-            it.params(this, belongsToName)
+            it.params(this)
         }
     }
 
@@ -66,13 +67,11 @@ data class AlignRule(val name: String?,
 
 @CacheableRule
 class AlignedPlatformMetadataRule: ComponentMetadataRule {
-    val belongsToName : String?
     val rule : AlignRule
 
     @Inject
-    constructor(rule: AlignRule, belongsToName: String?) {
+    constructor(rule: AlignRule) {
         this.rule = rule
-        this.belongsToName = belongsToName
     }
 
     override fun execute(componentMetadataContext: ComponentMetadataContext?) {
@@ -81,7 +80,7 @@ class AlignedPlatformMetadataRule: ComponentMetadataRule {
 
     fun modifyDetails(details: ComponentMetadataDetails) {
         if (rule.ruleMatches(details.id)) {
-            details.belongsTo("aligned-platform:$belongsToName:${details.id.version}")
+            details.belongsTo("aligned-platform:${rule.belongsToName}:${details.id.version}")
         }
     }
 }
