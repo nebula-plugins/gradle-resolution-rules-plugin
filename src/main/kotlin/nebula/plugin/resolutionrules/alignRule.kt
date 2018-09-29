@@ -1,9 +1,6 @@
 package nebula.plugin.resolutionrules
 
-import com.netflix.nebula.interop.VersionWithSelector
-import com.netflix.nebula.interop.selectedId
-import com.netflix.nebula.interop.selectedModuleVersion
-import com.netflix.nebula.interop.selectedVersion
+import com.netflix.nebula.interop.*
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.artifacts.*
@@ -21,8 +18,10 @@ import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.SubVersi
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.VersionRangeSelector
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
+import java.io.Serializable
 import java.util.*
 import java.util.regex.Matcher
+import javax.inject.Inject
 
 data class AlignRule(val name: String?,
                      val group: Regex,
@@ -33,7 +32,7 @@ data class AlignRule(val name: String?,
                      override val reason: String,
                      override val author: String,
                      override val date: String,
-                     var belongsToName: String?) : BasicRule {
+                     var belongsToName: String?) : BasicRule, Serializable {
 
     private var groupMatcher: Matcher? = null
     private lateinit var includesMatchers: List<Matcher>
@@ -46,10 +45,8 @@ data class AlignRule(val name: String?,
                        reasons: MutableSet<String>) {
         //TODO this rule is applied repeatedly for each configuration. Ideally it should be taken out and
         //applied only once per project
-        project.dependencies.components.all { details: ComponentMetadataDetails ->
-            if (ruleMatches(details.id)) {
-                details.belongsTo("aligned-platform:$belongsToName:${details.id.version}")
-            }
+        project.dependencies.components.all(AlignedPlatformMetadataRule::class.java) {
+            it.params(this)
         }
     }
 
@@ -65,6 +62,26 @@ data class AlignRule(val name: String?,
         return groupMatcher!!.matches(inputGroup) &&
                 (includes.isEmpty() || includesMatchers.any { it.matches(inputName) }) &&
                 (excludes.isEmpty() || excludesMatchers.none { it.matches(inputName) })
+    }
+}
+
+@CacheableRule
+class AlignedPlatformMetadataRule: ComponentMetadataRule {
+    val rule : AlignRule
+
+    @Inject
+    constructor(rule: AlignRule) {
+        this.rule = rule
+    }
+
+    override fun execute(componentMetadataContext: ComponentMetadataContext?) {
+        modifyDetails(componentMetadataContext!!.details)
+    }
+
+    fun modifyDetails(details: ComponentMetadataDetails) {
+        if (rule.ruleMatches(details.id)) {
+            details.belongsTo("aligned-platform:${rule.belongsToName}:${details.id.version}")
+        }
     }
 }
 
