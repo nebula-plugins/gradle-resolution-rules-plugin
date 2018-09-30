@@ -100,6 +100,9 @@ data class ReplaceRule(override val module: String, val with: String, override v
 
 data class SubstituteRule(val module: String, val with: String, override var ruleSet: String?, override val reason: String, override val author: String, override val date: String) : BasicRule {
     override fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension, reasons: MutableSet<String>) {
+        if(!configuration.isCanBeResolved) {
+            //return
+        }
         val substitution = resolutionStrategy.dependencySubstitution
         val selector = substitution.module(module)
         val withModuleId = ModuleVersionIdentifier.valueOf(with)

@@ -543,4 +543,108 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
         then:
         !result.standardOutput.contains("Dependency resolution rules will not be applied to configuration ':nebulaRecommenderBom', it was resolved before the project was executed")
     }
+
+    def 'should not fail if configuration is already resolved'() {
+        setup:
+        def nebulaBomResolutionRulesFile =  new File(projectDir, "nebulaRecommenderBom-test-rules.json")
+        nebulaBomResolutionRulesFile << """
+                        {
+                            "align": [
+                                {
+                                    "name": "foo",
+                                    "group": "example",
+                                    "reason": "Align foo",
+                                    "author": "Example Person <person@example.org>",
+                                    "date": "2018-02-17T20:21:20.368Z"
+                                },
+                                {
+                                    "name": "bar",
+                                    "group": "example",
+                                    "reason": "Align bar",
+                                    "author": "Example Person <person@example.org>",
+                                    "date": "2018-02-17T20:21:20.368Z"
+                                }
+                            ]
+                        }
+                        """.stripIndent()
+        MavenRepo repo = new MavenRepo()
+        repo.root = new File(projectDir, 'build/bomrepo')
+        Pom pom = new Pom('test.nebula.bom', 'testbom', '1.0.0', ArtifactType.POM)
+        pom.addManagementDependency('example', 'foo', '1.0.0')
+        pom.addManagementDependency('example', 'bar', '1.0.0')
+        repo.poms.add(pom)
+        repo.generate()
+        DependencyGraph depGraph = new DependencyGraphBuilder()
+                .addModule('example:foo:1.0.0')
+                .addModule('example:bar:1.0.0')
+                .build()
+        GradleDependencyGenerator generator = new GradleDependencyGenerator(depGraph)
+        generator.generateTestMavenRepo()
+
+
+        def dir = new File(projectDir, 'src/main/java/mypackage')
+        dir.mkdirs()
+        def main = new File(dir, "MyApplication.java")
+        main.text = '''\
+            package mypackage;
+                public class MyApplication {
+            
+                public static void main(String[] args) {
+                    System.out.println("Hello World!");
+                }
+            }
+            '''.stripIndent()
+
+        settingsFile << """
+            enableFeaturePreview('IMPROVED_POM_SUPPORT')
+        """
+        buildFile.text = """\
+             buildscript {
+                repositories { jcenter() }
+
+                dependencies {
+                    classpath 'com.netflix.nebula:nebula-dependency-recommender:7.0.1'
+                }
+             }
+
+             apply plugin: 'java'
+             apply plugin: 'nebula.dependency-recommender'
+             apply plugin: 'nebula.resolution-rules'
+             apply plugin: 'nebula.dependency-lock'
+
+             repositories {
+                 jcenter()
+                 maven { url '${repo.root.absoluteFile.toURI()}' }
+                 ${generator.mavenRepositoryBlock}                 
+             }
+             
+             dependencyRecommendations {
+                mavenBom module: 'test.nebula.bom:testbom:1.0.0@pom'
+             }
+
+             dependencies {
+                 resolutionRules files("$nebulaBomResolutionRulesFile")
+                 compile group: 'com.google.guava', name: 'guava', version: '19.0'
+             }
+                  
+             task printConfigurations {
+                doLast {
+                    project.configurations.each {
+                        println it.name
+                    }
+                    
+                }
+             }        
+             """.stripIndent()
+
+
+        when:
+        runTasksSuccessfully("generateLock", "saveLock")
+        def configurations = runTasksSuccessfully("printConfigurations").standardOutput
+        def result = runTasksSuccessfully("build")
+
+        then:
+        true
+    }
+
 }
