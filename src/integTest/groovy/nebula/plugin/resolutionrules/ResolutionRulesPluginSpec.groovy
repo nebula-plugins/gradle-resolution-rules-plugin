@@ -547,20 +547,15 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
     def 'should not fail if configuration is already resolved'() {
         setup:
         def nebulaBomResolutionRulesFile =  new File(projectDir, "nebulaRecommenderBom-test-rules.json")
+
+
         nebulaBomResolutionRulesFile << """
                         {
-                            "align": [
+                            "substitute": [
                                 {
-                                    "name": "foo",
-                                    "group": "example",
+                                    "module": "foo:1.0.0",
+                                    "with": "example:baz:1.0.0",
                                     "reason": "Align foo",
-                                    "author": "Example Person <person@example.org>",
-                                    "date": "2018-02-17T20:21:20.368Z"
-                                },
-                                {
-                                    "name": "bar",
-                                    "group": "example",
-                                    "reason": "Align bar",
                                     "author": "Example Person <person@example.org>",
                                     "date": "2018-02-17T20:21:20.368Z"
                                 }
@@ -577,6 +572,7 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
         DependencyGraph depGraph = new DependencyGraphBuilder()
                 .addModule('example:foo:1.0.0')
                 .addModule('example:bar:1.0.0')
+                .addModule('example:baz:1.0.0')
                 .build()
         GradleDependencyGenerator generator = new GradleDependencyGenerator(depGraph)
         generator.generateTestMavenRepo()
@@ -638,13 +634,11 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
              """.stripIndent()
 
 
-        when:
+        expect:
         runTasksSuccessfully("generateLock", "saveLock")
-        def configurations = runTasksSuccessfully("printConfigurations").standardOutput
-        def result = runTasksSuccessfully("build")
+        runTasksSuccessfully("printConfigurations").standardOutput.contains("nebulaRecommenderBom")
+        runTasksWithFailure("build")
 
-        then:
-        true
     }
 
 }
