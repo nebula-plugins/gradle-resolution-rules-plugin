@@ -44,6 +44,8 @@ class ResolutionRulesPlugin : Plugin<Project> {
     private lateinit var extension: NebulaResolutionRulesExtension
     private lateinit var mapper: ObjectMapper
     private var reasons: MutableSet<String> = mutableSetOf()
+    private val ignoredConfigurations = listOf(RESOLUTION_RULES_CONFIG_NAME, SPRING_VERSION_MANAGEMENT_CONFIG_NAME,
+            NEBULA_RECOMMENDER_BOM_CONFIG_NAME)
 
     companion object Constants {
         fun isCoreAlignmentEnabled() = java.lang.Boolean.getBoolean("nebula.features.coreAlignmentSupport")
@@ -71,16 +73,14 @@ class ResolutionRulesPlugin : Plugin<Project> {
         }
 
         project.configurations.all { config ->
-            if (config.name == RESOLUTION_RULES_CONFIG_NAME || config.name == SPRING_VERSION_MANAGEMENT_CONFIG_NAME) {
+            if (ignoredConfigurations.contains(config.name)) {
                 return@all
             }
 
             var dependencyRulesApplied = false
-            var isNebulaRecommenderBom = config.name.contains(NEBULA_RECOMMENDER_BOM_CONFIG_NAME)
-
             project.onExecute {
                 when {
-                    config.state != Configuration.State.UNRESOLVED && !isNebulaRecommenderBom -> logger.warn("Dependency resolution rules will not be applied to $config, it was resolved before the project was executed")
+                    config.state != Configuration.State.UNRESOLVED -> logger.warn("Dependency resolution rules will not be applied to $config, it was resolved before the project was executed")
                     else -> {
                         ruleSet.dependencyRules().forEach { rule ->
                             rule.apply(project, config, config.resolutionStrategy, extension, reasons)
