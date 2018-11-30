@@ -196,8 +196,8 @@ class AlignRulesDirectDependenciesSpec extends AbstractAlignRulesSpec {
         org.gradle.testkit.runner.BuildResult result = runTasksAndFail('assemble')
 
         then:
-        result.output.contains 'Could not resolve all files for configuration \':compileClasspath\'.\n' +
-                '> Could not find com.google.guava:guava:oops.'
+        result.output.contains("Could not resolve all files for configuration ':compileClasspath'.")
+        result.output.contains("Could not find com.google.guava:guava:oops.")
     }
 
     @Unroll('unresolvable dependencies do not cause #tasks to fail')
