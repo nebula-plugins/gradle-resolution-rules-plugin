@@ -9,7 +9,6 @@ class AlignRulesBasicWithCoreSpec extends AbstractAlignRulesSpec {
         debug = true
         new File("${projectDir}/gradle.properties").text = "systemProp.nebula.features.coreAlignmentSupport=true"
         settingsFile << """
-        enableFeaturePreview("IMPROVED_POM_SUPPORT")
         enableFeaturePreview("GRADLE_METADATA")
         """
     }
