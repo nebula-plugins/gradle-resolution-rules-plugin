@@ -99,7 +99,7 @@
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "7.1.4",
+            "locked": "7.1.5",
             "requested": "7.+"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
@@ -121,7 +121,7 @@
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "7.1.4",
+            "locked": "7.1.5",
             "requested": "7.+"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
@@ -143,7 +143,7 @@
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "7.1.4",
+            "locked": "7.1.5",
             "requested": "7.+"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
@@ -165,7 +165,7 @@
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "7.1.4",
+            "locked": "7.1.5",
             "requested": "7.+"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
@@ -191,7 +191,7 @@
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "7.1.4",
+            "locked": "7.1.5",
             "requested": "7.+"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
@@ -217,7 +217,7 @@
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "7.1.4",
+            "locked": "7.1.5",
             "requested": "7.+"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
@@ -296,7 +296,7 @@
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "7.1.4",
+            "locked": "7.1.5",
             "requested": "7.+"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
@@ -318,7 +318,7 @@
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "7.1.4",
+            "locked": "7.1.5",
             "requested": "7.+"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
@@ -340,7 +340,7 @@
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "7.1.4",
+            "locked": "7.1.5",
             "requested": "7.+"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
@@ -362,7 +362,7 @@
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "7.1.4",
+            "locked": "7.1.5",
             "requested": "7.+"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
@@ -388,7 +388,7 @@
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "7.1.4",
+            "locked": "7.1.5",
             "requested": "7.+"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
@@ -414,7 +414,7 @@
             "requested": "latest.release"
         },
         "com.netflix.nebula:nebula-test": {
-            "locked": "7.1.4",
+            "locked": "7.1.5",
             "requested": "7.+"
         },
         "org.jetbrains.kotlin:kotlin-reflect": {
