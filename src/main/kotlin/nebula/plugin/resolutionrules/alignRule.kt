@@ -65,7 +65,7 @@ data class AlignRule(val name: String?,
     }
 }
 
-@CacheableRule
+//@CacheableRule TODO: this is disable to test RealisedMavenModuleResolveMetadataSerializationHelper duplicate objects
 class AlignedPlatformMetadataRule: ComponentMetadataRule {
     val rule : AlignRule
 
