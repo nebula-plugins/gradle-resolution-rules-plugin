@@ -138,6 +138,7 @@ class AlignRuleMatcherTest extends Specification {
         then:
         IllegalArgumentException e = thrown()
         e.getMessage().contains('Failed to use ')
+        e.getMessage().contains("$alignRule")
     }
 
     @Test
@@ -156,6 +157,7 @@ class AlignRuleMatcherTest extends Specification {
         then:
         IllegalArgumentException e = thrown()
         e.getMessage().contains('Failed to use ')
+        e.getMessage().contains("$alignRule")
     }
 
 

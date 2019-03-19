@@ -57,29 +57,31 @@ data class AlignRule(val name: String?,
 
     fun ruleMatches(inputGroup: String, inputName: String): Boolean {
         if (groupMatcher == null) {
-            groupMatcher = safelyCreatesMatcher(group, inputGroup)
-            includesMatchers = includes.map { safelyCreatesMatcher(it, inputName) }
-            excludesMatchers = excludes.map { safelyCreatesMatcher(it, inputName) }
+            groupMatcher = safelyCreatesMatcher(group, inputGroup, "group")
+            includesMatchers = includes.map { safelyCreatesMatcher(it, inputName, "includes") }
+            excludesMatchers = excludes.map { safelyCreatesMatcher(it, inputName, "excludes") }
         }
 
-        return safelyMatches(groupMatcher!!, inputGroup) &&
-                (includes.isEmpty() || includesMatchers.any { safelyMatches(it, inputName) }) &&
-                (excludes.isEmpty() || excludesMatchers.none { safelyMatches(it, inputName) })
+        return safelyMatches(groupMatcher!!, inputGroup, "group") &&
+                (includes.isEmpty() || includesMatchers.any { safelyMatches(it, inputName, "includes") }) &&
+                (excludes.isEmpty() || excludesMatchers.none { safelyMatches(it, inputName, "excludes") })
     }
 
-    private fun safelyCreatesMatcher(it: Regex, input: String): Matcher {
+    private fun safelyCreatesMatcher(it: Regex, input: String, type: String): Matcher {
         return try {
             it.toPattern().matcher(input)
         } catch (e: Exception) {
-            throw java.lang.IllegalArgumentException("Failed to use regex '$it' to create matcher for '$input'")
+            throw java.lang.IllegalArgumentException("Failed to use regex '$it' from type '$type' to create matcher for '$input'\n" +
+                    "Rule: ${this}")
         }
     }
 
-    private fun safelyMatches(it: Matcher, inputName: String): Boolean {
+    private fun safelyMatches(it: Matcher, input: String, type: String): Boolean {
         return try {
-            it.matches(inputName)
+            it.matches(input)
         } catch (e: Exception) {
-            throw java.lang.IllegalArgumentException("Failed to use matcher '$it' to match '$inputName'")
+            throw java.lang.IllegalArgumentException("Failed to use matcher '$it' from type '$type' to match '$input'\n" +
+                    "Rule: ${this}")
         }
     }
 }
