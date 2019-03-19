@@ -1,6 +1,9 @@
 package nebula.plugin.resolutionrules
 
-import com.netflix.nebula.interop.*
+import com.netflix.nebula.interop.VersionWithSelector
+import com.netflix.nebula.interop.selectedId
+import com.netflix.nebula.interop.selectedModuleVersion
+import com.netflix.nebula.interop.selectedVersion
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.artifacts.*
@@ -54,20 +57,36 @@ data class AlignRule(val name: String?,
 
     fun ruleMatches(inputGroup: String, inputName: String): Boolean {
         if (groupMatcher == null) {
-            groupMatcher = group.toPattern().matcher(inputGroup)
-            includesMatchers = includes.map { it.toPattern().matcher(inputName) }
-            excludesMatchers = excludes.map { it.toPattern().matcher(inputName) }
+            groupMatcher = safelyCreatesMatcher(group, inputGroup)
+            includesMatchers = includes.map { safelyCreatesMatcher(it, inputName) }
+            excludesMatchers = excludes.map { safelyCreatesMatcher(it, inputName) }
         }
 
-        return groupMatcher!!.matches(inputGroup) &&
-                (includes.isEmpty() || includesMatchers.any { it.matches(inputName) }) &&
-                (excludes.isEmpty() || excludesMatchers.none { it.matches(inputName) })
+        return safelyMatches(groupMatcher!!, inputGroup) &&
+                (includes.isEmpty() || includesMatchers.any { safelyMatches(it, inputName) }) &&
+                (excludes.isEmpty() || excludesMatchers.none { safelyMatches(it, inputName) })
+    }
+
+    private fun safelyCreatesMatcher(it: Regex, input: String): Matcher {
+        return try {
+            it.toPattern().matcher(input)
+        } catch (e: Exception) {
+            throw java.lang.IllegalArgumentException("Failed to use regex '$it' to create matcher for '$input'")
+        }
+    }
+
+    private fun safelyMatches(it: Matcher, inputName: String): Boolean {
+        return try {
+            it.matches(inputName)
+        } catch (e: Exception) {
+            throw java.lang.IllegalArgumentException("Failed to use matcher '$it' to match '$inputName'")
+        }
     }
 }
 
 //@CacheableRule TODO: this is disable to test RealisedMavenModuleResolveMetadataSerializationHelper duplicate objects
-class AlignedPlatformMetadataRule: ComponentMetadataRule {
-    val rule : AlignRule
+class AlignedPlatformMetadataRule : ComponentMetadataRule {
+    val rule: AlignRule
 
     @Inject
     constructor(rule: AlignRule) {
@@ -190,7 +209,8 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
         val dependency = resolvedDependencies
                 .filter { it.from.moduleVersion?.module == newRoundDependency.from.moduleVersion?.module }
                 .map { it.selected }
-                .singleOrNull { it.moduleVersion?.module == newRoundDependency.selectedModuleVersion.module } ?: return true
+                .singleOrNull { it.moduleVersion?.module == newRoundDependency.selectedModuleVersion.module }
+                ?: return true
         val selectionReason = dependency.selectionReason
         return selectionReason
                 .descriptions
@@ -247,8 +267,7 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
         return withDependencies
     }
 
-    private fun CopiedConfiguration.applyAligns(alignedVersionsWithDependencies: List<AlignedVersionWithDependencies>)
-            = (this as Configuration).applyAligns(alignedVersionsWithDependencies) as CopiedConfiguration
+    private fun CopiedConfiguration.applyAligns(alignedVersionsWithDependencies: List<AlignedVersionWithDependencies>) = (this as Configuration).applyAligns(alignedVersionsWithDependencies) as CopiedConfiguration
 
     private fun Configuration.applyAligns(alignedVersionsWithDependencies: List<AlignedVersionWithDependencies>, finalConfiguration: Boolean = false): Configuration {
         alignedVersionsWithDependencies.map { it.alignedVersion }.let {
@@ -300,7 +319,7 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
         val forced = forcedModules + forcedDependencies
         if (forced.isNotEmpty()) {
             val (dynamic, static) = forced
-                    .mapToSet { VersionWithSelector(it.version !!) }
+                    .mapToSet { VersionWithSelector(it.version!!) }
                     .partition { it.asSelector().isDynamic }
             return if (static.isNotEmpty()) {
                 val forcedVersion = static.min()!!
