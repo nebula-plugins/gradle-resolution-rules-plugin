@@ -83,7 +83,18 @@ class ResolutionRulesPlugin : Plugin<Project> {
                 when {
                     config.state != Configuration.State.UNRESOLVED -> logger.warn("Dependency resolution rules will not be applied to $config, it was resolved before the project was executed")
                     else -> {
-                        ruleSet.dependencyRules().forEach { rule ->
+                        ruleSet.dependencyRulesPartOne().forEach { rule ->
+                            rule.apply(project, config, config.resolutionStrategy, extension, reasons)
+                        }
+
+                        if (isCoreAlignmentEnabled()) {
+                            val alignedPlatformRules = generateAlignedPlatformRules(ruleSet.align, ruleSet.substitute)
+                            alignedPlatformRules.forEach { rule ->
+                                rule.apply(project, config, config.resolutionStrategy, extension, reasons)
+                            }
+                        }
+
+                        ruleSet.dependencyRulesPartTwo().forEach { rule ->
                             rule.apply(project, config, config.resolutionStrategy, extension, reasons)
                         }
                         dependencyRulesApplied = true
@@ -103,11 +114,33 @@ class ResolutionRulesPlugin : Plugin<Project> {
         }
     }
 
+    private fun generateAlignedPlatformRules(alignRules: List<AlignRule>, substituteRules: List<SubstituteRule>): List<AlignedPlatformRule> {
+        val alignToSubstitutes: MutableMap<AlignRule, MutableList<SubstituteRule>> = mutableMapOf()
+        val forAlignedPlatform: MutableList<AlignedPlatformRule> = mutableListOf()
+
+        alignRules.forEach { alignRule ->
+            substituteRules.forEach { substituteRule ->
+                val substitution = ModuleVersionIdentifier.valueOf(substituteRule.module)
+                if (alignRule.ruleMatches(substitution.organization, substitution.name)) {
+                    if (!alignToSubstitutes.containsKey(alignRule)) {
+                        alignToSubstitutes[alignRule] = mutableListOf()
+                    }
+                    alignToSubstitutes[alignRule]!!.add(substituteRule)
+                }
+            }
+        }
+
+        alignToSubstitutes.forEach { (alignRule, listOfSubstituteRules) ->
+            forAlignedPlatform.add(AlignedPlatformRule(alignRule, listOfSubstituteRules))
+        }
+        return forAlignedPlatform
+    }
+
     private fun rulesFromConfiguration(project: Project, extension: NebulaResolutionRulesExtension): RuleSet {
         val rules = LinkedHashMap<String, RuleSet>()
         val files = extension.ruleFiles(project)
         for (file in files) {
-            val message = "nebula.resolution-rules uses: ${file.name}"
+            val message = "nebula.resolution-rules uses: ${file.name}" // TODO: reformat
             reasons.add(message)
             if (isIncludedRuleFile(file.name, extension)) {
                 rules.putRules(parseJsonFile(file))

@@ -3,7 +3,7 @@ package nebula.plugin.resolutionrules
 import nebula.test.IntegrationSpec
 import org.codehaus.groovy.runtime.StackTraceUtils
 
-class SubsituteRulesSpec extends IntegrationSpec {
+class SubstituteRulesSpec extends IntegrationSpec {
     File rulesJsonFile
 
     def setup() {
@@ -80,7 +80,7 @@ class SubsituteRulesSpec extends IntegrationSpec {
         then:
         !result.standardOutput.contains('org.bouncycastle:bcmail-jdk16:1.40')
         result.standardOutput.contains('org.bouncycastle:bcmail-jdk16:')
-        result.standardOutput.contains('substitution because The latest version of BC is required, using the new coordinate')
+        result.standardOutput.contains('The latest version of BC is required, using the new coordinate')
     }
 
     def 'substitute dependency with version'() {
