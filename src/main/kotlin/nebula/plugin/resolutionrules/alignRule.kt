@@ -5,6 +5,7 @@ import com.netflix.nebula.interop.selectedId
 import com.netflix.nebula.interop.selectedModuleVersion
 import com.netflix.nebula.interop.selectedVersion
 import org.gradle.api.Action
+import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.artifacts.*
 import org.gradle.api.artifacts.ModuleVersionIdentifier
@@ -299,53 +300,57 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
     }
 
     private fun alignedRange(rule: AlignRule, moduleVersions: List<ModuleVersionIdentifier>, configuration: Configuration): VersionWithSelector {
-        val versions = moduleVersions.mapToSet { VersionWithSelector(it.version) }
-        check(versions.all { !it.asSelector().isDynamic }) { "A dynamic version was included in $versions for $rule" }
-        val highestVersion = versions.max()!!
+        try {
+            val versions = moduleVersions.mapToSet { VersionWithSelector(it.version) }
+            check(versions.all { !it.asSelector().isDynamic }) { "A dynamic version was included in $versions for $rule" }
+            val highestVersion = versions.max()!!
 
-        val forcedModules = moduleVersions.flatMap { moduleVersion ->
-            configuration.resolutionStrategy.forcedModules.filter {
-                it.group == moduleVersion.group && it.name == moduleVersion.name
-            }
-        }
-
-        val forcedDependencies = moduleVersions.flatMap { moduleVersion ->
-            configuration.dependencies.filter {
-                it is ExternalDependency && it.isForce && it.group == moduleVersion.group && it.name == moduleVersion.name
-            }
-        }.map {
-            val moduleIdentifier = DefaultModuleIdentifier.newId(it.group, it.name)
-            DefaultModuleVersionSelector.newSelector(moduleIdentifier, it.version)
-        }
-
-        val forced = forcedModules + forcedDependencies
-        if (forced.isNotEmpty()) {
-            val (dynamic, static) = forced
-                    .mapToSet { VersionWithSelector(it.version!!) }
-                    .partition { it.asSelector().isDynamic }
-            return if (static.isNotEmpty()) {
-                val forcedVersion = static.min()!!
-                logger.debug("Found force(s) $forced that supersede resolution rule $rule. Will use $forcedVersion") // FIXME: What about locks?
-                forcedVersion
-            } else {
-                val mostSpecific = dynamic.minBy {
-                    when (it.asSelector().javaClass.kotlin) {
-                        LatestVersionSelector::class -> 2
-                        SubVersionSelector::class -> 1
-                        VersionRangeSelector::class -> 0
-                        else -> throw IllegalArgumentException("Unknown selector type $it")
-                    }
-                }!!
-                val forcedVersion = if (mostSpecific.asSelector() is LatestVersionSelector) {
-                    highestVersion
-                } else {
-                    versions.filter { mostSpecific.asSelector().accept(it.stringVersion) }.max()!!
+            val forcedModules = moduleVersions.flatMap { moduleVersion ->
+                configuration.resolutionStrategy.forcedModules.filter {
+                    it.group == moduleVersion.group && it.name == moduleVersion.name
                 }
-                logger.debug("Found force(s) $forced that supersede resolution rule $rule. Will use highest dynamic version $forcedVersion that matches most specific selector $mostSpecific") // FIXME: What about locks?
-                forcedVersion
             }
-        }
 
-        return highestVersion
+            val forcedDependencies = moduleVersions.flatMap { moduleVersion ->
+                configuration.dependencies.filter {
+                    it is ExternalDependency && it.isForce && it.group == moduleVersion.group && it.name == moduleVersion.name
+                }
+            }.map {
+                val moduleIdentifier = DefaultModuleIdentifier.newId(it.group, it.name)
+                DefaultModuleVersionSelector.newSelector(moduleIdentifier, it.version)
+            }
+
+            val forced = forcedModules + forcedDependencies
+            if (forced.isNotEmpty()) {
+                val (dynamic, static) = forced
+                        .mapToSet { VersionWithSelector(it.version!!) }
+                        .partition { it.asSelector().isDynamic }
+                return if (static.isNotEmpty()) {
+                    val forcedVersion = static.min()!!
+                    logger.debug("Found force(s) $forced that supersede resolution rule $rule. Will use $forcedVersion") // FIXME: What about locks?
+                    forcedVersion
+                } else {
+                    val mostSpecific = dynamic.minBy {
+                        when (it.asSelector().javaClass.kotlin) {
+                            LatestVersionSelector::class -> 2
+                            SubVersionSelector::class -> 1
+                            VersionRangeSelector::class -> 0
+                            else -> throw IllegalArgumentException("Unknown selector type $it")
+                        }
+                    }!!
+                    val forcedVersion = if (mostSpecific.asSelector() is LatestVersionSelector) {
+                        highestVersion
+                    } else {
+                        versions.filter { mostSpecific.asSelector().accept(it.stringVersion) }.max()!!
+                    }
+                    logger.debug("Found force(s) $forced that supersede resolution rule $rule. Will use highest dynamic version $forcedVersion that matches most specific selector $mostSpecific") // FIXME: What about locks?
+                    forcedVersion
+                }
+            }
+
+            return highestVersion
+        } catch (e: Exception) {
+            throw GradleException("Could not apply alignment rule ${rule.name} | Reason: ${e.message}", e)
+        }
     }
 }
