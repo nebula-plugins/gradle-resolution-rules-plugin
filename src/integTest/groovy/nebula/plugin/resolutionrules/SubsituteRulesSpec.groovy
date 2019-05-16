@@ -26,8 +26,8 @@ class SubsituteRulesSpec extends IntegrationSpec {
                         {
                             "substitute": [
                                 {
-                                    "module" : "bouncycastle:bcprov-jdk15",
-                                    "with" : "org.bouncycastle:bcprov-jdk15:latest.release",
+                                    "module" : "bouncycastle:bcmail-jdk16",
+                                    "with" : "org.bouncycastle:bcmail-jdk16:latest.release",
                                     "reason" : "The latest version of BC is required, using the new coordinate",
                                     "author" : "Danny Thomas <dmthomas@gmail.com>",
                                     "date" : "2015-10-07T20:21:20.368Z"
@@ -55,7 +55,7 @@ class SubsituteRulesSpec extends IntegrationSpec {
         given:
         buildFile << """
                      dependencies {
-                        compile 'bouncycastle:bcprov-jdk15:140'
+                        compile 'bouncycastle:bcmail-jdk16:1.40'
                      }
                      """.stripIndent()
 
@@ -63,22 +63,23 @@ class SubsituteRulesSpec extends IntegrationSpec {
         def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
 
         then:
-        result.standardOutput.contains('bouncycastle:bcprov-jdk15:140 -> org.bouncycastle:bcprov-jdk15:latest.release')
+        result.standardOutput.contains('bouncycastle:bcmail-jdk16:1.40 -> org.bouncycastle:bcmail-jdk16:')
     }
 
     def 'substitute details are shown by dependencyInsight'() {
         given:
         buildFile << """\
              dependencies {
-                compile 'bouncycastle:bcprov-jdk15:140'
+                compile 'bouncycastle:bcmail-jdk16:1.40'
              }
              """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencyInsight', '--configuration', 'compile', '--dependency', 'bcprov-jdk15')
+        def result = runTasksSuccessfully('dependencyInsight', '--configuration', 'compile', '--dependency', 'bcmail-jdk16')
 
         then:
-        result.standardOutput.contains('org.bouncycastle:bcprov-jdk15:latest.release')
+        !result.standardOutput.contains('org.bouncycastle:bcmail-jdk16:1.40')
+        result.standardOutput.contains('org.bouncycastle:bcmail-jdk16:')
         result.standardOutput.contains('substitution because The latest version of BC is required, using the new coordinate')
     }
 
