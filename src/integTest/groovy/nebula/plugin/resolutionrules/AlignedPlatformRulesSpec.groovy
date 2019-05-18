@@ -471,7 +471,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
     @Unroll
     def 'missing cases: statically defined dependency: core alignment fails to align when lower versions are missing | core alignment: #coreAlignment'() {
         given:
-        setupFortSubstitutionAndAlignmentCasesWithMissingVersions(subFromVersionAndModule, subToVersionAndModule, definedVersion)
+        setupForSubstitutionAndAlignmentCasesWithMissingVersions(subFromVersionAndModule, subToVersionAndModule, definedVersion)
 
         when:
         def result = runTasks(*tasks(coreAlignment))
@@ -495,7 +495,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
     @Unroll
     def 'missing cases: statically defined dependency: core alignment fails to align when higher versions are missing | core alignment: #coreAlignment'() {
         given:
-        setupFortSubstitutionAndAlignmentCasesWithMissingVersions(subFromVersionAndModule, subToVersionAndModule, definedVersion)
+        setupForSubstitutionAndAlignmentCasesWithMissingVersions(subFromVersionAndModule, subToVersionAndModule, definedVersion)
 
         when:
         def result = runTasks(*tasks(coreAlignment))
@@ -518,7 +518,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
     @Unroll
     def 'missing cases: dynamically defined dependency: core alignment fails to align when dependency definition and substitutions leave no viable versions | core alignment: #coreAlignment'() {
         given:
-        setupFortSubstitutionAndAlignmentCasesWithMissingVersions(subFromVersionAndModule, subToVersionAndModule, definedVersion)
+        setupForSubstitutionAndAlignmentCasesWithMissingVersions(subFromVersionAndModule, subToVersionAndModule, definedVersion)
 
         when:
         def result = runTasks(*tasks(coreAlignment))
@@ -541,7 +541,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
     @Unroll
     def 'missing cases: dynamically defined dependency: core alignment fails to align when dependency definition and substitutions leave no viable versions for some lower aligned dependencies | core alignment: #coreAlignment'() {
         given:
-        setupFortSubstitutionAndAlignmentCasesWithMissingVersions(subFromVersionAndModule, subToVersionAndModule, definedVersion)
+        setupForSubstitutionAndAlignmentCasesWithMissingVersions(subFromVersionAndModule, subToVersionAndModule, definedVersion)
 
         when:
         def result = runTasks(*tasks(coreAlignment))
@@ -564,7 +564,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
     @Unroll
     def 'missing cases: dynamically defined dependency: core alignment fails to align when dependency definition and substitutions leave no viable versions for some higher aligned dependencies | core alignment: #coreAlignment'() {
         given:
-        setupFortSubstitutionAndAlignmentCasesWithMissingVersions(subFromVersionAndModule, subToVersionAndModule, definedVersion)
+        setupForSubstitutionAndAlignmentCasesWithMissingVersions(subFromVersionAndModule, subToVersionAndModule, definedVersion)
 
         when:
         def result = runTasks(*tasks(coreAlignment))
@@ -587,7 +587,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
     @Unroll
     def 'missing cases: narrowly defined dynamic dependency: core alignment fails to align when dependency definition and substitutions leave no viable versions for some lower aligned dependencies | core alignment: #coreAlignment'() {
         given:
-        setupFortSubstitutionAndAlignmentCasesWithMissingVersions(subFromVersionAndModule, subToVersionAndModule, definedVersion)
+        setupForSubstitutionAndAlignmentCasesWithMissingVersions(subFromVersionAndModule, subToVersionAndModule, definedVersion)
 
         when:
         def result = runTasks(*tasks(coreAlignment))
@@ -610,7 +610,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
     @Unroll
     def 'missing cases: narrowly defined dynamic dependency: core alignment fails to align when dependency definition and substitutions leave no viable versions for some higher aligned dependencies | core alignment: #coreAlignment'() {
         given:
-        setupFortSubstitutionAndAlignmentCasesWithMissingVersions(subFromVersionAndModule, subToVersionAndModule, definedVersion)
+        setupForSubstitutionAndAlignmentCasesWithMissingVersions(subFromVersionAndModule, subToVersionAndModule, definedVersion)
 
         when:
         def result = runTasks(*tasks(coreAlignment))
@@ -1270,7 +1270,7 @@ dependencies {
             """.stripIndent()
     }
 
-    private def setupFortSubstitutionAndAlignmentCasesWithMissingVersions(String subFromVersionAndModule, String subToVersionAndModule, String definedVersion) {
+    private def setupForSubstitutionAndAlignmentCasesWithMissingVersions(String subFromVersionAndModule, String subToVersionAndModule, String definedVersion) {
         def module = "test.nebula:$subFromVersionAndModule"
         def with = "test.nebula:$subToVersionAndModule"
         createAlignAndSubstituteRule(module, with)

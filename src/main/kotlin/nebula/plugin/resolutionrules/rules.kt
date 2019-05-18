@@ -121,7 +121,7 @@ class AlignedPlatformRule(alignRule: AlignRule, substituteRules: MutableList<Sub
             resolvableDependencies.dependencies.forEach { dep ->
                 if (dep is ExternalModuleDependency) {
                     if (dep.group!! == substitutedModule.group) { // TODO: had been .startsWith() Which do we want?
-                        val usingDependencyRecommendation = dep.version == null
+                        val usingDependencyRecommendation = dep.version.isNullOrEmpty()
 
                         if (usingDependencyRecommendation) {
                             applyConstraintsToDependencyIfRecommendedVersionMatches(project, dep, substitutedModule, withSelector, logger, configuration)
