@@ -60,18 +60,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
                 .build()
         mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
 
-        buildFile << """
-            plugins {
-                id 'java'
-                id 'nebula.resolution-rules'
-            }
-            repositories {
-                maven { url '${projectDir.toPath().relativize(mavenrepo.toPath()).toFile()}' }
-            }
-            dependencies {
-                resolutionRules files("${projectDir.toPath().relativize(rulesJsonFile.toPath()).toFile()}")
-            }
-            """.stripIndent()
+        buildFile << baseBuildGradleFile()
 
         debug = true
         keepFiles = true
@@ -1256,6 +1245,25 @@ dependencies {
         true          | "1.0.0"    | false                                 | "1.0.1"             | "1.0.0"          | true
     }
 
+    private String baseBuildGradleFile(String additionalPlugin = '') {
+        def pluginToAdd = ''
+        if (additionalPlugin != '') {
+            pluginToAdd = "\n\tid $additionalPlugin"
+        }
+        """
+        plugins {
+            id 'java'
+            id 'nebula.resolution-rules'$pluginToAdd
+        }
+        repositories {
+            maven { url '${projectDir.toPath().relativize(mavenrepo.toPath()).toFile()}' }
+        }
+        dependencies {
+            resolutionRules files("${projectDir.toPath().relativize(rulesJsonFile.toPath()).toFile()}")
+        }
+        """.stripIndent()
+    }
+
     private def setupForSimplestSubstitutionAndAlignmentCases(String substituteFromVersion, String substituteToVersion, String dependencyDefinitionVersion) {
         def module = "test.nebula:b:$substituteFromVersion"
         def with = "test.nebula:b:$substituteToVersion"
@@ -1291,17 +1299,13 @@ dependencies {
 
         def bomRepo = createBom(["test.nebula:a:$bomVersion", "test.nebula:b:$bomVersion"])
 
-        def startingBuildFileContents = buildFile.text
         buildFile.text = ""
         buildFile << """
             buildscript {
                 repositories { jcenter() }
             }
-            plugins {
-                id 'nebula.dependency-recommender' version "7.5.5"
-            }
             """.stripIndent()
-        buildFile << startingBuildFileContents
+        buildFile << baseBuildGradleFile("'nebula.dependency-recommender' version '7.5.5\'")
 
 
         if (!usingEnforcedPlatform) {
