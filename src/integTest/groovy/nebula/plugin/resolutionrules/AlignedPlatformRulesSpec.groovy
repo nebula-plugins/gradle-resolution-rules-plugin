@@ -833,148 +833,63 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
     }
 
     @Unroll
-    def 'request a dynamic version and sub all versions higher than x and align | core alignment #coreAlignment'() {
+    def 'statically defined dependency: alignment styles substitute all versions higher than x and align | core alignment #coreAlignment'() {
         given:
         // based on https://github.com/nebula-plugins/gradle-nebula-integration/issues/50
-        rulesJsonFile << """
-            {
-                "align": [
-                    {
-                        "group": "com.google.inject",
-                        "reason": "Align guice",
-                        "author": "Example Person <person@example.org>",
-                        "date": "2016-03-17T20:21:20.368Z"
-                    }
-                ],
-                "substitute": [
-                    {
-                        "module" : "com.google.inject:guice:[4.2.0,)",
-                        "with" : "com.google.inject:guice:4.1.0",
-                        "reason" : "$reason",
-                        "author" : "Test user <test@example.com>",
-                        "date" : "2015-10-07T20:21:20.368Z"
-                    }
-                ]
-            }
-            """.stripIndent()
-
-        buildFile << """
-repositories {
-    mavenCentral()
-    maven {
-        url 'repo'
-    }
-}
-
-dependencies {
-    //at the time of writing resolves to 4.2.2
-    compile "com.google.inject:guice:4.+"
-    compile "sample:module:1.0"
-}
-"""
-
-        MavenRepo repo = new MavenRepo()
-        repo.root = new File(projectDir, 'repo')
-        Pom pom = new Pom('sample', 'module', '1.0', ArtifactType.POM)
-        pom.addDependency('com.google.inject.extensions', 'guice-grapher', '4.1.0')
-        repo.poms.add(pom)
-        repo.generate()
+        setupForGuiceAndLibraryDependency(definedVersion)
 
         when:
-        def result = runTasks(*tasks(coreAlignment, false, 'com.google.inject:guice'))
+        def result = runTasks(*tasks(coreAlignment, false, 'com.google.inject'))
 
         then:
-        if (coreAlignment) {
-            dependencyInsightContains(result.output, "com.google.inject", resultingVersion)
-        } else {
-            // since this test uses an external dependency that keeps incrementing, let's check that it just doesn't get the same result
-            def content = "com.google.inject:.*4.1.0\n"
-            assert result.output.findAll(content).size() == 0
-
-            // just make sure there's a value here for dependencyInsight
-            dependencyInsightContains(result.output, "com.google.inject", '')
-        }
+        dependencyInsightContains(result.output, "com.google.inject.extensions:guice-assistedinject", resultingVersion)
+        dependencyInsightContains(result.output, "com.google.inject.extensions:guice-grapher", resultingVersion)
+        dependencyInsightContains(result.output, "com.google.inject.extensions:guice-multibindings", resultingVersion)
+        dependencyInsightContains(result.output, "com.google.inject:guice", resultingVersion)
 
         if (coreAlignment) {
             assert result.output.contains("belongs to platform aligned-platform:rules-0:$resultingVersion")
         }
 
         where:
-        coreAlignment | resultingVersion
-        false         | '4.2.2'
-        true          | '4.1.0'
+        coreAlignment | definedVersion | resultingVersion
+        false         | '4.2.0'        | '4.1.0'
+        true          | '4.2.0'        | '4.1.0'
     }
 
     @Unroll
-    def 'request a dynamic version and sub version range used in transitive dep and align | core alignment #coreAlignment'() {
+    def 'dynamically defined dependency: core alignment substitutes all versions higher than x and aligns | core alignment #coreAlignment'() {
         given:
         // based on https://github.com/nebula-plugins/gradle-nebula-integration/issues/50
-        rulesJsonFile << """
-            {
-                "align": [
-                    {
-                        "group": "com.google.inject",
-                        "reason": "Align guice",
-                        "author": "Example Person <person@example.org>",
-                        "date": "2016-03-17T20:21:20.368Z"
-                    }
-                ],
-                "substitute": [
-                    {
-                        "module" : "com.google.inject:guice:[4.2.0,)",
-                        "with" : "com.google.inject:guice:4.1.0",
-                        "reason" : "$reason",
-                        "author" : "Test user <test@example.com>",
-                        "date" : "2015-10-07T20:21:20.368Z"
-                    }
-                ]
-            }
-            """.stripIndent()
-
-        buildFile << """
-repositories {
-    mavenCentral()
-    maven {
-        url 'repo'
-    }
-}
-
-dependencies {
-    //at the time of writing, 4.+ resolves to 4.2.1
-    compile "com.google.inject:guice:4.+"
-    compile "sample:module:1.0"
-}
-"""
-
-        MavenRepo repo = new MavenRepo()
-        repo.root = new File(projectDir, 'repo')
-        Pom pom = new Pom('sample', 'module', '1.0', ArtifactType.POM)
-        pom.addDependency('com.google.inject.extensions', 'guice-grapher', '4.2.0')
-        repo.poms.add(pom)
-        repo.generate()
+        setupForGuiceAndLibraryDependency(definedVersion)
 
         when:
-        def result = runTasks(*tasks(coreAlignment, false, 'com.google.inject:guice'))
+        def result = runTasks(*tasks(coreAlignment, false, 'com.google.inject'))
 
         then:
-        def resultingVersion = '4.1.0'
-        if (coreAlignment) {
-            dependencyInsightContains(result.output, "com.google.inject", resultingVersion)
-        } else {
+        dependencyInsightContains(result.output, "com.google.inject.extensions:guice-assistedinject", resultingAlignedVersion)
+        dependencyInsightContains(result.output, "com.google.inject.extensions:guice-grapher", resultingAlignedVersion)
+        dependencyInsightContains(result.output, "com.google.inject.extensions:guice-multibindings", resultingAlignedVersion)
+
+        if (resultingNonAlignedVersion != null) {
             // since this test uses an external dependency that keeps incrementing, let's check that it just doesn't get the same result
-            def content = "com.google.inject:.*4.1.0\n"
+            def content = "com.google.inject:guice:.*$resultingAlignedVersion\n"
             assert result.output.findAll(content).size() == 0
 
             // just make sure there's a value here for dependencyInsight
-            dependencyInsightContains(result.output, "com.google.inject", '')
+            dependencyInsightContains(result.output, "com.google.inject:guice", '')
+        } else {
+            dependencyInsightContains(result.output, "com.google.inject:guice", resultingAlignedVersion)
         }
 
         if (coreAlignment) {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0:$resultingVersion")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0:$resultingAlignedVersion")
         }
 
         where:
-        coreAlignment << [false, true]
+        coreAlignment | definedVersion | resultingAlignedVersion | resultingNonAlignedVersion
+        false         | '4.+'          | '4.1.0'                 | '4.2.2'
+        true          | '4.+'          | '4.1.0'                 | null
     }
 
     @Unroll
@@ -1331,6 +1246,52 @@ dependencies {
                  maven { url '${bomRepo.root.absoluteFile.toURI()}' }
             }
             """.stripIndent()
+    }
+
+    def setupForGuiceAndLibraryDependency(String definedVersion) {
+        rulesJsonFile << """
+            {
+                "align": [
+                    {
+                        "group": "com.google.inject",
+                        "reason": "Align guice",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    }
+                ],
+                "substitute": [
+                    {
+                        "module" : "com.google.inject:guice:[4.2.0,)",
+                        "with" : "com.google.inject:guice:4.1.0",
+                        "reason" : "$reason",
+                        "author" : "Test user <test@example.com>",
+                        "date" : "2015-10-07T20:21:20.368Z"
+                    }
+                ]
+            }
+            """.stripIndent()
+
+        buildFile << """
+repositories {
+    mavenCentral()
+    maven {
+        url 'repo'
+    }
+}
+
+dependencies {
+    //at the time of writing resolves to 4.2.2
+    compile "com.google.inject:guice:$definedVersion"
+    compile "sample:module:1.0"
+}
+"""
+
+        MavenRepo repo = new MavenRepo()
+        repo.root = new File(projectDir, 'repo')
+        Pom pom = new Pom('sample', 'module', '1.0', ArtifactType.POM)
+        pom.addDependency('com.google.inject.extensions', 'guice-grapher', '4.1.0')
+        repo.poms.add(pom)
+        repo.generate()
     }
 
     private def createBom(List<String> dependencies) {

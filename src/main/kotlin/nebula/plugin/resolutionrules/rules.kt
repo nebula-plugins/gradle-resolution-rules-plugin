@@ -120,7 +120,7 @@ class AlignedPlatformRule(alignRule: AlignRule, substituteRules: MutableList<Sub
         configuration.incoming.beforeResolve { resolvableDependencies ->
             resolvableDependencies.dependencies.forEach { dep ->
                 if (dep is ExternalModuleDependency) {
-                    if (dep.group!! == substitutedModule.group) { // TODO: had been .startsWith() Which do we want?
+                    if (dep.group!!.startsWith(substitutedModule.group)) {
                         val usingDependencyRecommendation = dep.version.isNullOrEmpty()
 
                         if (usingDependencyRecommendation) {
@@ -299,7 +299,7 @@ class TransitiveDependenciesSubstitutionMetadataRule : ComponentMetadataRule, Se
         details.allVariants {
             it.withDependencies { deps ->
                 deps.forEach { dep ->
-                    if (dep.group == substitutionGroup) { // TODO: had been .startsWith()
+                    if (dep.group.startsWith(substitutionGroup)) {
                         dep.version {
                             it.reject(substitutionVersion)
                             logger.debug("Rejection of group '$substitutionGroup' and version $substitutionVersion")
