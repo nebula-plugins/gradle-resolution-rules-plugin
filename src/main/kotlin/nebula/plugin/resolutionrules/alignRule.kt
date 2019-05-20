@@ -38,8 +38,11 @@ data class AlignRule(val name: String?,
                      override val date: String,
                      var belongsToName: String?) : BasicRule, Serializable {
 
+    @Transient
     private var groupMatcher: Matcher? = null
+    @Transient
     private lateinit var includesMatchers: List<Matcher>
+    @Transient
     private lateinit var excludesMatchers: List<Matcher>
 
     override fun apply(project: Project,
@@ -49,8 +52,10 @@ data class AlignRule(val name: String?,
                        reasons: MutableSet<String>) {
         //TODO this rule is applied repeatedly for each configuration. Ideally it should be taken out and
         //applied only once per project
-        project.dependencies.components.all(AlignedPlatformMetadataRule::class.java) {
-            it.params(this)
+        if (configuration.name == "compileClasspath") { // This is one way to ensure it'll be run for only one configuration
+            project.dependencies.components.all(AlignedPlatformMetadataRule::class.java) {
+                it.params(this)
+            }
         }
     }
 
@@ -88,8 +93,9 @@ data class AlignRule(val name: String?,
 }
 
 @CacheableRule
-open class AlignedPlatformMetadataRule : ComponentMetadataRule {
+open class AlignedPlatformMetadataRule : ComponentMetadataRule, Serializable {
     val rule: AlignRule
+    val logger: Logger = Logging.getLogger(AlignedPlatformMetadataRule::class.java)
 
     @Inject
     constructor(rule: AlignRule) {
@@ -103,6 +109,7 @@ open class AlignedPlatformMetadataRule : ComponentMetadataRule {
     fun modifyDetails(details: ComponentMetadataDetails) {
         if (rule.ruleMatches(details.id)) {
             details.belongsTo("aligned-platform:${rule.belongsToName}:${details.id.version}")
+            logger.debug("Aligning platform based on '${details.id.group}:${details.id.name}:${details.id.version}' from align rule with group '${rule.group}'")
         }
     }
 }
@@ -291,7 +298,7 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
                     if (finalConfiguration) {
                         logger.debug("Resolution rule $rule aligning ${details.requested.group}:${details.requested.name} to $version")
                     }
-                    details.because("aligned to $version by ${rule.ruleSet}\n" +
+                    details.because("aligned to $version by ${rule.ruleSet} aligning group '${rule.group}'\n" +
                             "\twith reasons: ${reasons.joinToString()}")
                             .useVersion("(,$version]")
                 }

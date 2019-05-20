@@ -18,12 +18,15 @@ package nebula.plugin.resolutionrules
 
 import com.netflix.nebula.interop.VersionWithSelector
 import com.netflix.nebula.interop.action
+import netflix.nebula.dependency.recommender.DependencyRecommendationsPlugin
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.artifacts.*
 import org.gradle.api.artifacts.component.ModuleComponentSelector
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
+import java.io.Serializable
+import javax.inject.Inject
 import org.gradle.api.artifacts.ModuleVersionIdentifier as GradleModuleVersionIdentifier
 
 interface Rule {
@@ -50,11 +53,14 @@ data class RuleSet(
         val exclude: List<ExcludeRule> = emptyList(),
         val align: List<AlignRule> = emptyList()) {
 
-    fun dependencyRules() =
+    fun dependencyRulesPartOne() =
+            listOf(replace, substitute, reject, deny, exclude).flatten()
+
+    fun dependencyRulesPartTwo() =
             if (ResolutionRulesPlugin.isCoreAlignmentEnabled())
-                listOf(replace, substitute, reject, deny, exclude, align).flatten()
+                listOf(align).flatten()
             else
-                listOf(replace, substitute, reject, deny, exclude).flatten()
+                emptyList()
 
     fun resolveRules() =
             if (ResolutionRulesPlugin.isCoreAlignmentEnabled())
@@ -65,6 +71,103 @@ data class RuleSet(
     fun generateAlignmentBelongsToName() {
         align.forEachIndexed { index, alignRule ->
             alignRule.belongsToName = "$name-$index"
+        }
+    }
+}
+
+class AlignedPlatformRule(alignRule: AlignRule, substituteRules: MutableList<SubstituteRule>) : Serializable {
+    var substituteRules: List<SubstituteRule> = substituteRules
+
+    fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension, reasons: MutableSet<String>) {
+        substituteRules.forEach {
+            val substitution = resolutionStrategy.dependencySubstitution
+            val selector = substitution.module(it.module)
+            val substitutedModule = selector as? ModuleComponentSelector
+
+            val withModuleId = ModuleVersionIdentifier.valueOf(it.with)
+            if (!withModuleId.hasVersion()) {
+                throw SubstituteRuleMissingVersionException(withModuleId, it, reasons)
+            }
+            val withSelector = substitution.module(withModuleId.toString()) as ModuleComponentSelector
+
+            if (substitutedModule != null && shouldApplyRule(configuration, substitutedModule)) {
+                firstLevelDependenciesRejectTheSubstitutedVersions(project, configuration, substitutedModule, withSelector, resolutionStrategy)
+                transitiveDependenciesRejectTheSubstitutedVersions(project, substitutedModule, withSelector)
+                it.applyForAlignedGroup(project, configuration, configuration.resolutionStrategy, extension, reasons)
+            }
+        }
+    }
+
+    private fun shouldApplyRule(configuration: Configuration, substitutedModule: ModuleComponentSelector): Boolean {
+        var shouldApplyRule = false
+        configuration.incoming.dependencies.forEach { dep ->
+            if (dep.group == substitutedModule.group && dep.name == substitutedModule.module) {
+                shouldApplyRule = true // should apply only if substituted model is in the dependency graph
+            }
+        }
+        return shouldApplyRule
+    }
+
+    private fun transitiveDependenciesRejectTheSubstitutedVersions(project: Project, substitutedModule: ModuleComponentSelector, withSelector: ModuleComponentSelector) {
+        project.dependencies.components.all(TransitiveDependenciesSubstitutionMetadataRule::class.java) {
+            it.params(substitutedModule.group, substitutedModule.module, withSelector.version)
+        }
+    }
+
+    private fun firstLevelDependenciesRejectTheSubstitutedVersions(project: Project, configuration: Configuration, substitutedModule: ModuleComponentSelector,
+                                                                   withSelector: ModuleComponentSelector, resolutionStrategy: ResolutionStrategy) {
+        val logger: Logger = Logging.getLogger(AlignedPlatformRule::class.java)
+        configuration.incoming.beforeResolve { resolvableDependencies ->
+            resolvableDependencies.dependencies.forEach { dep ->
+                if (dep is ExternalModuleDependency) {
+                    if (dep.group!! == substitutedModule.group) { // TODO: had been .startsWith() Which do we want?
+                        val usingDependencyRecommendation = dep.version.isNullOrEmpty()
+
+                        if (usingDependencyRecommendation) {
+                            applyConstraintsToDependencyIfRecommendedVersionMatches(project, dep, substitutedModule, withSelector, logger, configuration)
+                        } else {
+                            applyConstraintsToDependency(dep, substitutedModule, logger, configuration)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun applyConstraintsToDependencyIfRecommendedVersionMatches(project: Project, dep: ExternalModuleDependency, substitutedModule: ModuleComponentSelector, withSelector: ModuleComponentSelector, logger: Logger, configuration: Configuration) {
+        val recommendedVersion = DependencyRecommendationsPlugin().getRecommendedVersionRecursive(project, dep)
+        if (recommendedVersion != null) {
+            val substitutedModuleVersionWithSelector = VersionWithSelector(substitutedModule.version)
+
+            if (substitutedModuleVersionWithSelector.asSelector().accept(recommendedVersion)) {
+                applyConstraintsToDependencyWithRecommendation(dep, withSelector, logger, configuration, substitutedModule)
+            }
+        }
+    }
+
+    private fun applyConstraintsToDependency(dep: ExternalModuleDependency, substitutedModule: ModuleComponentSelector, logger: Logger, configuration: Configuration) {
+        dep.version {
+            it.reject(substitutedModule.version)
+            logger.debug("Rejecting version(s) '${substitutedModule.version}' for incoming dependency '${dep.group}:${dep.name}' " +
+                    "in $configuration before resolution, " +
+                    "based on alignment group '${substitutedModule.group}' " +
+                    "via constraint '$it'")
+        }
+    }
+
+    private fun applyConstraintsToDependencyWithRecommendation(dep: ExternalModuleDependency, withSelector: ModuleComponentSelector, logger: Logger, configuration: Configuration, substitutedModule: ModuleComponentSelector) {
+        dep.version {
+            it.require(withSelector.version) // Define before any "rejects". When defined, overrides previous strictly declaration and clears previous reject.
+            logger.debug("Requiring version ${withSelector.version} for incoming dependency '${dep.group}:${dep.name}' " +
+                    "in $configuration, " +
+                    "based on alignment group '${substitutedModule.group}' " +
+                    "via constraint '$it' because recommended version matched a substitution rule version."
+            )
+            it.reject(substitutedModule.version)
+            logger.debug("Rejecting version(s) '${substitutedModule.version}' for incoming dependency '${dep.group}:${dep.name}' " +
+                    "in $configuration, " +
+                    "based on alignment group '${substitutedModule.group}' " +
+                    "via constraint '$it' because recommended version matched a substitution rule version.")
         }
     }
 }
@@ -98,7 +201,8 @@ data class ReplaceRule(override val module: String, val with: String, override v
     }
 }
 
-data class SubstituteRule(val module: String, val with: String, override var ruleSet: String?, override val reason: String, override val author: String, override val date: String) : BasicRule {
+data class SubstituteRule(val module: String, val with: String, override var ruleSet: String?,
+                          override val reason: String, override val author: String, override val date: String) : BasicRule, Serializable {
     override fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension, reasons: MutableSet<String>) {
         val substitution = resolutionStrategy.dependencySubstitution
         val selector = substitution.module(module)
@@ -115,7 +219,7 @@ data class SubstituteRule(val module: String, val with: String, override var rul
                     if (requestedSelector.group == selector.group && requestedSelector.module == selector.module) {
                         val versionSelector = VersionWithSelector(selector.version).asSelector()
                         if (versionSelector.accept(requestedSelector.version)) {
-                            val message = "substitution because $reason \n" +
+                            val message = "substitution from '$selector' to '$withSelector' because $reason \n" +
                                     "\twith reasons: ${reasons.joinToString()}"
                             useTarget(withSelector, message)
                         }
@@ -123,12 +227,85 @@ data class SubstituteRule(val module: String, val with: String, override var rul
                 }
             })
         } else {
-            resolutionStrategy.dependencySubstitution {
-                val message = "substitution because $reason \n" +
+            var message = "substitution to '$withSelector' because $reason \n" +
+                    "\twith reasons: ${reasons.joinToString()}"
+
+            val selectorNameSections = selector.displayName.split(":")
+            if (selectorNameSections.size > 2) {
+                val selectorGroupAndArtifact = "${selectorNameSections[0]}:${selectorNameSections[1]}"
+                message = "substitution from '$selectorGroupAndArtifact' to '$withSelector' because $reason \n" +
                         "\twith reasons: ${reasons.joinToString()}"
+            }
+
+            resolutionStrategy.dependencySubstitution {
                 it.substitute(selector)
                         .because(message)
                         .with(withSelector)
+            }
+        }
+    }
+
+    fun applyForAlignedGroup(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension, reasons: MutableSet<String>) {
+        val substitution = resolutionStrategy.dependencySubstitution
+        val selector = substitution.module(module)
+        val withModuleId = ModuleVersionIdentifier.valueOf(with)
+        if (!withModuleId.hasVersion()) {
+            throw SubstituteRuleMissingVersionException(withModuleId, this, reasons)
+        }
+        val withSelector = substitution.module(withModuleId.toString()) as ModuleComponentSelector
+
+        // TODO: only do this if the alignment rule applies to this one via includes and excludes
+        if (selector is ModuleComponentSelector) {
+            resolutionStrategy.dependencySubstitution.all(action {
+                if (requested is ModuleComponentSelector) {
+                    val requestedSelector = requested as ModuleComponentSelector
+                    val requestedWithSubstitutedVersionFromAlignedModule = ModuleVersionIdentifier.valueOf("${requestedSelector.group}:${requestedSelector.module}:${withSelector.version}")
+
+                    if (requestedSelector.group == selector.group) {
+                        val versionSelector = VersionWithSelector(selector.version).asSelector()
+                        if (versionSelector.accept(requestedSelector.version)) {
+                            val message = "substitution from aligned dependency '$selector' to '$withSelector' because '$reason'\n" +
+                                    "\twith reasons: ${reasons.joinToString()}"
+                            val updatedRequestedModuleComponentSelector = substitution.module(requestedWithSubstitutedVersionFromAlignedModule.toString()) as ModuleComponentSelector
+                            useTarget(updatedRequestedModuleComponentSelector, message)
+                        }
+                    }
+                }
+            })
+        } else {
+            // do nothing if there is no version
+        }
+    }
+}
+
+class TransitiveDependenciesSubstitutionMetadataRule : ComponentMetadataRule, Serializable {
+    private val logger: Logger = Logging.getLogger(TransitiveDependenciesSubstitutionMetadataRule::class.java)
+    val substitutionGroup: String
+    val substitutionVersion: String
+    val withSelectorVersion: String
+
+    @Inject
+    constructor(substitutionGroup: String, substitutionVersion: String, withSelectorVersion: String) {
+        this.substitutionGroup = substitutionGroup
+        this.substitutionVersion = substitutionVersion
+        this.withSelectorVersion = withSelectorVersion
+    }
+
+    override fun execute(componentMetadataContext: ComponentMetadataContext?) {
+        modifyDetails(componentMetadataContext!!.details)
+    }
+
+    private fun modifyDetails(details: ComponentMetadataDetails) {
+        details.allVariants {
+            it.withDependencies { deps ->
+                deps.forEach { dep ->
+                    if (dep.group == substitutionGroup) { // TODO: had been .startsWith()
+                        dep.version {
+                            it.reject(substitutionVersion)
+                            logger.debug("Rejection of group '$substitutionGroup' and version $substitutionVersion")
+                        }
+                    }
+                }
             }
         }
     }
