@@ -110,7 +110,7 @@ class AlignedPlatformRule(alignRule: AlignRule, substituteRules: MutableList<Sub
 
     private fun transitiveDependenciesRejectTheSubstitutedVersions(project: Project, substitutedModule: ModuleComponentSelector, withSelector: ModuleComponentSelector) {
         project.dependencies.components.all(TransitiveDependenciesSubstitutionMetadataRule::class.java) {
-            it.params(substitutedModule.group, substitutedModule.module, withSelector.version)
+            it.params(substitutedModule.group, substitutedModule.module, substitutedModule.version, withSelector.version)
         }
     }
 
@@ -261,7 +261,9 @@ data class SubstituteRule(val module: String, val with: String, override var rul
                     val requestedSelector = requested as ModuleComponentSelector
                     val requestedWithSubstitutedVersionFromAlignedModule = ModuleVersionIdentifier.valueOf("${requestedSelector.group}:${requestedSelector.module}:${withSelector.version}")
 
-                    if (requestedSelector.group == selector.group) {
+                    val hasSameGroup = requestedSelector.group == selector.group
+                    val notTheOriginatingDependency = requestedSelector.module != selector.module
+                    if (hasSameGroup && notTheOriginatingDependency) {
                         val versionSelector = VersionWithSelector(selector.version).asSelector()
                         if (versionSelector.accept(requestedSelector.version)) {
                             val message = "substitution from aligned dependency '$selector' to '$withSelector' because '$reason'\n" +
@@ -281,12 +283,14 @@ data class SubstituteRule(val module: String, val with: String, override var rul
 class TransitiveDependenciesSubstitutionMetadataRule : ComponentMetadataRule, Serializable {
     private val logger: Logger = Logging.getLogger(TransitiveDependenciesSubstitutionMetadataRule::class.java)
     val substitutionGroup: String
+    val substitutionModuleName: String
     val substitutionVersion: String
     val withSelectorVersion: String
 
     @Inject
-    constructor(substitutionGroup: String, substitutionVersion: String, withSelectorVersion: String) {
+    constructor(substitutionGroup: String, substitutionModuleName: String, substitutionVersion: String, withSelectorVersion: String) {
         this.substitutionGroup = substitutionGroup
+        this.substitutionModuleName = substitutionModuleName
         this.substitutionVersion = substitutionVersion
         this.withSelectorVersion = withSelectorVersion
     }
@@ -296,13 +300,14 @@ class TransitiveDependenciesSubstitutionMetadataRule : ComponentMetadataRule, Se
     }
 
     private fun modifyDetails(details: ComponentMetadataDetails) {
+        // TODO: This happens frequently, as it's applied to all variants. Can this be reduced?
         details.allVariants {
             it.withDependencies { deps ->
                 deps.forEach { dep ->
                     if (dep.group.startsWith(substitutionGroup)) {
                         dep.version {
                             it.reject(substitutionVersion)
-                            logger.debug("Rejection of group '$substitutionGroup' and version $substitutionVersion")
+                            logger.debug("Rejection of transitive dependency ${dep.group}:${dep.name} version(s) '$substitutionVersion' from aligned dependency '$substitutionGroup:$substitutionModuleName'")
                         }
                     }
                 }
