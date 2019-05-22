@@ -57,6 +57,13 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
 
                 .addModule('test.beverage:d:1.0.0')
                 .addModule(new ModuleBuilder('test.other:e:1.0.0').addDependency('test.nebula:b:1.1.0').build())
+
+                .addModule(new ModuleBuilder('test.nebula:f:1.0.0').addDependency('test.nebula:a:1.0.0').build())
+                .addModule(new ModuleBuilder('test.nebula:f:1.0.1').addDependency('test.nebula:a:1.0.1').build())
+                .addModule(new ModuleBuilder('test.nebula:f:1.0.2').addDependency('test.nebula:a:1.0.2').build())
+                .addModule(new ModuleBuilder('test.nebula:f:1.0.3').addDependency('test.nebula:a:1.0.3').build())
+                .addModule(new ModuleBuilder('test.nebula:f:1.1.0').addDependency('test.nebula:a:1.1.0').build())
+
                 .build()
         mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
 
@@ -848,6 +855,14 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "com.google.inject:guice", resultingVersion)
 
         if (coreAlignment) {
+            // for direct dependency
+            assert result.output.contains("com.google.inject:guice:{require 4.1.0; reject [4.2.0,)}")
+
+            // for transitive dependencies
+            assert result.output.contains("com.google.inject.extensions:guice-assistedinject:{require 4.1.0; reject [4.2.0,)}")
+            assert result.output.contains("com.google.inject.extensions:guice-multibindings:{require 4.1.0; reject [4.2.0,)}")
+            assert result.output.contains("com.google.inject.extensions:guice-grapher:{require 4.1.0; reject [4.2.0,)}")
+
             assert result.output.contains("belongs to platform aligned-platform:rules-0:$resultingVersion")
         }
 
@@ -883,6 +898,14 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         }
 
         if (coreAlignment) {
+            // for direct dependency
+            assert result.output.contains("com.google.inject:guice:{require 4.1.0; reject [4.2.0,)}")
+
+            // for transitive dependencies
+            assert result.output.contains("com.google.inject.extensions:guice-assistedinject:{require 4.1.0; reject [4.2.0,)}")
+            assert result.output.contains("com.google.inject.extensions:guice-multibindings:{require 4.1.0; reject [4.2.0,)}")
+            assert result.output.contains("com.google.inject.extensions:guice-grapher:{require 4.1.0; reject [4.2.0,)}")
+
             assert result.output.contains("belongs to platform aligned-platform:rules-0:$resultingAlignedVersion")
         }
 
@@ -891,6 +914,42 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         false         | '4.+'          | '4.1.0'                 | '4.2.2'
         true          | '4.+'          | '4.1.0'                 | null
     }
+
+    @Unroll
+    def 'transitive dependencies are aligned with same constraints as direct dependencies | core alignment #coreAlignment'() {
+        given:
+        def module = "test.nebula:f:[1.0.1,1.1.0)"
+        def with = "test.nebula:f:1.0.0"
+        createAlignAndSubstituteRule(module, with)
+
+        buildFile << """
+            dependencies {
+                compile 'test.nebula:f:1.0.3'
+            }
+            """.stripIndent()
+
+        when:
+        def result = runTasks(*tasks(coreAlignment))
+
+        then:
+        def resultingVersion = "1.0.0"
+        dependencyInsightContains(result.output, "test.nebula:f", resultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
+
+        if (coreAlignment) {
+            // for direct dependency
+            assert result.output.contains("test.nebula:f:{require 1.0.3; reject [1.0.1,1.1.0)}")
+
+            // for transitive dependencies
+            assert result.output.contains("test.nebula:a:{require 1.0.0; reject [1.0.1,1.1.0)}")
+
+            assert result.output.contains("belongs to platform aligned-platform:rules-0:$resultingVersion")
+        }
+
+        where:
+        coreAlignment << [false, true]
+    }
+
 
     @Unroll
     def 'recs with core bom support disabled: core alignment should substitute and align from bom version to lower static version | core alignment #coreAlignment'() {
