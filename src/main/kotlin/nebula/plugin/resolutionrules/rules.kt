@@ -77,6 +77,7 @@ data class RuleSet(
 
 class AlignedPlatformRule(alignRule: AlignRule, substituteRules: MutableList<SubstituteRule>) : Serializable {
     var substituteRules: List<SubstituteRule> = substituteRules
+    var alignRule: AlignRule = alignRule
 
     fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension, reasons: MutableSet<String>) {
         substituteRules.forEach {
@@ -93,16 +94,27 @@ class AlignedPlatformRule(alignRule: AlignRule, substituteRules: MutableList<Sub
             if (substitutedModule != null && shouldApplyRule(configuration, substitutedModule)) {
                 firstLevelDependenciesRejectTheSubstitutedVersions(project, configuration, substitutedModule, withSelector, resolutionStrategy)
                 transitiveDependenciesRejectTheSubstitutedVersions(project, substitutedModule, withSelector)
-                it.applyForAlignedGroup(project, configuration, configuration.resolutionStrategy, extension, reasons)
+                it.applyForAlignedGroup(project, configuration, configuration.resolutionStrategy, extension, reasons, alignRule)
             }
         }
     }
 
     private fun shouldApplyRule(configuration: Configuration, substitutedModule: ModuleComponentSelector): Boolean {
         var shouldApplyRule = false
-        configuration.incoming.dependencies.forEach { dep ->
+        var substitutedDependencyIsInDependencyGraph = false
+
+        val incomingDependencies = configuration.incoming.dependencies
+
+        incomingDependencies.forEach { dep ->
             if (dep.group == substitutedModule.group && dep.name == substitutedModule.module) {
-                shouldApplyRule = true // should apply only if substituted model is in the dependency graph
+                substitutedDependencyIsInDependencyGraph = true
+            }
+        }
+        if (substitutedDependencyIsInDependencyGraph) {
+            incomingDependencies.forEach { dep ->
+                if (alignRule.ruleMatches(dep.group ?: "", dep.name)) {
+                    shouldApplyRule = true
+                }
             }
         }
         return shouldApplyRule
@@ -110,7 +122,7 @@ class AlignedPlatformRule(alignRule: AlignRule, substituteRules: MutableList<Sub
 
     private fun transitiveDependenciesRejectTheSubstitutedVersions(project: Project, substitutedModule: ModuleComponentSelector, withSelector: ModuleComponentSelector) {
         project.dependencies.components.all(TransitiveDependenciesSubstitutionMetadataRule::class.java) {
-            it.params(substitutedModule.group, substitutedModule.module, substitutedModule.version, withSelector.version)
+            it.params(alignRule, substitutedModule.group, substitutedModule.module, substitutedModule.version, withSelector.version)
         }
     }
 
@@ -120,7 +132,7 @@ class AlignedPlatformRule(alignRule: AlignRule, substituteRules: MutableList<Sub
         configuration.incoming.beforeResolve { resolvableDependencies ->
             resolvableDependencies.dependencies.forEach { dep ->
                 if (dep is ExternalModuleDependency) {
-                    if (dep.group!!.startsWith(substitutedModule.group)) {
+                    if (alignRule.ruleMatches(dep.group ?: "", dep.name)) {
                         val usingDependencyRecommendation = dep.version.isNullOrEmpty()
 
                         if (usingDependencyRecommendation) {
@@ -245,7 +257,8 @@ data class SubstituteRule(val module: String, val with: String, override var rul
         }
     }
 
-    fun applyForAlignedGroup(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension, reasons: MutableSet<String>) {
+    fun applyForAlignedGroup(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy,
+                             extension: NebulaResolutionRulesExtension, reasons: MutableSet<String>, alignRule: AlignRule) {
         val substitution = resolutionStrategy.dependencySubstitution
         val selector = substitution.module(module)
         val withModuleId = ModuleVersionIdentifier.valueOf(with)
@@ -254,16 +267,15 @@ data class SubstituteRule(val module: String, val with: String, override var rul
         }
         val withSelector = substitution.module(withModuleId.toString()) as ModuleComponentSelector
 
-        // TODO: only do this if the alignment rule applies to this one via includes and excludes
         if (selector is ModuleComponentSelector) {
             resolutionStrategy.dependencySubstitution.all(action {
                 if (requested is ModuleComponentSelector) {
                     val requestedSelector = requested as ModuleComponentSelector
                     val requestedWithSubstitutedVersionFromAlignedModule = ModuleVersionIdentifier.valueOf("${requestedSelector.group}:${requestedSelector.module}:${withSelector.version}")
 
-                    val hasSameGroup = requestedSelector.group == selector.group
+                    val matches = alignRule.ruleMatches(requestedSelector.group ?: "", requestedSelector.module)
                     val notTheOriginatingDependency = requestedSelector.module != selector.module
-                    if (hasSameGroup && notTheOriginatingDependency) {
+                    if (matches && notTheOriginatingDependency) {
                         val versionSelector = VersionWithSelector(selector.version).asSelector()
                         if (versionSelector.accept(requestedSelector.version)) {
                             val message = "substitution from aligned dependency '$selector' to '$withSelector' because '$reason'\n" +
@@ -282,13 +294,15 @@ data class SubstituteRule(val module: String, val with: String, override var rul
 
 class TransitiveDependenciesSubstitutionMetadataRule : ComponentMetadataRule, Serializable {
     private val logger: Logger = Logging.getLogger(TransitiveDependenciesSubstitutionMetadataRule::class.java)
+    val alignRule: AlignRule
     val substitutionGroup: String
     val substitutionModuleName: String
     val substitutionVersion: String
     val withSelectorVersion: String
 
     @Inject
-    constructor(substitutionGroup: String, substitutionModuleName: String, substitutionVersion: String, withSelectorVersion: String) {
+    constructor(alignRule: AlignRule, substitutionGroup: String, substitutionModuleName: String, substitutionVersion: String, withSelectorVersion: String) {
+        this.alignRule = alignRule
         this.substitutionGroup = substitutionGroup
         this.substitutionModuleName = substitutionModuleName
         this.substitutionVersion = substitutionVersion
@@ -304,7 +318,7 @@ class TransitiveDependenciesSubstitutionMetadataRule : ComponentMetadataRule, Se
         details.allVariants {
             it.withDependencies { deps ->
                 deps.forEach { dep ->
-                    if (dep.group.startsWith(substitutionGroup)) {
+                    if (alignRule.ruleMatches(dep.group ?: "", dep.name)) {
                         dep.version {
                             it.reject(substitutionVersion)
                             logger.debug("Rejection of transitive dependency ${dep.group}:${dep.name} version(s) '$substitutionVersion' from aligned dependency '$substitutionGroup:$substitutionModuleName'")
