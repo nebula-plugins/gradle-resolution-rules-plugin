@@ -64,6 +64,12 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
                 .addModule(new ModuleBuilder('test.nebula:f:1.0.3').addDependency('test.nebula:a:1.0.3').build())
                 .addModule(new ModuleBuilder('test.nebula:f:1.1.0').addDependency('test.nebula:a:1.1.0').build())
 
+                .addModule('test.nebula:g:1.0.0')
+                .addModule('test.nebula:g:1.0.1')
+                .addModule('test.nebula:g:1.0.2')
+                .addModule('test.nebula:g:1.0.3')
+                .addModule('test.nebula:g:1.1.0')
+
                 .build()
         mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
 
@@ -483,7 +489,6 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
 
         where:
         definedVersionType | definedVersion | subVersionType | subFromVersionAndModule | subToVersionAndModule | subUpOrDown | coreAlignment | ABResultingVersion | CResultingVersion
-        // missing cases: statically defined dependency: core alignment fails to align when lower versions are missing | core alignment: #coreAlignment
         "static version"   | "1.0.1"        | "range"        | "b:[1.0.0,1.1.0)"       | "b:0.5.0"             | "lower"     | false         | "1.0.1"            | "1.0.1"
         "static version"   | "1.0.1"        | "range"        | "b:[1.0.0,1.1.0)"       | "b:0.5.0"             | "lower"     | true          | "0.5.0"            | "FAILED"
     }
@@ -855,13 +860,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "com.google.inject:guice", resultingVersion)
 
         if (coreAlignment) {
-            // for direct dependency
             assert result.output.contains("com.google.inject:guice:{require 4.1.0; reject [4.2.0,)}")
-
-            // for transitive dependencies
-            assert result.output.contains("com.google.inject.extensions:guice-assistedinject:{require 4.1.0; reject [4.2.0,)}")
-            assert result.output.contains("com.google.inject.extensions:guice-multibindings:{require 4.1.0; reject [4.2.0,)}")
-            assert result.output.contains("com.google.inject.extensions:guice-grapher:{require 4.1.0; reject [4.2.0,)}")
 
             assert result.output.contains("belongs to platform aligned-platform:rules-0:$resultingVersion")
         }
@@ -898,13 +897,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         }
 
         if (coreAlignment) {
-            // for direct dependency
             assert result.output.contains("com.google.inject:guice:{require 4.1.0; reject [4.2.0,)}")
-
-            // for transitive dependencies
-            assert result.output.contains("com.google.inject.extensions:guice-assistedinject:{require 4.1.0; reject [4.2.0,)}")
-            assert result.output.contains("com.google.inject.extensions:guice-multibindings:{require 4.1.0; reject [4.2.0,)}")
-            assert result.output.contains("com.google.inject.extensions:guice-grapher:{require 4.1.0; reject [4.2.0,)}")
 
             assert result.output.contains("belongs to platform aligned-platform:rules-0:$resultingAlignedVersion")
         }
@@ -950,6 +943,119 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         coreAlignment << [false, true]
     }
 
+    @Unroll
+    def 'substitution rule excludes are honored | core alignment #coreAlignment'() {
+        given:
+        def module = "test.nebula:a:[1.0.0,1.0.3)"
+        def with = "test.nebula:a:1.0.3"
+        rulesJsonFile << """
+            {
+                "substitute": [
+                    {
+                        "module" : "$module",
+                        "with" : "$with",
+                        "reason" : "$reason",
+                        "author" : "Test user <test@example.com>",
+                        "date" : "2015-10-07T20:21:20.368Z"
+                    }
+                ],
+                "align": [
+                   {
+                        "group": "(test.nebula|test.nebula.ext)",
+                        "reason": "Align test.nebula dependencies",
+                        "author": "Example Person <person@example.org>",
+                        "includes": [],
+                        "excludes": ["(b|c)"],
+                        "date": "2016-03-17T20:21:20.368Z"
+                    }
+                ]
+            }
+            """.stripIndent()
+
+        buildFile << """
+            dependencies {
+                compile 'test.nebula:a:1.0.1'
+                compile 'test.nebula:b:1.0.1'
+                compile 'test.nebula:c:1.0.2'
+                compile 'test.nebula:g:1.0.1'
+            }
+            """.stripIndent()
+
+        when:
+        def result = runTasks(*tasks(coreAlignment))
+
+        then:
+        def alignedResultingVersion = "1.0.3"
+        dependencyInsightContains(result.output, "test.nebula:a", alignedResultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:g", alignedResultingVersion)
+
+        dependencyInsightContains(result.output, "test.nebula:b", '1.0.1')
+        dependencyInsightContains(result.output, "test.nebula:c", '1.0.2')
+
+        if (coreAlignment) {
+            assert result.output.contains("belongs to platform aligned-platform:rules-0:$alignedResultingVersion")
+        }
+
+        where:
+        coreAlignment << [false, true]
+    }
+
+    @Unroll
+    def 'substitution rule includes are honored | core alignment #coreAlignment'() {
+        given:
+        def module = "test.nebula:a:[1.0.0,1.0.3)"
+        def with = "test.nebula:a:1.0.3"
+        rulesJsonFile << """
+            {
+                "substitute": [
+                    {
+                        "module" : "$module",
+                        "with" : "$with",
+                        "reason" : "$reason",
+                        "author" : "Test user <test@example.com>",
+                        "date" : "2015-10-07T20:21:20.368Z"
+                    }
+                ],
+                "align": [
+                   {
+                        "group": "(test.nebula|test.nebula.ext)",
+                        "reason": "Align test.nebula dependencies",
+                        "author": "Example Person <person@example.org>",
+                        "includes": ["(a|g)"],
+                        "excludes": [],
+                        "date": "2016-03-17T20:21:20.368Z"
+                    }
+                ]
+            }
+            """.stripIndent()
+
+        buildFile << """
+            dependencies {
+                compile 'test.nebula:a:1.0.1'
+                compile 'test.nebula:b:1.0.1'
+                compile 'test.nebula:c:1.0.2'
+                compile 'test.nebula:g:1.0.1'
+            }
+            """.stripIndent()
+
+        when:
+        def result = runTasks(*tasks(coreAlignment))
+
+        then:
+        def alignedResultingVersion = "1.0.3"
+        dependencyInsightContains(result.output, "test.nebula:a", alignedResultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:g", alignedResultingVersion)
+
+        dependencyInsightContains(result.output, "test.nebula:b", '1.0.1')
+        dependencyInsightContains(result.output, "test.nebula:c", '1.0.2')
+
+        if (coreAlignment) {
+            assert result.output.contains("belongs to platform aligned-platform:rules-0:$alignedResultingVersion")
+        }
+
+        where:
+        coreAlignment << [false, true]
+    }
 
     @Unroll
     def 'recs with core bom support disabled: core alignment should substitute and align from bom version to lower static version | core alignment #coreAlignment'() {
