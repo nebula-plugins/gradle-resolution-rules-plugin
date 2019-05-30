@@ -70,7 +70,13 @@ data class RuleSet(
 
     fun generateAlignmentBelongsToName() {
         align.forEachIndexed { index, alignRule ->
-            alignRule.belongsToName = "$name-$index"
+            var abbreviatedAlignGroup = alignRule.group.toString()
+                    .replace("|", "-or-")
+
+            val onlyAlphabeticalRegex = Regex("[^A-Za-z.\\-]")
+            abbreviatedAlignGroup = onlyAlphabeticalRegex.replace(abbreviatedAlignGroup, "")
+
+            alignRule.belongsToName = "$name-$index-for-$abbreviatedAlignGroup"
         }
     }
 }
