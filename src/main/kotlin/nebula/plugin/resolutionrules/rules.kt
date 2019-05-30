@@ -91,33 +91,12 @@ class AlignedPlatformRule(alignRule: AlignRule, substituteRules: MutableList<Sub
             }
             val withSelector = substitution.module(withModuleId.toString()) as ModuleComponentSelector
 
-            if (substitutedModule != null && shouldApplyRule(configuration, substitutedModule)) {
+            if (substitutedModule != null) {
                 firstLevelDependenciesRejectTheSubstitutedVersions(project, configuration, substitutedModule, withSelector, resolutionStrategy)
                 transitiveDependenciesRejectTheSubstitutedVersions(project, substitutedModule, withSelector)
                 it.applyForAlignedGroup(project, configuration, configuration.resolutionStrategy, extension, reasons, alignRule)
             }
         }
-    }
-
-    private fun shouldApplyRule(configuration: Configuration, substitutedModule: ModuleComponentSelector): Boolean {
-        var shouldApplyRule = false
-        var substitutedDependencyIsInDependencyGraph = false
-
-        val incomingDependencies = configuration.incoming.dependencies
-
-        incomingDependencies.forEach { dep ->
-            if (dep.group == substitutedModule.group && dep.name == substitutedModule.module) {
-                substitutedDependencyIsInDependencyGraph = true
-            }
-        }
-        if (substitutedDependencyIsInDependencyGraph) {
-            incomingDependencies.forEach { dep ->
-                if (alignRule.ruleMatches(dep.group ?: "", dep.name)) {
-                    shouldApplyRule = true
-                }
-            }
-        }
-        return shouldApplyRule
     }
 
     private fun transitiveDependenciesRejectTheSubstitutedVersions(project: Project, substitutedModule: ModuleComponentSelector, withSelector: ModuleComponentSelector) {
