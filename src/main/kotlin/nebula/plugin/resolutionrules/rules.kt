@@ -139,27 +139,22 @@ class AlignedPlatformRule(alignRule: AlignRule, substituteRules: MutableList<Sub
     private fun applyConstraintsToDependency(dep: ExternalModuleDependency, substitutedModule: ModuleComponentSelector, logger: Logger, configuration: Configuration) {
         dep.version {
             it.reject(substitutedModule.version)
-            logger.debug("Rejecting version(s) '${substitutedModule.version}' for incoming dependency '${dep.group}:${dep.name}' " +
-                    "in $configuration before resolution, " +
-                    "based on alignment group '${substitutedModule.group}' " +
-                    "via constraint '$it'")
         }
+        dep.because("rejection of version(s) '${substitutedModule.version}' for incoming dependency '${dep.group}:${dep.name}' " +
+                "in $configuration before resolution, " +
+                "based on alignment group '${substitutedModule.group}' in rule set '${alignRule.ruleSet}' ")
     }
 
     private fun applyConstraintsToDependencyWithRecommendation(dep: ExternalModuleDependency, withSelector: ModuleComponentSelector, logger: Logger, configuration: Configuration, substitutedModule: ModuleComponentSelector) {
         dep.version {
             it.require(withSelector.version) // Define before any "rejects". When defined, overrides previous strictly declaration and clears previous reject.
-            logger.debug("Requiring version ${withSelector.version} for incoming dependency '${dep.group}:${dep.name}' " +
-                    "in $configuration, " +
-                    "based on alignment group '${substitutedModule.group}' " +
-                    "via constraint '$it' because recommended version matched a substitution rule version."
-            )
             it.reject(substitutedModule.version)
-            logger.debug("Rejecting version(s) '${substitutedModule.version}' for incoming dependency '${dep.group}:${dep.name}' " +
-                    "in $configuration, " +
-                    "based on alignment group '${substitutedModule.group}' " +
-                    "via constraint '$it' because recommended version matched a substitution rule version.")
         }
+        dep.because("require version ${withSelector.version} and rejection of version(s) '${substitutedModule.version}'" +
+                "for incoming dependency '${dep.group}:${dep.name}' " +
+                "in $configuration, " +
+                "based on alignment group '${substitutedModule.group}' in rule set '${alignRule.ruleSet}' " +
+                "because recommended version matched a substitution rule version.\n")
     }
 }
 
@@ -300,8 +295,8 @@ class TransitiveDependenciesSubstitutionMetadataRule : ComponentMetadataRule, Se
                     if (alignRule.ruleMatches(dep.group ?: "", dep.name)) {
                         dep.version {
                             it.reject(substitutionVersion)
-                            logger.debug("Rejection of transitive dependency ${dep.group}:${dep.name} version(s) '$substitutionVersion' from aligned dependency '$substitutionGroup:$substitutionModuleName'")
                         }
+                        dep.because("rejection of transitive dependency ${dep.group}:${dep.name} version(s) '$substitutionVersion' from aligned dependency '$substitutionGroup:$substitutionModuleName'")
                     }
                 }
             }
