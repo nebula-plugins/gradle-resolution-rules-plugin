@@ -75,6 +75,6 @@ class AlignRulesBasicWithCoreSpec extends AbstractAlignRulesSpec {
 
         then:
         result.output.contains 'coreAlignmentSupport feature enabled'
-        result.output.contains 'belongs to platform aligned-platform:multiple-align-rules-0:1.1.0'
+        result.output.contains 'belongs to platform aligned-platform:multiple-align-rules-0-for-test.nebula:1.1.0'
     }
 }

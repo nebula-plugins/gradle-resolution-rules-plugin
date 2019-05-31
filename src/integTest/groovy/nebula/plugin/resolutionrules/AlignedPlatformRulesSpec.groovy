@@ -93,7 +93,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
         if (coreAlignment) {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0:$resultingVersion")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
         }
 
         where:
@@ -116,7 +116,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
         if (coreAlignment) {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0:$resultingVersion")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
         }
 
         where:
@@ -139,7 +139,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
         if (coreAlignment) {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0:$resultingVersion")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
         }
 
         where:
@@ -162,7 +162,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
         if (coreAlignment) {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0:$resultingVersion")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
         }
 
         where:
@@ -185,7 +185,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
         if (coreAlignment) {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0:$resultingVersion")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
         }
 
         where:
@@ -208,7 +208,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
         if (coreAlignment) {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0:$resultingVersion")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
         }
 
         where:
@@ -231,7 +231,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
         if (coreAlignment) {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0:$resultingVersion")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
         }
 
         where:
@@ -254,7 +254,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
         if (coreAlignment) {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0:$resultingVersion")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
         }
 
         where:
@@ -277,7 +277,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
         if (coreAlignment) {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0:$resultingVersion")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
         }
 
         where:
@@ -300,7 +300,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
         if (coreAlignment) {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0:$resultingVersion")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
         }
 
         where:
@@ -323,7 +323,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
         if (coreAlignment) {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0:$resultingVersion")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
         }
 
         where:
@@ -346,7 +346,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
         if (coreAlignment) {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0:$resultingVersion")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
         }
 
         where:
@@ -369,7 +369,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
         if (coreAlignment) {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0:$resultingVersion")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
         }
 
         where:
@@ -392,7 +392,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
         if (coreAlignment) {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0:$resultingVersion")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
         }
 
         where:
@@ -415,7 +415,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
         if (coreAlignment) {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0:$resultingVersion")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
         }
 
         where:
@@ -438,7 +438,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
         if (coreAlignment) {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0:$resultingVersion")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
         }
 
         where:
@@ -461,7 +461,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
         if (coreAlignment) {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0:$resultingVersion")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
         }
 
         where:
@@ -484,7 +484,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "test.nebula:c", CResultingVersion)
 
         if (coreAlignment && ABResultingVersion != "FAILED" && CResultingVersion != "FAILED") {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0:$ABResultingVersion")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$ABResultingVersion")
         }
 
         where:
@@ -507,7 +507,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "test.nebula:c", CResultingVersion)
 
         if (coreAlignment && ABResultingVersion != "FAILED" && CResultingVersion != "FAILED") {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0:$ABResultingVersion")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$ABResultingVersion")
         }
 
         where:
@@ -530,7 +530,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "test.nebula:c", CResultingVersion)
 
         if (coreAlignment && ABResultingVersion != "FAILED" && CResultingVersion != "FAILED") {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0:$ABResultingVersion")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$ABResultingVersion")
         }
 
         where:
@@ -553,7 +553,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "test.nebula:c", CResultingVersion)
 
         if (coreAlignment && ABResultingVersion != "FAILED" && CResultingVersion != "FAILED") {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0:$ABResultingVersion")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$ABResultingVersion")
         }
 
         where:
@@ -576,7 +576,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "test.nebula:c", CResultingVersion)
 
         if (coreAlignment && ABResultingVersion != "FAILED" && CResultingVersion != "FAILED") {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0:$ABResultingVersion")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$ABResultingVersion")
         }
 
         where:
@@ -599,7 +599,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "test.nebula:c", CResultingVersion)
 
         if (coreAlignment && ABResultingVersion != "FAILED" && CResultingVersion != "FAILED") {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0:$ABResultingVersion")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$ABResultingVersion")
         }
 
         where:
@@ -622,7 +622,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "test.nebula:c", CResultingVersion)
 
         if (coreAlignment && ABResultingVersion != "FAILED" && CResultingVersion != "FAILED") {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0:$ABResultingVersion")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$ABResultingVersion")
         }
 
         where:
@@ -632,7 +632,8 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
     }
 
     @Unroll
-    def 'do not apply substitution to group if the specified dependency is not in the graph | core alignment: #coreAlignment'() {
+    def 'should still apply substitution to group if the specified dependency is not in the graph | core alignment: #coreAlignment'() {
+        // Note: this may be controversial
         given:
         def module = "test.nebula:$subFromVersionAndModule"
         def with = "test.nebula:$subToVersionAndModule"
@@ -653,13 +654,13 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
         if (coreAlignment) {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0:$resultingVersion")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext")
         }
 
         where:
         definedVersionType | definedVersion | subVersionType | subFromVersionAndModule | subToVersionAndModule | subUpOrDown | coreAlignment | resultingVersion
         "range"            | "1.+"          | "range"        | "c:[1.0.0,1.2.0)"       | "c:1.4.0"             | "higher"    | false         | "1.1.0"
-        "range"            | "1.+"          | "range"        | "c:[1.0.0,1.2.0)"       | "c:1.4.0"             | "higher"    | true          | "1.1.0"
+        "range"            | "1.+"          | "range"        | "c:[1.0.0,1.2.0)"       | "c:1.4.0"             | "higher"    | true          | "FAILED"
     }
 
     @Unroll
@@ -685,7 +686,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
         if (coreAlignment) {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0:$resultingVersion")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
         }
 
         where:
@@ -718,7 +719,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
 
         if (coreAlignment) {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0:$resultingVersion")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
         }
 
         where:
@@ -748,7 +749,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "test.nebula", resultingVersion)
 
         if (coreAlignment) {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0:$resultingVersion")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
         }
 
         where:
@@ -787,11 +788,50 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
         if (coreAlignment) {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0:$resultingVersion")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
         }
 
         where:
         coreAlignment << [false, true]
+    }
+
+    @Unroll
+    def 'only brought in transitively: core alignment should substitute and align from static version to lower static version that is not substituted-away-from | core alignment #coreAlignment'() {
+        given:
+        def graph = new DependencyGraphBuilder()
+                .addModule(new ModuleBuilder('test.other:brings-a:1.0.0').addDependency('test.nebula:a:1.0.2').build())
+                .addModule(new ModuleBuilder('test.other:also-brings-a:1.0.0').addDependency('test.nebula:a:1.0.3').build())
+                .addModule(new ModuleBuilder('test.other:brings-b:1.0.0').addDependency('test.nebula:b:1.0.3').build())
+                .build()
+        mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
+
+        def module = "test.nebula:a:[1.0.2,1.1.0]"
+        def with = "test.nebula:a:1.0.1"
+        createAlignAndSubstituteRule(module, with)
+
+        buildFile << """
+            dependencies {
+                compile 'test.other:brings-a:latest.release'
+                compile 'test.other:also-brings-a:latest.release'
+                compile 'test.other:brings-b:latest.release'
+            }
+            """.stripIndent()
+
+        when:
+        def result = runTasks(*tasks(coreAlignment))
+
+        then:
+        dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
+
+        if (coreAlignment) {
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
+        }
+
+        where:
+        coreAlignment | resultingVersion
+        false         | "1.0.3"
+        true          | "1.0.1"
     }
 
     @Unroll
@@ -834,7 +874,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "test.nebula:c", resultingVersionForNonConstrainedVersion)
 
         if (coreAlignment) {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0:$resultingVersionForNonConstrainedVersion")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersionForNonConstrainedVersion")
         }
 
 
@@ -862,7 +902,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         if (coreAlignment) {
             assert result.output.contains("com.google.inject:guice:{require 4.1.0; reject [4.2.0,)}")
 
-            assert result.output.contains("belongs to platform aligned-platform:rules-0:$resultingVersion")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-com.google.inject:$resultingVersion")
         }
 
         where:
@@ -899,7 +939,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         if (coreAlignment) {
             assert result.output.contains("com.google.inject:guice:{require 4.1.0; reject [4.2.0,)}")
 
-            assert result.output.contains("belongs to platform aligned-platform:rules-0:$resultingAlignedVersion")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-com.google.inject:$resultingAlignedVersion")
         }
 
         where:
@@ -936,7 +976,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
             // for transitive dependencies
             assert result.output.contains("test.nebula:a:{require 1.0.0; reject [1.0.1,1.1.0)}")
 
-            assert result.output.contains("belongs to platform aligned-platform:rules-0:$resultingVersion")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
         }
 
         where:
@@ -993,7 +1033,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "test.nebula:c", '1.0.2')
 
         if (coreAlignment) {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0:$alignedResultingVersion")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$alignedResultingVersion")
         }
 
         where:
@@ -1050,7 +1090,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "test.nebula:c", '1.0.2')
 
         if (coreAlignment) {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0:$alignedResultingVersion")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$alignedResultingVersion")
         }
 
         where:
@@ -1070,7 +1110,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         assert result.output.findAll("test.nebula:b:$resultingVersion").size() >= 1
 
         if (coreAlignment) {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0:$resultingVersion")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
         }
 
         where:
@@ -1092,7 +1132,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         assert result.output.findAll("test.nebula:b:$resultingVersion").size() >= 1
 
         if (coreAlignment) {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0:$resultingVersion")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
         }
 
         where:
@@ -1114,7 +1154,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         assert result.output.findAll("test.nebula:b:$resultingVersion").size() >= 1
 
         if (coreAlignment) {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0:$resultingVersion")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
         }
 
         where:
@@ -1136,7 +1176,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         assert result.output.findAll("test.nebula:b:$resultingVersion").size() >= 1
 
         if (coreAlignment) {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0:$resultingVersion")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
         }
 
         where:
@@ -1158,7 +1198,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         assert result.output.findAll("test.nebula:b:$resultingVersion").size() >= 1
 
         if (coreAlignment) {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0:$resultingVersion")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
         }
 
         where:
@@ -1180,7 +1220,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         assert result.output.findAll("test.nebula:b:$resultingVersion").size() >= 1
 
         if (coreAlignment) {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0:$resultingVersion")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
         }
 
         where:
@@ -1202,7 +1242,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         assert result.output.findAll("test.nebula:b:$resultingVersion").size() >= 1
 
         if (coreAlignment) {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0:$resultingVersion")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
         }
 
         where:
@@ -1224,7 +1264,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         assert result.output.findAll("test.nebula:b:$resultingVersion").size() >= 1
 
         if (coreAlignment) {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0:$resultingVersion")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
         }
 
         where:
@@ -1247,7 +1287,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         assert result.output.findAll("test.nebula:b:$resultingVersion").size() >= 1
 
         if (coreAlignment) {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0:$resultingVersion")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
         }
 
         where:
@@ -1270,7 +1310,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         assert result.output.findAll("test.nebula:b:$resultingVersion").size() >= 1
 
         if (coreAlignment) {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0:$resultingVersion")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
         }
 
         where:
@@ -1293,7 +1333,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         assert result.output.findAll("test.nebula:b:$resultingVersion").size() >= 1
 
         if (coreAlignment) {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0:$resultingVersion")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
         }
 
         where:
@@ -1316,7 +1356,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         assert result.output.findAll("test.nebula:b:$resultingVersion").size() >= 1
 
         if (coreAlignment) {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0:$resultingVersion")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
         }
 
         where:
