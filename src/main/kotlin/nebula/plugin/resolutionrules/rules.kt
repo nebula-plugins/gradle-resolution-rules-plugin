@@ -213,6 +213,9 @@ data class SubstituteRule(val module: String, val with: String, override var rul
                         if (versionSelector.accept(requestedSelector.version)) {
                             val message = "substitution from '$selector' to '$withSelector' because $reason \n" +
                                     "\twith reasons: ${reasons.joinToString()}"
+                            // Note on `useTarget`:
+                            // Forcing modules via ResolutionStrategy.force(Object...) uses this capability.
+                            // from https://docs.gradle.org/current/javadoc/org/gradle/api/artifacts/DependencyResolveDetails.html
                             useTarget(withSelector, message)
                         }
                     }

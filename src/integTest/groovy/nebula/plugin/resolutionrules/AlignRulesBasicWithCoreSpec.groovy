@@ -2,6 +2,7 @@ package nebula.plugin.resolutionrules
 
 import nebula.test.dependencies.DependencyGraphBuilder
 import nebula.test.dependencies.GradleDependencyGenerator
+import nebula.test.dependencies.ModuleBuilder
 
 class AlignRulesBasicWithCoreSpec extends AbstractAlignRulesSpec {
 
@@ -11,6 +12,117 @@ class AlignRulesBasicWithCoreSpec extends AbstractAlignRulesSpec {
         settingsFile << """
         enableFeaturePreview("GRADLE_METADATA")
         """
+    }
+
+    def 'align rules and force to latest.release'() {
+        def graph = new DependencyGraphBuilder()
+                .addModule('test.nebula:a:1.0.0')
+                .addModule('test.nebula:a:1.0.1')
+                .addModule('test.nebula:a:1.1.0')
+                .addModule('test.nebula:b:1.0.0')
+                .addModule('test.nebula:b:1.0.1')
+                .addModule('test.nebula:b:1.1.0')
+                .build()
+        def mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen")
+        mavenrepo.generateTestMavenRepo()
+
+        rulesJsonFile << '''\
+            {
+                "deny": [], "reject": [], "substitute": [], "replace": [],
+                "align": [
+                    {
+                        "name": "testNebula",
+                        "group": "test.nebula",
+                        "reason": "Align test.nebula dependencies",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    }
+                ]
+            }
+        '''.stripIndent()
+
+        buildFile << """\
+            repositories {
+                ${mavenrepo.mavenRepositoryBlock}
+            }
+            dependencies {
+                compile 'test.nebula:a:1.0.0'
+                compile 'test.nebula:b:1.1.0'
+            }
+            configurations.all {
+                resolutionStrategy { 
+                    force 'test.nebula:a:latest.release' 
+                }
+            }
+        """.stripIndent()
+
+        when:
+        def result = runTasks('dependencyInsight', '--dependency', 'test.nebula')
+
+        then:
+        def resultingVersion = "1.1.0"
+        dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
+
+        result.output.contains 'coreAlignmentSupport feature enabled'
+        result.output.contains 'belongs to platform aligned-platform:align-rules-and-force-to-latest-release-0-for-test.nebula:1.1.0'
+    }
+
+    def 'align rules and force to latest.release when brought in transitively'() {
+        def graph = new DependencyGraphBuilder()
+                .addModule('test.nebula:a:1.0.0')
+                .addModule('test.nebula:a:1.0.1')
+                .addModule('test.nebula:a:1.1.0')
+                .addModule('test.nebula:b:1.0.0')
+                .addModule('test.nebula:b:1.0.1')
+                .addModule('test.nebula:b:1.1.0')
+                .addModule(new ModuleBuilder('test.other:brings-a:1.0.0').addDependency('test.nebula:a:1.0.3').build())
+                .addModule(new ModuleBuilder('test.other:also-brings-a:1.0.0').addDependency('test.nebula:a:1.1.0').build())
+                .addModule(new ModuleBuilder('test.other:brings-b:1.0.0').addDependency('test.nebula:b:1.1.0').build())
+                .build()
+        def mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen")
+        mavenrepo.generateTestMavenRepo()
+
+        rulesJsonFile << '''\
+            {
+                "deny": [], "reject": [], "substitute": [], "replace": [],
+                "align": [
+                    {
+                        "name": "testNebula",
+                        "group": "test.nebula",
+                        "reason": "Align test.nebula dependencies",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    }
+                ]
+            }
+        '''.stripIndent()
+
+        buildFile << """\
+            repositories {
+                ${mavenrepo.mavenRepositoryBlock}
+            }
+            dependencies {
+                compile 'test.other:brings-a:latest.release'
+                compile 'test.other:also-brings-a:latest.release'
+                compile 'test.other:brings-b:latest.release'
+            }
+            configurations.all {
+                resolutionStrategy { 
+                    force 'test.nebula:a:latest.release' 
+                }
+            }
+        """.stripIndent()
+
+        when:
+        def result = runTasks('dependencyInsight', '--dependency', 'test.nebula')
+
+        then:
+        def resultingVersion = "1.1.0"
+        dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
+
+        result.output.contains 'coreAlignmentSupport feature enabled'
     }
 
     def 'multiple align rules'() {
@@ -75,6 +187,10 @@ class AlignRulesBasicWithCoreSpec extends AbstractAlignRulesSpec {
 
         then:
         result.output.contains 'coreAlignmentSupport feature enabled'
-        result.output.contains 'belongs to platform aligned-platform:multiple-align-rules-0-for-test.nebula:1.1.0'
+    }
+
+    private static void dependencyInsightContains(String resultOutput, String groupAndName, String resultingVersion) {
+        def content = "$groupAndName:.*$resultingVersion\n"
+        assert resultOutput.findAll(content).size() >= 1
     }
 }
