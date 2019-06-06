@@ -51,7 +51,7 @@ fun Configuration.setName(name: String) {
     val internalConfig = this as ConfigurationInternal
     val parentPath = Path.path(internalConfig.path).parent
     try {
-        val path = parentPath.child(name)
+        val path = parentPath!!.child(name)
         setField("path", path)
         setField("identityPath", path)
     } catch (e: NoSuchMethodError) {
