@@ -835,6 +835,109 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
     }
 
     @Unroll
+    def 'only brought in transitively: core alignment should substitute and align #description | core alignment #coreAlignment'() {
+        given:
+        def graph = new DependencyGraphBuilder()
+                .addModule(new ModuleBuilder('test.other:brings-a:1.0.0').addDependency('test.nebula:a:1.0.3').build())
+                .addModule(new ModuleBuilder('test.other:also-brings-a:1.0.0').addDependency('test.nebula:a:1.1.0').build())
+                .addModule(new ModuleBuilder('test.other:brings-b:1.0.0').addDependency('test.nebula:b:1.1.0').build())
+                .build()
+        mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
+
+        def module = "test.nebula:a:1.0.3"
+        def with = "test.nebula:a:1.1.0"
+        createAlignAndSubstituteRule(module, with)
+
+        def forceConfig = ''
+        if (useForce) {
+            forceConfig = "force 'test.nebula:a:$forcedVersion'"
+        }
+
+        buildFile << """
+            dependencies {
+                compile 'test.other:brings-a:latest.release'
+                compile 'test.other:also-brings-a:latest.release'
+                compile 'test.other:brings-b:latest.release'
+            }
+            configurations.all {
+                resolutionStrategy { $forceConfig }
+            }
+            """.stripIndent()
+
+        when:
+        def result = runTasks(*tasks(coreAlignment))
+
+        then:
+        if (!needsWorkToFix) {
+            dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
+            dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
+        } else {
+            dependencyInsightContains(result.output, "test.nebula:a", 'FAILED')
+            dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
+        }
+
+        if (coreAlignment) {
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
+        }
+
+        where:
+        coreAlignment | useForce | forcedVersion    | resultingVersion | description                  | needsWorkToFix
+        false         | false    | null             | '1.1.0'          | 'without a force'            | false
+        false         | true     | '1.0.3'          | '1.0.3'          | 'forced to static version'   | false
+        false         | true     | 'latest.release' | '1.1.0'          | 'forced to latest.release'   | false
+
+        true          | false    | null             | '1.1.0'          | 'without a force'            | false
+        true          | true     | '1.1.0'          | '1.1.0'          | 'forced to a static version' | false
+
+//         TODO: possibly use require-reject in lieu of resolutionStrategy.dependencySubstitution to fix this case
+        true          | true     | 'latest.release' | '1.1.0'          | 'forced to latest.release'   | true
+    }
+
+    @Unroll
+    def 'only brought in transitively: core alignment should substitute with a range and align with a force | core alignment #coreAlignment'() {
+        given:
+        def graph = new DependencyGraphBuilder()
+                .addModule(new ModuleBuilder('test.other:brings-a:1.0.0').addDependency('test.nebula:a:1.0.2').build())
+                .addModule(new ModuleBuilder('test.other:also-brings-a:1.0.0').addDependency('test.nebula:a:1.0.3').build())
+                .addModule(new ModuleBuilder('test.other:brings-b:1.0.0').addDependency('test.nebula:b:1.0.3').build())
+                .build()
+        mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
+
+        def module = "test.nebula:a:[1.0.2,1.1.0]"
+        def with = "test.nebula:a:1.0.1"
+        createAlignAndSubstituteRule(module, with)
+
+        buildFile << """
+            dependencies {
+                compile 'test.other:brings-a:latest.release'
+                compile 'test.other:also-brings-a:latest.release'
+                compile 'test.other:brings-b:latest.release'
+            }
+            configurations.all {
+                resolutionStrategy {
+                    force 'test.nebula:a:latest.release'
+                }
+            }
+            """.stripIndent()
+
+        when:
+        def result = runTasks(*tasks(coreAlignment))
+
+        then:
+        dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
+
+        if (coreAlignment) {
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
+        }
+
+        where:
+        coreAlignment | resultingVersion
+        false         | "1.0.3"
+        true          | "1.0.1"
+    }
+
+    @Unroll
     def 'apply a static version via details.useVersion and align results #description | core alignment #coreAlignment'() {
         // This is not using a substitution rule, so alignment is not totally taking place, as some versions are not rejected
         // TODO: See about reading in the resolution strategies to catch cases like this

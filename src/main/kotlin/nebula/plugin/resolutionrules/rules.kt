@@ -98,7 +98,7 @@ class AlignedPlatformRule(alignRule: AlignRule, substituteRules: MutableList<Sub
             val withSelector = substitution.module(withModuleId.toString()) as ModuleComponentSelector
 
             if (substitutedModule != null) {
-                firstLevelDependenciesRejectTheSubstitutedVersions(project, configuration, substitutedModule, withSelector, resolutionStrategy)
+                firstLevelDependenciesRejectTheSubstitutedVersions(project, configuration, substitutedModule, withSelector)
                 transitiveDependenciesRejectTheSubstitutedVersions(project, substitutedModule, withSelector)
                 it.applyForAlignedGroup(project, configuration, configuration.resolutionStrategy, extension, reasons, alignRule)
             }
@@ -112,8 +112,7 @@ class AlignedPlatformRule(alignRule: AlignRule, substituteRules: MutableList<Sub
     }
 
     private fun firstLevelDependenciesRejectTheSubstitutedVersions(project: Project, configuration: Configuration, substitutedModule: ModuleComponentSelector,
-                                                                   withSelector: ModuleComponentSelector, resolutionStrategy: ResolutionStrategy) {
-        val logger: Logger = Logging.getLogger(AlignedPlatformRule::class.java)
+                                                                   withSelector: ModuleComponentSelector) {
         configuration.incoming.beforeResolve { resolvableDependencies ->
             resolvableDependencies.dependencies.forEach { dep ->
                 if (dep is ExternalModuleDependency) {
@@ -121,9 +120,9 @@ class AlignedPlatformRule(alignRule: AlignRule, substituteRules: MutableList<Sub
                         val usingDependencyRecommendation = dep.version.isNullOrEmpty()
 
                         if (usingDependencyRecommendation) {
-                            applyConstraintsToDependencyIfRecommendedVersionMatches(project, dep, substitutedModule, withSelector, logger, configuration)
+                            applyConstraintsToDependencyIfRecommendedVersionMatches(project, dep, substitutedModule, withSelector, configuration)
                         } else {
-                            applyConstraintsToDependency(dep, substitutedModule, logger, configuration)
+                            applyConstraintsToDependency(dep, substitutedModule, configuration)
                         }
                     }
                 }
@@ -131,18 +130,19 @@ class AlignedPlatformRule(alignRule: AlignRule, substituteRules: MutableList<Sub
         }
     }
 
-    private fun applyConstraintsToDependencyIfRecommendedVersionMatches(project: Project, dep: ExternalModuleDependency, substitutedModule: ModuleComponentSelector, withSelector: ModuleComponentSelector, logger: Logger, configuration: Configuration) {
+    private fun applyConstraintsToDependencyIfRecommendedVersionMatches(project: Project, dep: ExternalModuleDependency, substitutedModule: ModuleComponentSelector,
+                                                                        withSelector: ModuleComponentSelector, configuration: Configuration) {
         val recommendedVersion = DependencyRecommendationsPlugin().getRecommendedVersionRecursive(project, dep)
         if (recommendedVersion != null) {
             val substitutedModuleVersionWithSelector = VersionWithSelector(substitutedModule.version)
 
             if (substitutedModuleVersionWithSelector.asSelector().accept(recommendedVersion)) {
-                applyConstraintsToDependencyWithRecommendation(dep, withSelector, logger, configuration, substitutedModule)
+                applyConstraintsToDependencyWithRecommendation(dep, withSelector, configuration, substitutedModule)
             }
         }
     }
 
-    private fun applyConstraintsToDependency(dep: ExternalModuleDependency, substitutedModule: ModuleComponentSelector, logger: Logger, configuration: Configuration) {
+    private fun applyConstraintsToDependency(dep: ExternalModuleDependency, substitutedModule: ModuleComponentSelector, configuration: Configuration) {
         dep.version {
             it.reject(substitutedModule.version)
         }
@@ -151,7 +151,8 @@ class AlignedPlatformRule(alignRule: AlignRule, substituteRules: MutableList<Sub
                 "based on alignment group '${substitutedModule.group}' in rule set '${alignRule.ruleSet}' ")
     }
 
-    private fun applyConstraintsToDependencyWithRecommendation(dep: ExternalModuleDependency, withSelector: ModuleComponentSelector, logger: Logger, configuration: Configuration, substitutedModule: ModuleComponentSelector) {
+    private fun applyConstraintsToDependencyWithRecommendation(dep: ExternalModuleDependency, withSelector: ModuleComponentSelector,
+                                                               configuration: Configuration, substitutedModule: ModuleComponentSelector) {
         dep.version {
             it.require(withSelector.version) // Define before any "rejects". When defined, overrides previous strictly declaration and clears previous reject.
             it.reject(substitutedModule.version)
@@ -213,6 +214,9 @@ data class SubstituteRule(val module: String, val with: String, override var rul
                         if (versionSelector.accept(requestedSelector.version)) {
                             val message = "substitution from '$selector' to '$withSelector' because $reason \n" +
                                     "\twith reasons: ${reasons.joinToString()}"
+                            // Note on `useTarget`:
+                            // Forcing modules via ResolutionStrategy.force(Object...) uses this capability.
+                            // from https://docs.gradle.org/current/javadoc/org/gradle/api/artifacts/DependencyResolveDetails.html
                             useTarget(withSelector, message)
                         }
                     }
@@ -273,7 +277,6 @@ data class SubstituteRule(val module: String, val with: String, override var rul
 }
 
 class TransitiveDependenciesSubstitutionMetadataRule : ComponentMetadataRule, Serializable {
-    private val logger: Logger = Logging.getLogger(TransitiveDependenciesSubstitutionMetadataRule::class.java)
     val alignRule: AlignRule
     val substitutionGroup: String
     val substitutionModuleName: String
