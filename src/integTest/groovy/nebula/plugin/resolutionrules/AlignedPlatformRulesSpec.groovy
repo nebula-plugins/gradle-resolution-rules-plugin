@@ -1468,6 +1468,116 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         true          | "1.0.0"    | false                                 | "1.0.1"             | "1.0.0"          | true
     }
 
+    @Unroll
+    def 'multiple substitutions applied: direct static dependency: alignment styles should honor multiple substitutions | core alignment: #coreAlignment'() {
+        given:
+        createMultipleSubstitutionRules()
+
+        buildFile << """
+            dependencies {
+                compile 'test.nebula:a:1.0.1'
+                compile 'test.nebula:b:1.0.3'
+            }
+            """.stripIndent()
+
+        when:
+        def result = runTasks(*tasks(coreAlignment))
+
+        then:
+        dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
+
+        if (coreAlignment) {
+            assert result.output.contains("test.nebula:a:{require 1.0.1; reject 1.0.1 & 1.0.3 & 1.1.0} -> 1.0.2")
+            assert result.output.contains("test.nebula:b:{require 1.0.3; reject 1.0.1 & 1.0.3 & 1.1.0} -> 1.0.2")
+
+            assert result.output.contains("rejection of version(s) '1.0.1'")
+            assert result.output.contains("rejection of version(s) '1.0.3'")
+            assert result.output.contains("rejection of version(s) '1.1.0'")
+            assert result.output.contains("substitution from 'test.nebula:a:1.0.1' to 'test.nebula:a:1.0.2'")
+
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
+        }
+
+        where:
+        coreAlignment | resultingVersion
+        false         | "1.0.2"
+        true          | "1.0.2"
+    }
+
+    @Unroll
+    def 'multiple substitutions applied: only brought in transitively: alignment styles should honor multiple substitutions | core alignment: #coreAlignment'() {
+        given:
+        def graph = new DependencyGraphBuilder()
+                .addModule(new ModuleBuilder('test.other:brings-a:1.0.0').addDependency('test.nebula:a:1.0.1').build())
+                .addModule(new ModuleBuilder('test.other:also-brings-a:1.0.0').addDependency('test.nebula:a:1.0.3').build())
+                .addModule(new ModuleBuilder('test.other:brings-b:1.0.0').addDependency('test.nebula:b:1.0.3').build())
+                .build()
+        mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
+
+        createMultipleSubstitutionRules()
+
+        buildFile << """
+            dependencies {
+                compile 'test.other:brings-a:latest.release'
+                compile 'test.other:brings-b:latest.release'
+            }
+            """.stripIndent()
+
+        when:
+        def result = runTasks(*tasks(coreAlignment))
+
+        then:
+        dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
+
+        if (coreAlignment) {
+            assert result.output.contains("test.nebula:a:{require 1.0.1; reject 1.0.1 & 1.0.3 & 1.1.0} -> 1.0.2")
+            assert result.output.contains("test.nebula:b:{require 1.0.3; reject 1.0.1 & 1.0.3 & 1.1.0} -> 1.0.2")
+
+            assert result.output.contains("substitution from 'test.nebula:a:1.0.1' to 'test.nebula:a:1.0.2'")
+
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
+        }
+
+        where:
+        coreAlignment | resultingVersion
+        false         | "1.0.2"
+        true          | "1.0.2"
+    }
+
+    private File createMultipleSubstitutionRules() {
+        rulesJsonFile << """
+            {
+                "substitute": [
+                    {
+                        "module" : "test.nebula:a:1.0.1",
+                        "with" : "test.nebula:a:1.0.2",
+                        "reason" : "(substitution for a)",
+                        "author" : "Test user <test@example.com>",
+                        "date" : "2015-10-07T20:21:20.368Z"
+                    },
+                    {
+                        "module" : "test.nebula:b:1.1.0",
+                        "with" : "test.nebula:b:1.0.3",
+                        "reason" : "(acts as rejection for a)",
+                        "author" : "Test user <test@example.com>",
+                        "date" : "2015-10-07T20:21:20.368Z"
+                    },                    {
+                        "module" : "test.nebula:b:1.0.3",
+                        "with" : "test.nebula:b:1.0.2",
+                        "reason" : "(acts as rejection for a)",
+                        "author" : "Test user <test@example.com>",
+                        "date" : "2015-10-07T20:21:20.368Z"
+                    }
+                ],
+                "align": [
+                    $alignRuleForTestNebula
+                ]
+            }
+            """.stripIndent()
+    }
+
     private String baseBuildGradleFile(String additionalPlugin = '') {
         def pluginToAdd = ''
         if (additionalPlugin != '') {
