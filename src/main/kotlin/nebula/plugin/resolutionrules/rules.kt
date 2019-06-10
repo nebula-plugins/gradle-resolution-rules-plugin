@@ -159,7 +159,7 @@ class AlignedPlatformRule(alignRule: AlignRule, substituteRules: MutableList<Sub
         if (!alreadyRejectedThisVersion(dep.versionConstraint, substitutedModule.version) &&
                 !alreadyRequiredThisVersion(dep.versionConstraint, requiredVersion)) {
 
-            val reason = "require version ${withSelector.version} and rejection of version(s) '${substitutedModule.version}'" +
+            val reason = "require version ${withSelector.version} and rejection of BOM recommended version(s) '${substitutedModule.version}' " +
                     "for incoming dependency '${dep.group}:${dep.name}' " +
                     "based on alignment group '${substitutedModule.group}' in rule set '${alignRule.ruleSet}' " +
                     "because recommended version matched a substitution rule version."

@@ -1,6 +1,5 @@
 package nebula.plugin.resolutionrules
 
-
 import nebula.test.IntegrationTestKitSpec
 import nebula.test.dependencies.DependencyGraphBuilder
 import nebula.test.dependencies.GradleDependencyGenerator
@@ -1544,6 +1543,154 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         coreAlignment | resultingVersion
         false         | "1.0.2"
         true          | "1.0.2"
+    }
+
+
+    @Unroll
+    def 'multiple substitutions applied: recs with core bom support disabled: core alignment should honor multiple substitutions | core alignment: #coreAlignment'() {
+        given:
+        def bomVersion = "1.0.1"
+        setupForBomAndAlignmentAndSubstitution(bomVersion, "")
+
+        rulesJsonFile.delete()
+        rulesJsonFile.createNewFile()
+        createMultipleSubstitutionRules()
+
+        when:
+        def result = runTasks(*tasks(coreAlignment, coreBomSupport))
+
+        then:
+        dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
+
+        if (coreAlignment) {
+            assert result.output.contains("test.nebula:a:{require 1.0.2; reject 1.0.1 & 1.0.3 & 1.1.0} -> 1.0.2")
+            assert result.output.contains("test.nebula:b:{require 1.0.2; reject 1.0.1 & 1.0.3 & 1.1.0} -> 1.0.2")
+
+            assert result.output.contains("require version 1.0.2")
+            assert result.output.contains("rejection of BOM recommended version(s) '1.0.1'")
+            assert result.output.contains("rejection of version(s) '1.0.3'")
+            assert result.output.contains("rejection of version(s) '1.1.0'")
+//            assert result.output.contains("substitution from 'test.nebula:a:1.0.1' to 'test.nebula:a:1.0.2'")
+
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
+        }
+
+        where:
+        coreAlignment | coreBomSupport | resultingVersion
+        false         | false          | "1.0.1"
+        true          | false          | "1.0.2"
+    }
+
+    @Unroll
+    def 'multiple substitutions applied: recs with core bom support enabled: alignment styles should honor multiple substitutions | core alignment: #coreAlignment'() {
+        given:
+        def bomVersion = "1.0.1"
+        setupForBomAndAlignmentAndSubstitution(bomVersion, "")
+
+        rulesJsonFile.delete()
+        rulesJsonFile.createNewFile()
+        createMultipleSubstitutionRules()
+
+        when:
+        def result = runTasks(*tasks(coreAlignment, coreBomSupport))
+
+        then:
+        dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
+
+        if (coreAlignment) {
+            assert result.output.contains("test.nebula:a:{require 1.0.2; reject 1.0.1 & 1.0.3 & 1.1.0} -> 1.0.2")
+            assert result.output.contains("test.nebula:b:{require 1.0.2; reject 1.0.1 & 1.0.3 & 1.1.0} -> 1.0.2")
+
+            assert result.output.contains("require version 1.0.2")
+            assert result.output.contains("rejection of BOM recommended version(s) '1.0.1'")
+            assert result.output.contains("rejection of version(s) '1.0.3'")
+            assert result.output.contains("rejection of version(s) '1.1.0'")
+            assert result.output.contains("substitution from 'test.nebula:a:1.0.1' to 'test.nebula:a:1.0.2'")
+
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
+        }
+
+        where:
+        coreAlignment | coreBomSupport | resultingVersion
+        false         | true           | "1.0.2"
+        true          | true           | "1.0.2"
+    }
+
+
+    @Unroll
+    def 'multiple substitutions applied: enforced recs with core bom support disabled: core alignment should honor multiple substitutions | core alignment: #coreAlignment'() {
+        given:
+        def bomVersion = "1.0.1"
+        def usingEnforcedPlatform = true
+        setupForBomAndAlignmentAndSubstitution(bomVersion, "", usingEnforcedPlatform)
+
+        rulesJsonFile.delete()
+        rulesJsonFile.createNewFile()
+        createMultipleSubstitutionRules()
+
+        when:
+        def result = runTasks(*tasks(coreAlignment, coreBomSupport))
+
+        then:
+        dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
+
+        if (coreAlignment) {
+            assert result.output.contains("test.nebula:a:{require 1.0.2; reject 1.0.1 & 1.0.3 & 1.1.0} -> 1.0.2")
+            assert result.output.contains("test.nebula:b:{require 1.0.2; reject 1.0.1 & 1.0.3 & 1.1.0} -> 1.0.2")
+
+            assert result.output.contains("require version 1.0.2")
+            assert result.output.contains("rejection of BOM recommended version(s) '1.0.1'")
+            assert result.output.contains("rejection of version(s) '1.0.3'")
+            assert result.output.contains("rejection of version(s) '1.1.0'")
+//            assert result.output.contains("substitution from 'test.nebula:a:1.0.1' to 'test.nebula:a:1.0.2'")
+
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
+        }
+
+        where:
+        coreAlignment | coreBomSupport | resultingVersion
+        false         | false          | "1.0.1"
+        true          | false          | "1.0.2"
+    }
+
+    @Unroll
+    def 'multiple substitutions applied: enforced recs with core bom support enabled: alignment styles should honor multiple substitutions | core alignment: #coreAlignment'() {
+        given:
+        def bomVersion = "1.0.1"
+        def usingEnforcedPlatform = true
+        setupForBomAndAlignmentAndSubstitution(bomVersion, "", usingEnforcedPlatform)
+
+        rulesJsonFile.delete()
+        rulesJsonFile.createNewFile()
+        createMultipleSubstitutionRules()
+
+        when:
+        def result = runTasks(*tasks(coreAlignment, coreBomSupport))
+
+        then:
+        dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
+
+        if (coreAlignment) {
+            assert result.output.contains("test.nebula:a:{require 1.0.2; reject 1.0.1 & 1.0.3 & 1.1.0} -> 1.0.2")
+            assert result.output.contains("test.nebula:b:{require 1.0.2; reject 1.0.1 & 1.0.3 & 1.1.0} -> 1.0.2")
+
+            assert result.output.contains("require version 1.0.2")
+            assert result.output.contains("rejection of BOM recommended version(s) '1.0.1'")
+            assert result.output.contains("rejection of version(s) '1.0.3'")
+            assert result.output.contains("rejection of version(s) '1.1.0'")
+            assert result.output.contains("substitution from 'test.nebula:a:1.0.1' to 'test.nebula:a:1.0.2'")
+
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
+        }
+
+        where:
+        coreAlignment | coreBomSupport | resultingVersion
+        false         | true           | "1.0.2"
+        true          | true           | "1.0.2"
     }
 
     private File createMultipleSubstitutionRules() {
