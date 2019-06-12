@@ -81,7 +81,7 @@ data class RuleSet(
     }
 }
 
-class AlignedPlatformRule(alignRule: AlignRule, substituteRules: MutableList<SubstituteRule>) : Serializable {
+class AlignedPlatformRule(alignRule: AlignRule, substituteRules: MutableList<SubstituteRule>) : CanRejectDependency, Serializable {
     var substituteRules: List<SubstituteRule> = substituteRules
     var alignRule: AlignRule = alignRule
 
@@ -143,25 +143,23 @@ class AlignedPlatformRule(alignRule: AlignRule, substituteRules: MutableList<Sub
     }
 
     private fun applyConstraintsToDependency(dep: ExternalModuleDependency, substitutedModule: ModuleComponentSelector, configuration: Configuration) {
-        dep.version {
-            it.reject(substitutedModule.version)
-        }
-        dep.because("rejection of version(s) '${substitutedModule.version}' for incoming dependency '${dep.group}:${dep.name}' " +
-                "in $configuration before resolution, " +
-                "based on alignment group '${substitutedModule.group}' in rule set '${alignRule.ruleSet}' ")
+        val reason = "rejection of version(s) '${substitutedModule.version}' for incoming dependency '${dep.group}:${dep.name}' " +
+                "before resolution, " +
+                "based on alignment group '${substitutedModule.group}' in rule set '${alignRule.ruleSet}'"
+        rejectVersion(dep, substitutedModule.version, reason)
     }
 
     private fun applyConstraintsToDependencyWithRecommendation(dep: ExternalModuleDependency, withSelector: ModuleComponentSelector,
                                                                configuration: Configuration, substitutedModule: ModuleComponentSelector) {
-        dep.version {
-            it.require(withSelector.version) // Define before any "rejects". When defined, overrides previous strictly declaration and clears previous reject.
-            it.reject(substitutedModule.version)
+        val requiredVersion = withSelector.version
+        if (!alreadyRequiredThisVersion(dep.versionConstraint, requiredVersion)) {
+
+            val reason = "require version ${withSelector.version} and rejection of BOM recommended version(s) '${substitutedModule.version}' " +
+                    "for incoming dependency '${dep.group}:${dep.name}' " +
+                    "based on alignment group '${substitutedModule.group}' in rule set '${alignRule.ruleSet}' " +
+                    "because recommended version matched a substitution rule version."
+            rejectVersion(dep, substitutedModule.version, reason, requiredVersion)
         }
-        dep.because("require version ${withSelector.version} and rejection of version(s) '${substitutedModule.version}'" +
-                "for incoming dependency '${dep.group}:${dep.name}' " +
-                "in $configuration, " +
-                "based on alignment group '${substitutedModule.group}' in rule set '${alignRule.ruleSet}' " +
-                "because recommended version matched a substitution rule version.\n")
     }
 }
 
@@ -276,7 +274,7 @@ data class SubstituteRule(val module: String, val with: String, override var rul
     }
 }
 
-class TransitiveDependenciesSubstitutionMetadataRule : ComponentMetadataRule, Serializable {
+class TransitiveDependenciesSubstitutionMetadataRule : CanRejectDependency, ComponentMetadataRule, Serializable {
     val alignRule: AlignRule
     val substitutionGroup: String
     val substitutionModuleName: String
@@ -302,10 +300,9 @@ class TransitiveDependenciesSubstitutionMetadataRule : ComponentMetadataRule, Se
             it.withDependencies { deps ->
                 deps.forEach { dep ->
                     if (alignRule.ruleMatches(dep.group ?: "", dep.name)) {
-                        dep.version {
-                            it.reject(substitutionVersion)
-                        }
-                        dep.because("rejection of transitive dependency ${dep.group}:${dep.name} version(s) '$substitutionVersion' from aligned dependency '$substitutionGroup:$substitutionModuleName'")
+                        val reason = "rejection of transitive dependency ${dep.group}:${dep.name} version(s) " +
+                                "'$substitutionVersion' from aligned dependency '$substitutionGroup:$substitutionModuleName'"
+                        rejectVersion(dep, substitutionVersion, reason)
                     }
                 }
             }
@@ -370,6 +367,66 @@ class DependencyDeniedException(moduleId: ModuleVersionIdentifier, rule: DenyRul
 
 class SubstituteRuleMissingVersionException(moduleId: ModuleVersionIdentifier, rule: SubstituteRule, reasons: MutableSet<String>) : Exception("The dependency to be substituted ($moduleId) must have a version. Invalid rule: $rule\n" +
         "\twith reasons: ${reasons.joinToString()}")
+
+interface CanRejectDependency {
+    fun rejectVersion(dep: DirectDependencyMetadata, newVersionToReject: String, newReason: String, requiredVersion: String? = null) {
+        if (!alreadyRejectedThisVersion(dep.versionConstraint, newVersionToReject)) {
+            val rejectedVersions = mutableSetOf<String>()
+            val reasons = mutableSetOf<String>()
+            if (dep.reason != null) {
+                reasons.addAll(dep.reason!!.split("\n"))
+            }
+            dep.version {
+                rejectedVersions.addAll(it.rejectedVersions)
+            }
+
+            // reset values
+            if (requiredVersion != null) {
+                dep.version {
+                    it.require(requiredVersion) // Define before any "rejects". When defined, overrides previous strictly declaration and clears previous reject.
+                }
+            }
+            dep.version {
+                rejectedVersions.add(newVersionToReject)
+                it.reject(*(rejectedVersions.sorted().toTypedArray()))
+            }
+            reasons.add(newReason)
+            dep.because(reasons.sorted().joinToString("\n"))
+        }
+    }
+
+    fun rejectVersion(dep: ExternalModuleDependency, newVersionToReject: String, newReason: String, requiredVersion: String? = null) {
+        if (!alreadyRejectedThisVersion(dep.versionConstraint, newVersionToReject)) {
+            val rejectedVersions = mutableSetOf<String>()
+            val reasons = mutableSetOf<String>()
+            if (dep.reason != null) {
+                reasons.addAll(dep.reason!!.split("\n"))
+            }
+            dep.version {
+                rejectedVersions.addAll(it.rejectedVersions)
+            }
+
+            // reset values
+            if (requiredVersion != null) {
+                dep.version {
+                    it.require(requiredVersion) // Define before any "rejects". When defined, overrides previous strictly declaration and clears previous reject.
+                }
+            }
+            dep.version {
+                rejectedVersions.add(newVersionToReject)
+                it.reject(*(rejectedVersions.sorted().toTypedArray()))
+            }
+            reasons.add(newReason)
+            dep.because(reasons.sorted().joinToString("\n"))
+        }
+    }
+
+    fun alreadyRejectedThisVersion(versionConstraint: VersionConstraint, versionToReject: String) =
+            versionConstraint.rejectedVersions.contains(versionToReject)
+
+    fun alreadyRequiredThisVersion(versionConstraint: VersionConstraint, versionToRequire: String) =
+            versionConstraint.requiredVersion == versionToRequire
+}
 
 fun Configuration.exclude(group: String, module: String) {
     exclude(mapOf("group" to group, "module" to module))
