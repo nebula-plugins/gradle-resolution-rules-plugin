@@ -57,11 +57,10 @@ data class AlignRule(val name: String?,
     fun ruleMatches(dep: ModuleVersionIdentifier) = ruleMatches(dep.group, dep.name)
 
     fun ruleMatches(inputGroup: String, inputName: String): Boolean {
-        if (groupMatcher == null) {
-            groupMatcher = safelyCreatesMatcher(group, inputGroup, "group")
-            includesMatchers = includes.map { safelyCreatesMatcher(it, inputName, "includes") }
-            excludesMatchers = excludes.map { safelyCreatesMatcher(it, inputName, "excludes") }
-        }
+        groupMatcher = safelyCreatesMatcher(group, inputGroup, "group")
+        includesMatchers = includes.map { safelyCreatesMatcher(it, inputName, "includes") }
+        excludesMatchers = excludes.map { safelyCreatesMatcher(it, inputName, "excludes") }
+
 
         return safelyMatches(groupMatcher!!, inputGroup, "group") &&
                 (includes.isEmpty() || includesMatchers.any { safelyMatches(it, inputName, "includes") }) &&
@@ -73,16 +72,16 @@ data class AlignRule(val name: String?,
             it.toPattern().matcher(input)
         } catch (e: Exception) {
             throw java.lang.IllegalArgumentException("Failed to use regex '$it' from type '$type' to create matcher for '$input'\n" +
-                    "Rule: ${this}")
+                    "Rule: ${this}", e)
         }
     }
 
     private fun safelyMatches(it: Matcher, input: String, type: String): Boolean {
         return try {
-            it.matches(input)
+            it.matches()
         } catch (e: Exception) {
             throw java.lang.IllegalArgumentException("Failed to use matcher '$it' from type '$type' to match '$input'\n" +
-                    "Rule: ${this}")
+                    "Rule: ${this}", e)
         }
     }
 }
