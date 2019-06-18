@@ -72,7 +72,7 @@ data class AlignRule(val name: String?,
             it.toPattern().matcher(input)
         } catch (e: Exception) {
             throw java.lang.IllegalArgumentException("Failed to use regex '$it' from type '$type' to create matcher for '$input'\n" +
-                    "Rule: ${this}")
+                    "Rule: ${this}", e)
         }
     }
 
@@ -81,7 +81,7 @@ data class AlignRule(val name: String?,
             it.matches()
         } catch (e: Exception) {
             throw java.lang.IllegalArgumentException("Failed to use matcher '$it' from type '$type' to match '$input'\n" +
-                    "Rule: ${this}")
+                    "Rule: ${this}", e)
         }
     }
 }
