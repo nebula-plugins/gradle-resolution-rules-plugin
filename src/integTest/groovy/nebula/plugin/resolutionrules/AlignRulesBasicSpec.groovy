@@ -1102,4 +1102,77 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
         result.output.contains 'example.nebula:sub0:1.0.0 -> project :sub0'
         result.output.contains 'example.nebula:sub1:1.1.0 -> project :sub1'
     }
+
+
+    def 'align com.google.inject'() {
+        def graph = new DependencyGraphBuilder()
+                .addModule(new ModuleBuilder('com.google.inject:guice:4.2.2').build())
+                .addModule(new ModuleBuilder('com.google.inject:guice:4.1.0').build())
+                .addModule(new ModuleBuilder('com.google.inject.extensions:guice-multibindings:4.1.0').build())
+                .addModule(new ModuleBuilder('com.google.inject.extensions:guice-multibindings:4.2.2').build())
+                .addModule(new ModuleBuilder('com.google.inject.extensions:guice-assistedinject:4.1.0').build())
+                .addModule(new ModuleBuilder('com.google.inject.extensions:guice-assistedinject:4.2.2').build())
+                .addModule(new ModuleBuilder('com.google.inject.extensions:guice-throwingproviders:4.1.0').build())
+                .addModule(new ModuleBuilder('com.google.inject.extensions:guice-throwingproviders:4.2.2').build())
+                .build()
+        def generator = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen")
+        generator.generateTestMavenRepo()
+
+        rulesJsonFile << '''\
+            {
+                "deny": [], "reject": [], "substitute": [], "replace": [],
+                "align": [
+                    {
+                        "name": "guice-align",
+                        "group": "(com\\\\.google\\\\.inject|com\\\\.google\\\\.inject\\\\.extensions)",
+                        "excludes": ["guice-(struts2-plugin|throwing-providers|assisted-inject|dagger-adapter)"],
+                        "includes": [],
+                        "reason": "Misaligned Guice jars cause strange runtime errors.",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2018-01-30T20:21:20.368Z"
+                    }
+                ]
+            }
+        '''.stripIndent()
+
+        buildFile.text = """\
+            plugins {
+                id 'nebula.resolution-rules'
+            }
+  
+            apply plugin: 'nebula.resolution-rules'
+            apply plugin: 'java'
+            repositories {
+                    ${generator.mavenRepositoryBlock}
+            }
+            
+            dependencies {
+                resolutionRules files('$rulesJsonFile')
+                implementation 'com.google.inject:guice:4.2.2'
+                implementation 'com.google.inject.extensions:guice-multibindings:4.1.0'
+                implementation 'com.google.inject.extensions:guice-assistedinject:4.1.0'
+                implementation 'com.google.inject.extensions:guice-throwingproviders:4.1.0'
+                
+                modules {
+                    module('com.google.inject:guice-assistedinject') {
+                        replacedBy('com.google.inject.extensions:guice-assistedinject')
+                    }
+                    module('com.google.inject:guice-throwingproviders') {
+                        replacedBy('com.google.inject.extensions:guice-throwingproviders')
+                    }
+                }
+            }
+            
+            
+        """.stripIndent()
+
+
+        when:
+        def result = runTasks('dependencyInsight', '--dependency', 'guice-multibindings', '--configuration', 'compileClasspath')
+
+        then:
+        result.output.contains 'aligned to 4.2.2 by align-com-google-inject'
+        result.output.contains 'with reasons: nebula.resolution-rules uses: align-com-google-inject.json'
+        result.output.contains 'com.google.inject.extensions:guice-multibindings:4.1.0 -> 4.2.2'
+    }
 }
