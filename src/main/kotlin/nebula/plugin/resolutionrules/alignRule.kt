@@ -83,7 +83,7 @@ data class AlignRule(val name: String?,
 
     private fun safelyMatches(it: Matcher, input: String, type: String): Boolean {
         return try {
-            it.matches(input)
+            it.matches()
         } catch (e: Exception) {
             throw java.lang.IllegalArgumentException("Failed to use matcher '$it' from type '$type' to match '$input'\n" +
                     "Rule: ${this}", e)
