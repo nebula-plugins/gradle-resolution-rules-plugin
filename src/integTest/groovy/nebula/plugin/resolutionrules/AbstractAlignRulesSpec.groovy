@@ -18,8 +18,8 @@ abstract class AbstractAlignRulesSpec extends IntegrationTestKitSpec {
             }
         """.stripIndent()
 
-        settingsFile << '''\
-            rootProject.name = 'aligntest'
-        '''.stripIndent()
+        settingsFile << """\
+            rootProject.name = '${moduleName}'
+        """.stripIndent()
     }
 }
