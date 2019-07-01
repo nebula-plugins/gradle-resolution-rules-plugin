@@ -24,7 +24,6 @@ class AlignRulesBasicWithCoreSpec extends IntegrationTestKitSpec {
                 id 'nebula.resolution-rules'
                 id 'java'
             }
-
             dependencies {
                 resolutionRules files('$rulesJsonFile')
             }
@@ -549,6 +548,72 @@ class AlignRulesBasicWithCoreSpec extends IntegrationTestKitSpec {
         "narrow range"     | "1.0.+"        | true          | "1.0.3"            | "1.0.2"
     }
 
+    @Unroll
+    def 'core alignment uses versions observed during resolution'() {
+        // test case from https://github.com/nebula-plugins/gradle-nebula-integration/issues/52
+        // higher version transitive aligning parent dependency
+        given:
+        rulesJsonFile << """
+            {
+                "align": [
+                    {
+                        "name": "exampleapp-client-align",
+                        "group": "test.nebula",
+                        "includes": [ "exampleapp-.*" ],
+                        "excludes": [],
+                        "reason": "Library all together",
+                        "author": "example@example.com",
+                        "date": "2018-03-01"
+                    }
+                ],
+                "deny": [],
+                "exclude": [],
+                "reject": [],
+                "replace": [],
+                "substitute": []
+            }
+            """.stripIndent()
+
+        def mavenrepo = createDependenciesForExampleAppDependencies()
+
+        buildFile << """
+            repositories {
+                ${mavenrepo.mavenRepositoryBlock}
+            }
+            dependencies {
+                compile 'test.nebula:exampleapp-client:80.0.139'
+            }
+            """.stripIndent()
+        when:
+        def dependenciesResult = runTasks('dependencies', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def result = runTasks(*tasks(coreAlignment))
+
+        then:
+        dependencyInsightContains(result.output, "test.nebula:exampleapp-client", resultingVersion)
+
+        if (coreAlignment) {
+            // Nebula implementation attempts to resolve multiple times which introduces new versions
+            assert dependenciesResult.output.contains("""
+            \\--- test.nebula:exampleapp-client:80.0.139 -> 80.0.225
+                 +--- test.nebula:exampleapp-common:80.0.249
+                 \\--- test.nebula:exampleapp-smart-client:80.0.10
+            """.stripIndent())
+        } else {
+            // Gradle implementation only considers versions currently observed during resolution
+            assert dependenciesResult.output.contains("""
+            \\--- test.nebula:exampleapp-client:80.0.139 -> 80.0.236
+                 +--- test.nebula:exampleapp-common:80.0.260
+                 \\--- test.nebula:exampleapp-smart-client:80.0.21
+                      \\--- test.nebula:exampleapp-model:80.0.15
+            """.stripIndent())
+        }
+
+        where:
+        coreAlignment | resultingVersion
+        false         | "80.0.236"
+        true          | "80.0.225"
+    }
+
     private static def tasks(Boolean usingCoreAlignment, Boolean usingCoreBomSupport = false, String groupForInsight = 'test.nebula') {
         return [
                 'dependencyInsight',
@@ -665,6 +730,52 @@ class AlignRulesBasicWithCoreSpec extends IntegrationTestKitSpec {
 
                 .addModule('test.nebula:c:1.4.0')
 
+                .build()
+        def mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen")
+        mavenrepo.generateTestMavenRepo()
+        return mavenrepo
+    }
+
+    private GradleDependencyGenerator createDependenciesForExampleAppDependencies() {
+        def client = 'test.nebula:exampleapp-client'
+        def common = 'test.nebula:exampleapp-common'
+        def model = 'test.nebula:exampleapp-model'
+        def smartClient = 'test.nebula:exampleapp-smart-client'
+        def graph = new DependencyGraphBuilder()
+                .addModule(new ModuleBuilder("$client:80.0.139")
+                        .addDependency("$common:80.0.154")
+                        .build())
+                .addModule(new ModuleBuilder("$client:80.0.154")
+                        .addDependency("$common:80.0.177")
+                        .build())
+                .addModule(new ModuleBuilder("$client:80.0.177")
+                        .addDependency("$common:80.0.201")
+                        .build())
+                .addModule(new ModuleBuilder("$client:80.0.201")
+                        .addDependency("$common:80.0.225")
+                        .build())
+                .addModule(new ModuleBuilder("$client:80.0.225")
+                        .addDependency("$common:80.0.249")
+                        .addDependency("$smartClient:80.0.10")
+                        .build())
+                .addModule(new ModuleBuilder("$client:80.0.236")
+                        .addDependency("$common:80.0.260")
+                        .addDependency("$smartClient:80.0.21")
+                        .build())
+
+                .addModule("$common:80.0.154")
+                .addModule("$common:80.0.177")
+                .addModule("$common:80.0.201")
+                .addModule("$common:80.0.225")
+                .addModule("$common:80.0.249")
+                .addModule("$common:80.0.260")
+
+                .addModule("$model:80.0.15")
+
+                .addModule("$smartClient:80.0.10")
+                .addModule(new ModuleBuilder("$smartClient:80.0.21")
+                        .addDependency("$model:80.0.15")
+                        .build())
                 .build()
         def mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen")
         mavenrepo.generateTestMavenRepo()
