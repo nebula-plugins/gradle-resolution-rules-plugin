@@ -196,21 +196,21 @@ data class SubstituteRule(val module: String, val with: String, override var rul
                           override val reason: String, override val author: String, override val date: String) : BasicRule, Serializable {
     override fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension, reasons: MutableSet<String>) {
         val substitution = resolutionStrategy.dependencySubstitution
-        val selector = substitution.module(module)
+        val substitutedModule = substitution.module(module)
         val withModuleId = ModuleVersionIdentifier.valueOf(with)
         if (!withModuleId.hasVersion()) {
             throw SubstituteRuleMissingVersionException(withModuleId, this, reasons)
         }
         val withSelector = substitution.module(withModuleId.toString()) as ModuleComponentSelector
 
-        if (selector is ModuleComponentSelector) {
+        if (substitutedModule is ModuleComponentSelector) {
             resolutionStrategy.dependencySubstitution.all(action {
                 if (requested is ModuleComponentSelector) {
                     val requestedSelector = requested as ModuleComponentSelector
-                    if (requestedSelector.group == selector.group && requestedSelector.module == selector.module) {
-                        val versionSelector = VersionWithSelector(selector.version).asSelector()
+                    if (requestedSelector.group == substitutedModule.group && requestedSelector.module == substitutedModule.module) {
+                        val versionSelector = VersionWithSelector(substitutedModule.version).asSelector()
                         if (versionSelector.accept(requestedSelector.version)) {
-                            val message = "substitution from '$selector' to '$withSelector' because $reason \n" +
+                            val message = "substitution from '$substitutedModule' to '$withSelector' because $reason \n" +
                                     "\twith reasons: ${reasons.joinToString()}"
                             // Note on `useTarget`:
                             // Forcing modules via ResolutionStrategy.force(Object...) uses this capability.
@@ -224,7 +224,7 @@ data class SubstituteRule(val module: String, val with: String, override var rul
             var message = "substitution to '$withSelector' because $reason \n" +
                     "\twith reasons: ${reasons.joinToString()}"
 
-            val selectorNameSections = selector.displayName.split(":")
+            val selectorNameSections = substitutedModule.displayName.split(":")
             if (selectorNameSections.size > 2) {
                 val selectorGroupAndArtifact = "${selectorNameSections[0]}:${selectorNameSections[1]}"
                 message = "substitution from '$selectorGroupAndArtifact' to '$withSelector' because $reason \n" +
@@ -232,7 +232,7 @@ data class SubstituteRule(val module: String, val with: String, override var rul
             }
 
             resolutionStrategy.dependencySubstitution {
-                it.substitute(selector)
+                it.substitute(substitutedModule)
                         .because(message)
                         .with(withSelector)
             }
