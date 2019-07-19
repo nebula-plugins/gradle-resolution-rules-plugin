@@ -140,12 +140,14 @@ data class SubstituteRule(val module: String, val with: String, override var rul
                         }
                     }
                 }
-                if (ResolutionRulesPlugin.isCoreAlignmentEnabled()) {
-                    // Presently only calling this when substitution is triggered, to align with Nebula implementation
-                    firstLevelDependenciesRejectTheSubstitutedVersions(configuration, substitutedModule, withSelector)
-                    transitiveDependenciesRejectTheSubstitutedVersions(project, substitutedModule, withSelector)
-                }
             })
+            if (ResolutionRulesPlugin.isCoreAlignmentEnabled()) {
+                // Call this even when substitution doesn't match (such as requested version 1.+).
+                // Dependencies that are pulled in both directly (but do not match the substitution rule) and transitively
+                // will have rejections added to them post-resolution that can cause a failure to resolve without this
+                firstLevelDependenciesRejectTheSubstitutedVersions(configuration, substitutedModule, withSelector)
+                transitiveDependenciesRejectTheSubstitutedVersions(project, substitutedModule, withSelector)
+            }
         } else {
             var message = "substitution to '$withSelector' because $reason \n" +
                     "\twith reasons: ${reasons.joinToString()}"

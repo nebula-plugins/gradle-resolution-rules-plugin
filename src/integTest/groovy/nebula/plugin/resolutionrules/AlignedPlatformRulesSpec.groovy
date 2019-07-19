@@ -287,7 +287,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
     }
 
     @Unroll
-    def 'narrowly defined dynamic dependency: alignment styles should substitute and align from static version to higher static version that is not substituted-away-from | core alignment: #coreAlignment'() {
+    def 'narrowly defined dynamic dependency: core alignment should substitute and align from static version to higher static version that is not substituted-away-from | core alignment: #coreAlignment'() {
         given:
         List<String> dependencyDefinitionVersions = ['1.0.+', '1.0.0']
         setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersions)
@@ -306,11 +306,11 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         where:
         substituteVersionType | substituteFromVersion | substituteToVersion | substituteUpOrDown | coreAlignment | resultingVersion
         "static version"      | "1.0.3"               | "1.1.0"             | "higher"           | false         | "1.0.3" // FIXME: should resolve differently
-        "static version"      | "1.0.3"               | "1.1.0"             | "higher"           | true          | "1.0.3" // keep behavior the same as coreAlignment=false
+        "static version"      | "1.0.3"               | "1.1.0"             | "higher"           | true          | "1.0.2"
     }
 
     @Unroll
-    def 'narrowly defined dynamic dependency: alignment styles should substitute and align from static version to higher latest.release dynamic version in narrow definition that is not substituted-away-from | core alignment: #coreAlignment'() {
+    def 'narrowly defined dynamic dependency: core alignment should substitute and align from static version to higher latest.release dynamic version in narrow definition that is not substituted-away-from | core alignment: #coreAlignment'() {
         given:
         List<String> dependencyDefinitionVersions = ['1.0.+', '1.0.0']
         setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersions)
@@ -329,11 +329,11 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         where:
         substituteVersionType | substituteFromVersion | substituteToVersion | substituteUpOrDown | coreAlignment | resultingVersion
         "static version"      | "1.0.3"               | "latest.release"    | "higher"           | false         | "1.0.3" // FIXME: should resolve differently
-        "static version"      | "1.0.3"               | "latest.release"    | "higher"           | true          | "1.0.3" // keep behavior the same as coreAlignment=false
+        "static version"      | "1.0.3"               | "latest.release"    | "higher"           | true          | "1.0.2"
     }
 
     @Unroll
-    def 'narrowly defined dynamic dependency: alignment styles should substitute and align from static version to higher minor-scoped dynamic version that is not substituted-away-from | core alignment: #coreAlignment'() {
+    def 'narrowly defined dynamic dependency: core alignment should substitute and align from static version to higher minor-scoped dynamic version that is not substituted-away-from | core alignment: #coreAlignment'() {
         given:
         List<String> dependencyDefinitionVersions = ['1.0.+', '1.0.0']
         setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersions)
@@ -352,11 +352,11 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         where:
         substituteVersionType | substituteFromVersion | substituteToVersion | substituteUpOrDown | coreAlignment | resultingVersion
         "static version"      | "1.0.3"               | "1.+"               | "higher"           | false         | "1.0.3" // FIXME: should resolve differently
-        "static version"      | "1.0.3"               | "1.+"               | "higher"           | true          | "1.0.3" // keep behavior the same as coreAlignment=false
+        "static version"      | "1.0.3"               | "1.+"               | "higher"           | true          | "1.0.2"
     }
 
     @Unroll
-    def 'narrowly defined dynamic dependency: alignment styles should substitute and align from static version to conflict-resolved version that is is not substituted-away-from | core alignment: #coreAlignment'() {
+    def 'narrowly defined dynamic dependency: core alignment should substitute and align from static version to conflict-resolved version that is is not substituted-away-from | core alignment: #coreAlignment'() {
         given:
         List<String> dependencyDefinitionVersions = ['1.0.+', '1.0.0']
         setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersions)
@@ -375,7 +375,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         where:
         substituteVersionType | substituteFromVersion | substituteToVersion | substituteUpOrDown | coreAlignment | resultingVersion
         "static version"      | "1.0.3"               | "1.0.0"             | "lower"            | false         | "1.0.3" // FIXME: should resolve differently
-        "static version"      | "1.0.3"               | "1.0.0"             | "lower"            | true          | "1.0.3" // keep behavior the same as coreAlignment=false
+        "static version"      | "1.0.3"               | "1.0.0"             | "lower"            | true          | "1.0.2"
     }
 
     @Unroll
@@ -519,7 +519,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
     }
 
     @Unroll
-    def 'missing cases: dynamically defined dependency: alignment styles should fail to align when dynamic dependency definition and substitutions leave no viable versions | core alignment: #coreAlignment'() {
+    def 'missing cases: dynamically defined dependency: core alignment fails to align when dynamic dependency definition and substitutions leave no viable versions | core alignment: #coreAlignment'() {
         given:
         List<String> dependencyDefinitionVersions = [definedVersion, '0.6.0', definedVersion]
         setupForSubstitutionAndAlignmentCasesWithMissingVersions(subFromVersionAndModule, subToVersionAndModule, dependencyDefinitionVersions)
@@ -533,17 +533,18 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "test.nebula:c", CResultingVersion)
 
         if (coreAlignment) {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$CResultingVersion")
+            def platformVersion = "1.4.0"
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$platformVersion")
         }
 
         where:
         definedVersionType | definedVersion | subVersionType | subFromVersionAndModule | subToVersionAndModule | subUpOrDown | coreAlignment | ABResultingVersion | CResultingVersion
         "range"            | "1.+"          | "range"        | "[1.0.0,)"              | "0.5.0"               | "lower"     | false         | "1.1.0"            | "1.4.0" // FIXME: should resolve differently
-        "range"            | "1.+"          | "range"        | "[1.0.0,)"              | "0.5.0"               | "lower"     | true          | "1.1.0"            | "1.4.0" // keep behavior the same as coreAlignment=false
+        "range"            | "1.+"          | "range"        | "[1.0.0,)"              | "0.5.0"               | "lower"     | true          | "FAILED"           | "FAILED"
     }
 
     @Unroll
-    def 'missing cases: dynamically defined dependency: alignment styles should fail to align when dynamic latest.release dependency definition and substitutions leave no viable versions for some lower aligned versions | core alignment: #coreAlignment'() {
+    def 'missing cases: dynamically defined dependency: core alignment fails to align when dynamic latest.release dependency definition and substitutions leave no viable versions for some lower aligned versions | core alignment: #coreAlignment'() {
         given:
         List<String> dependencyDefinitionVersions = [definedVersion, '0.6.0', definedVersion]
         setupForSubstitutionAndAlignmentCasesWithMissingVersions(subFromVersionAndModule, subToVersionAndModule, dependencyDefinitionVersions)
@@ -552,22 +553,23 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment))
 
         then:
-        dependencyInsightContains(result.output, "test.nebula:a", ABResultingVersion)
-        dependencyInsightContains(result.output, "test.nebula:b", ABResultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:a", AResultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:b", BResultingVersion)
         dependencyInsightContains(result.output, "test.nebula:c", CResultingVersion)
 
         if (coreAlignment) {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$CResultingVersion")
+            def platformVersion = "1.4.0"
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$platformVersion")
         }
 
         where:
-        definedVersionType | definedVersion   | subVersionType | subFromVersionAndModule | subToVersionAndModule | subUpOrDown | coreAlignment | ABResultingVersion | CResultingVersion
-        "range"            | "latest.release" | "range"        | "[1.0.0,)"              | "0.5.0"               | "lower"     | false         | "1.1.0"            | "1.4.0" // FIXME: should resolve differently
-        "range"            | "latest.release" | "range"        | "[1.0.0,)"              | "0.5.0"               | "lower"     | true          | "1.1.0"            | "1.4.0" // keep behavior the same as coreAlignment=false
+        definedVersionType | definedVersion   | subVersionType | subFromVersionAndModule | subToVersionAndModule | subUpOrDown | coreAlignment | AResultingVersion | BResultingVersion | CResultingVersion
+        "range"            | "latest.release" | "range"        | "[1.0.0,)"              | "0.5.0"               | "lower"     | false         | "1.1.0"           | "1.1.0"           | "1.4.0" // FIXME: should resolve differently
+        "range"            | "latest.release" | "range"        | "[1.0.0,)"              | "0.5.0"               | "lower"     | true          | "0.5.0"           | "0.6.0"           | "FAILED"
     }
 
     @Unroll
-    def 'missing cases: dynamically defined dependency: alignment styles should fail to align when dependency dynamic definition and substitutions leave no viable versions for some higher aligned dependencies | core alignment: #coreAlignment'() {
+    def 'missing cases: dynamically defined dependency: core alignment fails to align when dependency dynamic definition and substitutions leave no viable versions for some higher aligned dependencies | core alignment: #coreAlignment'() {
         given:
         List<String> dependencyDefinitionVersions = [definedVersion, '0.6.0', definedVersion]
         setupForSubstitutionAndAlignmentCasesWithMissingVersions(subFromVersionAndModule, subToVersionAndModule, dependencyDefinitionVersions)
@@ -587,11 +589,11 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         where:
         definedVersionType | definedVersion | subVersionType | subFromVersionAndModule | subToVersionAndModule | subUpOrDown | coreAlignment | ABResultingVersion | CResultingVersion
         "range"            | "1.+"          | "range"        | "[1.0.0,1.2.0)"         | "1.4.0"               | "higher"    | false         | "1.1.0"            | "1.4.0" // FIXME: should resolve differently
-        "range"            | "1.+"          | "range"        | "[1.0.0,1.2.0)"         | "1.4.0"               | "higher"    | true          | "1.1.0"            | "1.4.0" // keep behavior the same as coreAlignment=false
+        "range"            | "1.+"          | "range"        | "[1.0.0,1.2.0)"         | "1.4.0"               | "higher"    | true          | "FAILED"           | "1.4.0"
     }
 
     @Unroll
-    def 'missing cases: narrowly defined dynamic dependency: alignment styles should fail to resolve when narrow dynamic dependency definition and substitutions leave no viable versions for some lower aligned dependencies | core alignment: #coreAlignment'() {
+    def 'missing cases: narrowly defined dynamic dependency: core alignment fails to resolve when narrow dynamic dependency definition and substitutions leave no viable versions for some lower aligned dependencies | core alignment: #coreAlignment'() {
         given:
         List<String> dependencyDefinitionVersions = [definedVersion, '0.6.0', definedVersion]
         setupForSubstitutionAndAlignmentCasesWithMissingVersions(subFromVersionAndModule, subToVersionAndModule, dependencyDefinitionVersions)
@@ -605,13 +607,14 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "test.nebula:c", ABCResultingVersion)
 
         if (coreAlignment) {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$ABCResultingVersion")
+            def platformVersion = "1.0.3"
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$platformVersion")
         }
 
         where:
         definedVersionType | definedVersion | subVersionType | subFromVersionAndModule | subToVersionAndModule | subUpOrDown | coreAlignment | ABCResultingVersion
         "narrow range"     | "1.0.+"        | "range"        | "[1.0.0,1.1.0)"         | "0.5.0"               | "lower"     | false         | "1.0.3" // FIXME: should resolve differently
-        "narrow range"     | "1.0.+"        | "range"        | "[1.0.0,1.1.0)"         | "0.5.0"               | "lower"     | true          | "1.0.3" // keep behavior the same as coreAlignment=false
+        "narrow range"     | "1.0.+"        | "range"        | "[1.0.0,1.1.0)"         | "0.5.0"               | "lower"     | true          | "FAILED"
     }
 
     @Unroll
@@ -629,45 +632,16 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "test.nebula:c", ABCResultingVersion)
 
         if (coreAlignment) {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$ABCResultingVersion")
+            def platformVersion = "1.0.3"
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$platformVersion")
         }
 
         where:
         definedVersionType | definedVersion | subVersionType | subFromVersionAndModule | subToVersionAndModule | subUpOrDown | coreAlignment | ABCResultingVersion
         "narrow range"     | "1.0.+"        | "range"        | "[1.0.0,1.1.0)"         | "1.4.0"               | "higher"    | false         | "1.0.3" // FIXME: should resolve differently
-        "narrow range"     | "1.0.+"        | "range"        | "[1.0.0,1.1.0)"         | "1.4.0"               | "higher"    | true          | "1.0.3" // keep behavior the same as coreAlignment=false
+        "narrow range"     | "1.0.+"        | "range"        | "[1.0.0,1.1.0)"         | "1.4.0"               | "higher"    | true          | "FAILED"
     }
 
-    @Unroll
-    def 'should not apply substitution to modules not listed in substitution rule | core alignment: #coreAlignment'() {
-        given:
-        def module = "test.nebula:$subFromVersionAndModule"
-        def with = "test.nebula:$subToVersionAndModule"
-        createAlignAndSubstituteRule([(module.toString()): with])
-
-        buildFile << """
-            dependencies {
-                compile 'test.nebula:a:$definedVersion'
-                compile 'test.nebula:b:$definedVersion'
-            }
-            """.stripIndent()
-
-        when:
-        def result = runTasks(*tasks(coreAlignment))
-
-        then:
-        dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
-        dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
-
-        if (coreAlignment) {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext")
-        }
-
-        where:
-        definedVersionType | definedVersion | subVersionType | subFromVersionAndModule | subToVersionAndModule | subUpOrDown | coreAlignment | resultingVersion
-        "range"            | "1.+"          | "range"        | "a:[1.0.0,1.2.0)"       | "a:0.5.0"             | "lower"     | false         | "1.1.0" // FIXME: A & B could resolve differently
-        "range"            | "1.+"          | "range"        | "a:[1.0.0,1.2.0)"       | "a:0.5.0"             | "lower"     | true          | "1.1.0" // keep behavior the same as coreAlignment=false
-    }
 
     @Unroll
     def 'substitute static version for other dependency latest.release and align direct deps | core alignment #coreAlignment'() {
@@ -1006,14 +980,16 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         setupForGuiceAndLibraryDependency(definedVersion)
 
         when:
-        def result = runTasks(*tasks(coreAlignment, false, 'com.google.inject'))
+        def result = runTasks('dependencies', *tasks(coreAlignment, false, 'com.google.inject'))
 
         then:
         dependencyInsightContains(result.output, "com.google.inject.extensions:guice-assistedinject", resultingVersion)
         dependencyInsightContains(result.output, "com.google.inject.extensions:guice-grapher", resultingVersion)
         dependencyInsightContains(result.output, "com.google.inject.extensions:guice-multibindings", resultingVersion)
 
-        if (!guiceIsSubstituted) {
+        if (guiceIsSubstituted) {
+            dependencyInsightContains(result.output, "com.google.inject:guice", resultingVersion)
+        } else {
             // since this test uses an external dependency that keeps incrementing, let's check that it just doesn't get the same result
             def content = "com.google.inject:guice:.*$resultingVersion\n"
             assert result.output.findAll(content).size() == 0
@@ -1031,7 +1007,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         where:
         coreAlignment | definedVersion | resultingVersion | guiceIsSubstituted
         false         | '4.+'          | '4.1.0'          | false // FIXME: should resolve differently
-        true          | '4.+'          | '4.1.0'          | false // keep behavior the same as coreAlignment=false
+        true          | '4.+'          | '4.1.0'          | true
     }
 
     @Unroll
@@ -1859,13 +1835,13 @@ repositories {
 dependencies {
     //at the time of writing resolves to 4.2.2
     compile "com.google.inject:guice:$definedVersion"
-    compile "sample:module:1.0"
+    compile "test.nebula:a:1.0"
 }
 """
 
         MavenRepo repo = new MavenRepo()
         repo.root = new File(projectDir, 'repo')
-        Pom pom = new Pom('sample', 'module', '1.0', ArtifactType.POM)
+        Pom pom = new Pom('test.nebula', 'a', '1.0', ArtifactType.POM)
         pom.addDependency('com.google.inject.extensions', 'guice-grapher', '4.1.0')
         repo.poms.add(pom)
         repo.generate()
