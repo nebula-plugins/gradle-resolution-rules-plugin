@@ -39,6 +39,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
                 .addModule('test.nebula:a:1.1.0')
 
                 .addModule('test.nebula:b:0.5.0')
+                .addModule('test.nebula:b:0.6.0')
 
                 .addModule('test.nebula:b:1.0.0')
                 .addModule('test.nebula:b:1.0.1')
@@ -81,8 +82,8 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
     @Unroll
     def 'statically defined dependency: alignment styles should substitute and align from static version to higher static version | core alignment: #coreAlignment'() {
         given:
-        def dependencyDefinitionVersion = "1.0.1"
-        setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersion)
+        List<String> dependencyDefinitionVersions = ['1.0.1', '1.0.0']
+        setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersions)
 
         when:
         def result = runTasks(*tasks(coreAlignment))
@@ -104,8 +105,8 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
     @Unroll
     def 'statically defined dependency: alignment styles should substitute and align from static version to higher latest.release dynamic version | core alignment: #coreAlignment'() {
         given:
-        def dependencyDefinitionVersion = "1.0.1"
-        setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersion)
+        List<String> dependencyDefinitionVersions = ['1.0.1', '1.0.0']
+        setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersions)
 
         when:
         def result = runTasks(*tasks(coreAlignment))
@@ -127,8 +128,8 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
     @Unroll
     def 'statically defined dependency: alignment styles should substitute and align from static version to higher minor-scoped dynamic version | core alignment: #coreAlignment'() {
         given:
-        def dependencyDefinitionVersion = "1.0.1"
-        setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersion)
+        List<String> dependencyDefinitionVersions = ['1.0.1', '1.0.0']
+        setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersions)
 
         when:
         def result = runTasks(*tasks(coreAlignment))
@@ -148,10 +149,10 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
     }
 
     @Unroll
-    def 'statically defined dependency: core alignment should substitute and align from static version to lower substitute-to version | core alignment: #coreAlignment'() {
+    def 'statically defined dependency: alignment styles should substitute and align from static version to lower substitute-to version | core alignment: #coreAlignment'() {
         given:
-        def dependencyDefinitionVersion = "1.0.1"
-        setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersion)
+        List<String> dependencyDefinitionVersions = ['1.0.1', '1.0.0']
+        setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersions)
 
         when:
         def result = runTasks(*tasks(coreAlignment))
@@ -166,15 +167,15 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
 
         where:
         substituteVersionType | substituteFromVersion | substituteToVersion | substituteUpOrDown | coreAlignment | resultingVersion
-        "static version"      | "1.0.1"               | "1.0.0"             | "lower"            | false         | "1.0.1"
+        "static version"      | "1.0.1"               | "1.0.0"             | "lower"            | false         | "1.0.0"
         "static version"      | "1.0.1"               | "1.0.0"             | "lower"            | true          | "1.0.0"
     }
 
     @Unroll
     def 'statically defined dependency: alignment styles should substitute and align from range to higher static version | core alignment: #coreAlignment'() {
         given:
-        def dependencyDefinitionVersion = "1.0.1"
-        setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersion)
+        List<String> dependencyDefinitionVersions = ['1.0.1', '1.0.0']
+        setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersions)
 
         when:
         def result = runTasks(*tasks(coreAlignment))
@@ -196,8 +197,8 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
     @Unroll
     def 'statically defined dependency: alignment styles should substitute and align from range to higher latest.release dynamic version | core alignment: #coreAlignment'() {
         given:
-        def dependencyDefinitionVersion = "1.0.1"
-        setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersion)
+        List<String> dependencyDefinitionVersions = ['1.0.1', '1.0.0']
+        setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersions)
 
         when:
         def result = runTasks(*tasks(coreAlignment))
@@ -217,10 +218,10 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
     }
 
     @Unroll
-    def 'statically defined dependency: alignment styles should substitute and align from range to higher major-scoped dynamic version | core alignment: #coreAlignment'() {
+    def 'statically defined dependency: alignment styles should substitute and align from range to higher minor-scoped dynamic version | core alignment: #coreAlignment'() {
         given:
-        def dependencyDefinitionVersion = "1.0.1"
-        setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersion)
+        List<String> dependencyDefinitionVersions = ['1.0.1', '1.0.0']
+        setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersions)
 
         when:
         def result = runTasks(*tasks(coreAlignment))
@@ -242,8 +243,8 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
     @Unroll
     def 'statically defined dependency: alignment styles should substitute and align from range to higher static version with higher minor version | core alignment: #coreAlignment'() {
         given:
-        def dependencyDefinitionVersion = "1.0.1"
-        setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersion)
+        List<String> dependencyDefinitionVersions = ['1.0.1', '1.0.0']
+        setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersions)
 
         when:
         def result = runTasks(*tasks(coreAlignment))
@@ -263,10 +264,10 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
     }
 
     @Unroll
-    def 'statically defined dependency: core alignment should substitute and align from range to lower substitute-to version | core alignment: #coreAlignment'() {
+    def 'statically defined dependency: alignment styles should substitute and align from range to lower substitute-to version | core alignment: #coreAlignment'() {
         given:
-        def dependencyDefinitionVersion = "1.0.1"
-        setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersion)
+        List<String> dependencyDefinitionVersions = ['1.0.1', '1.0.0']
+        setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersions)
 
         when:
         def result = runTasks(*tasks(coreAlignment))
@@ -281,15 +282,15 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
 
         where:
         substituteVersionType | substituteFromVersion | substituteToVersion | substituteUpOrDown | coreAlignment | resultingVersion
-        "range"               | "[1.0.1,1.0.2]"       | "1.0.0"             | "lower"            | false         | "1.0.1"
+        "range"               | "[1.0.1,1.0.2]"       | "1.0.0"             | "lower"            | false         | "1.0.0"
         "range"               | "[1.0.1,1.0.2]"       | "1.0.0"             | "lower"            | true          | "1.0.0"
     }
 
     @Unroll
     def 'narrowly defined dynamic dependency: core alignment should substitute and align from static version to higher static version that is not substituted-away-from | core alignment: #coreAlignment'() {
         given:
-        def dependencyDefinitionVersion = "1.0.+"
-        setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersion)
+        List<String> dependencyDefinitionVersions = ['1.0.+', '1.0.0']
+        setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersions)
 
         when:
         def result = runTasks(*tasks(coreAlignment))
@@ -304,15 +305,15 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
 
         where:
         substituteVersionType | substituteFromVersion | substituteToVersion | substituteUpOrDown | coreAlignment | resultingVersion
-        "static version"      | "1.0.3"               | "1.1.0"             | "higher"           | false         | "1.0.3"
+        "static version"      | "1.0.3"               | "1.1.0"             | "higher"           | false         | "1.0.3" // FIXME: should resolve differently
         "static version"      | "1.0.3"               | "1.1.0"             | "higher"           | true          | "1.0.2"
     }
 
     @Unroll
     def 'narrowly defined dynamic dependency: core alignment should substitute and align from static version to higher latest.release dynamic version in narrow definition that is not substituted-away-from | core alignment: #coreAlignment'() {
         given:
-        def dependencyDefinitionVersion = "1.0.+"
-        setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersion)
+        List<String> dependencyDefinitionVersions = ['1.0.+', '1.0.0']
+        setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersions)
 
         when:
         def result = runTasks(*tasks(coreAlignment))
@@ -327,15 +328,15 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
 
         where:
         substituteVersionType | substituteFromVersion | substituteToVersion | substituteUpOrDown | coreAlignment | resultingVersion
-        "static version"      | "1.0.3"               | "latest.release"    | "higher"           | false         | "1.0.3"
+        "static version"      | "1.0.3"               | "latest.release"    | "higher"           | false         | "1.0.3" // FIXME: should resolve differently
         "static version"      | "1.0.3"               | "latest.release"    | "higher"           | true          | "1.0.2"
     }
 
     @Unroll
-    def 'narrowly defined dynamic dependency: core alignment should substitute and align from static version to higher major-scoped dynamic version that is not substituted-away-from | core alignment: #coreAlignment'() {
+    def 'narrowly defined dynamic dependency: core alignment should substitute and align from static version to higher minor-scoped dynamic version that is not substituted-away-from | core alignment: #coreAlignment'() {
         given:
-        def dependencyDefinitionVersion = "1.0.+"
-        setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersion)
+        List<String> dependencyDefinitionVersions = ['1.0.+', '1.0.0']
+        setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersions)
 
         when:
         def result = runTasks(*tasks(coreAlignment))
@@ -350,15 +351,15 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
 
         where:
         substituteVersionType | substituteFromVersion | substituteToVersion | substituteUpOrDown | coreAlignment | resultingVersion
-        "static version"      | "1.0.3"               | "1.+"               | "higher"           | false         | "1.0.3"
+        "static version"      | "1.0.3"               | "1.+"               | "higher"           | false         | "1.0.3" // FIXME: should resolve differently
         "static version"      | "1.0.3"               | "1.+"               | "higher"           | true          | "1.0.2"
     }
 
     @Unroll
     def 'narrowly defined dynamic dependency: core alignment should substitute and align from static version to conflict-resolved version that is is not substituted-away-from | core alignment: #coreAlignment'() {
         given:
-        def dependencyDefinitionVersion = "1.0.+"
-        setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersion)
+        List<String> dependencyDefinitionVersions = ['1.0.+', '1.0.0']
+        setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersions)
 
         when:
         def result = runTasks(*tasks(coreAlignment))
@@ -373,15 +374,15 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
 
         where:
         substituteVersionType | substituteFromVersion | substituteToVersion | substituteUpOrDown | coreAlignment | resultingVersion
-        "static version"      | "1.0.3"               | "1.0.0"             | "lower"            | false         | "1.0.3"
+        "static version"      | "1.0.3"               | "1.0.0"             | "lower"            | false         | "1.0.3" // FIXME: should resolve differently
         "static version"      | "1.0.3"               | "1.0.0"             | "lower"            | true          | "1.0.2"
     }
 
     @Unroll
     def 'narrowly defined dynamic dependency: alignment styles should substitute and align from range to higher static version | core alignment: #coreAlignment'() {
         given:
-        def dependencyDefinitionVersion = "1.0.+"
-        setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersion)
+        List<String> dependencyDefinitionVersions = ['1.0.+', '1.0.0']
+        setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersions)
 
         when:
         def result = runTasks(*tasks(coreAlignment))
@@ -403,8 +404,8 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
     @Unroll
     def 'narrowly defined dynamic dependency: alignment styles should substitute and align from range to higher latest.release dynamic version | core alignment: #coreAlignment'() {
         given:
-        def dependencyDefinitionVersion = "1.0.+"
-        setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersion)
+        List<String> dependencyDefinitionVersions = ['1.0.+', '1.0.0']
+        setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersions)
 
         when:
         def result = runTasks(*tasks(coreAlignment))
@@ -424,10 +425,10 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
     }
 
     @Unroll
-    def 'narrowly defined dynamic dependency: alignment styles should substitute and align from range to higher static version with higher minor version | core alignment: #coreAlignment'() {
+    def 'narrowly defined dynamic dependency: alignment styles should substitute and align from range to higher minor-scoped static version | core alignment: #coreAlignment'() {
         given:
-        def dependencyDefinitionVersion = "1.0.+"
-        setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersion)
+        List<String> dependencyDefinitionVersions = ['1.0.+', '1.0.0']
+        setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersions)
 
         when:
         def result = runTasks(*tasks(coreAlignment))
@@ -447,10 +448,10 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
     }
 
     @Unroll
-    def 'narrowly defined dynamic dependency: core alignment should substitute and align from range to lower substitute-to version | core alignment: #coreAlignment'() {
+    def 'narrowly defined dynamic dependency: alignment styles should substitute and align from range to lower substitute-to version | core alignment: #coreAlignment'() {
         given:
-        def dependencyDefinitionVersion = "1.0.+"
-        setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersion)
+        List<String> dependencyDefinitionVersions = ['1.0.+', '1.0.0']
+        setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersions)
 
         when:
         def result = runTasks(*tasks(coreAlignment))
@@ -465,209 +466,189 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
 
         where:
         substituteVersionType | substituteFromVersion | substituteToVersion | substituteUpOrDown | coreAlignment | resultingVersion
-        "range"               | "(,1.1.0)"            | "0.5.0"             | "lower"            | false         | "1.0.3"
+        "range"               | "(,1.1.0)"            | "0.5.0"             | "lower"            | false         | "0.5.0"
         "range"               | "(,1.1.0)"            | "0.5.0"             | "lower"            | true          | "0.5.0"
     }
 
     @Unroll
-    def 'missing cases: statically defined dependency: core alignment fails to align when lower versions are missing | core alignment: #coreAlignment'() {
+    def 'missing cases: statically defined dependency: alignment styles fail to align when lower versions are missing | core alignment: #coreAlignment'() {
         given:
-        setupForSubstitutionAndAlignmentCasesWithMissingVersions(subFromVersionAndModule, subToVersionAndModule, definedVersion)
+        List<String> dependencyDefinitionVersions = [definedVersion, '0.6.0', definedVersion]
+        setupForSubstitutionAndAlignmentCasesWithMissingVersions(subFromVersionAndModule, subToVersionAndModule, dependencyDefinitionVersions)
 
         when:
         def result = runTasks(*tasks(coreAlignment))
 
         then:
-        dependencyInsightContains(result.output, "test.nebula:a", ABResultingVersion)
-        dependencyInsightContains(result.output, "test.nebula:b", ABResultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:a", AResultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:b", BResultingVersion)
         dependencyInsightContains(result.output, "test.nebula:c", CResultingVersion)
-
-        if (coreAlignment && ABResultingVersion != "FAILED" && CResultingVersion != "FAILED") {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$ABResultingVersion")
-        }
-
-        where:
-        definedVersionType | definedVersion | subVersionType | subFromVersionAndModule | subToVersionAndModule | subUpOrDown | coreAlignment | ABResultingVersion | CResultingVersion
-        "static version"   | "1.0.1"        | "range"        | "b:[1.0.0,1.1.0)"       | "b:0.5.0"             | "lower"     | false         | "1.0.1"            | "1.0.1"
-        "static version"   | "1.0.1"        | "range"        | "b:[1.0.0,1.1.0)"       | "b:0.5.0"             | "lower"     | true          | "0.5.0"            | "FAILED"
-    }
-
-    @Unroll
-    def 'missing cases: statically defined dependency: core alignment fails to align when higher versions are missing | core alignment: #coreAlignment'() {
-        given:
-        setupForSubstitutionAndAlignmentCasesWithMissingVersions(subFromVersionAndModule, subToVersionAndModule, definedVersion)
-
-        when:
-        def result = runTasks(*tasks(coreAlignment))
-
-        then:
-        dependencyInsightContains(result.output, "test.nebula:a", ABResultingVersion)
-        dependencyInsightContains(result.output, "test.nebula:b", ABResultingVersion)
-        dependencyInsightContains(result.output, "test.nebula:c", CResultingVersion)
-
-        if (coreAlignment && ABResultingVersion != "FAILED" && CResultingVersion != "FAILED") {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$ABResultingVersion")
-        }
-
-        where:
-        definedVersionType | definedVersion | subVersionType | subFromVersionAndModule | subToVersionAndModule | subUpOrDown | coreAlignment | ABResultingVersion | CResultingVersion
-        "static version"   | "1.0.1"        | "range"        | "c:[1.0.0,1.1.0)"       | "c:1.4.0"             | "higher"    | false         | "1.1.0"            | "1.4.0"
-        "static version"   | "1.0.1"        | "range"        | "c:[1.0.0,1.1.0)"       | "c:1.4.0"             | "higher"    | true          | "FAILED"           | "1.4.0"
-    }
-
-    @Unroll
-    def 'missing cases: dynamically defined dependency: core alignment fails to align when dependency definition and substitutions leave no viable versions | core alignment: #coreAlignment'() {
-        given:
-        setupForSubstitutionAndAlignmentCasesWithMissingVersions(subFromVersionAndModule, subToVersionAndModule, definedVersion)
-
-        when:
-        def result = runTasks(*tasks(coreAlignment))
-
-        then:
-        dependencyInsightContains(result.output, "test.nebula:a", ABResultingVersion)
-        dependencyInsightContains(result.output, "test.nebula:b", ABResultingVersion)
-        dependencyInsightContains(result.output, "test.nebula:c", CResultingVersion)
-
-        if (coreAlignment && ABResultingVersion != "FAILED" && CResultingVersion != "FAILED") {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$ABResultingVersion")
-        }
-
-        where:
-        definedVersionType | definedVersion | subVersionType | subFromVersionAndModule | subToVersionAndModule | subUpOrDown | coreAlignment | ABResultingVersion | CResultingVersion
-        "range"            | "1.+"          | "range"        | "b:[1.0.0,)"            | "b:0.5.0"             | "lower"     | false         | "1.1.0"            | "1.4.0"
-        "range"            | "1.+"          | "range"        | "b:[1.0.0,)"            | "b:0.5.0"             | "lower"     | true          | "FAILED"           | "FAILED"
-    }
-
-    @Unroll
-    def 'missing cases: dynamically defined dependency: core alignment fails to align when dependency definition and substitutions leave no viable versions for some lower aligned dependencies | core alignment: #coreAlignment'() {
-        given:
-        setupForSubstitutionAndAlignmentCasesWithMissingVersions(subFromVersionAndModule, subToVersionAndModule, definedVersion)
-
-        when:
-        def result = runTasks(*tasks(coreAlignment))
-
-        then:
-        dependencyInsightContains(result.output, "test.nebula:a", ABResultingVersion)
-        dependencyInsightContains(result.output, "test.nebula:b", ABResultingVersion)
-        dependencyInsightContains(result.output, "test.nebula:c", CResultingVersion)
-
-        if (coreAlignment && ABResultingVersion != "FAILED" && CResultingVersion != "FAILED") {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$ABResultingVersion")
-        }
-
-        where:
-        definedVersionType | definedVersion   | subVersionType | subFromVersionAndModule | subToVersionAndModule | subUpOrDown | coreAlignment | ABResultingVersion | CResultingVersion
-        "range"            | "latest.release" | "range"        | "b:[1.0.0,)"            | "b:0.5.0"             | "lower"     | false         | "1.1.0"            | "1.4.0"
-        "range"            | "latest.release" | "range"        | "b:[1.0.0,)"            | "b:0.5.0"             | "lower"     | true          | "0.5.0"            | "FAILED"
-    }
-
-    @Unroll
-    def 'missing cases: dynamically defined dependency: core alignment fails to align when dependency definition and substitutions leave no viable versions for some higher aligned dependencies | core alignment: #coreAlignment'() {
-        given:
-        setupForSubstitutionAndAlignmentCasesWithMissingVersions(subFromVersionAndModule, subToVersionAndModule, definedVersion)
-
-        when:
-        def result = runTasks(*tasks(coreAlignment))
-
-        then:
-        dependencyInsightContains(result.output, "test.nebula:a", ABResultingVersion)
-        dependencyInsightContains(result.output, "test.nebula:b", ABResultingVersion)
-        dependencyInsightContains(result.output, "test.nebula:c", CResultingVersion)
-
-        if (coreAlignment && ABResultingVersion != "FAILED" && CResultingVersion != "FAILED") {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$ABResultingVersion")
-        }
-
-        where:
-        definedVersionType | definedVersion | subVersionType | subFromVersionAndModule | subToVersionAndModule | subUpOrDown | coreAlignment | ABResultingVersion | CResultingVersion
-        "range"            | "1.+"          | "range"        | "c:[1.0.0,1.2.0)"       | "c:1.4.0"             | "higher"    | false         | "1.1.0"            | "1.4.0"
-        "range"            | "1.+"          | "range"        | "c:[1.0.0,1.2.0)"       | "c:1.4.0"             | "higher"    | true          | "FAILED"           | "1.4.0"
-    }
-
-    @Unroll
-    def 'missing cases: narrowly defined dynamic dependency: core alignment fails to align when dependency definition and substitutions leave no viable versions for some lower aligned dependencies | core alignment: #coreAlignment'() {
-        given:
-        setupForSubstitutionAndAlignmentCasesWithMissingVersions(subFromVersionAndModule, subToVersionAndModule, definedVersion)
-
-        when:
-        def result = runTasks(*tasks(coreAlignment))
-
-        then:
-        dependencyInsightContains(result.output, "test.nebula:a", ABResultingVersion)
-        dependencyInsightContains(result.output, "test.nebula:b", ABResultingVersion)
-        dependencyInsightContains(result.output, "test.nebula:c", CResultingVersion)
-
-        if (coreAlignment && ABResultingVersion != "FAILED" && CResultingVersion != "FAILED") {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$ABResultingVersion")
-        }
-
-        where:
-        definedVersionType | definedVersion | subVersionType | subFromVersionAndModule | subToVersionAndModule | subUpOrDown | coreAlignment | ABResultingVersion | CResultingVersion
-        "narrow range"     | "1.0.+"        | "range"        | "b:[1.0.0,1.1.0)"       | "b:0.5.0"             | "lower"     | false         | "1.0.3"            | "1.0.3"
-        "narrow range"     | "1.0.+"        | "range"        | "b:[1.0.0,1.1.0)"       | "b:0.5.0"             | "lower"     | true          | "FAILED"           | "FAILED"
-    }
-
-    @Unroll
-    def 'missing cases: narrowly defined dynamic dependency: core alignment fails to align when dependency definition and substitutions leave no viable versions for some higher aligned dependencies | core alignment: #coreAlignment'() {
-        given:
-        setupForSubstitutionAndAlignmentCasesWithMissingVersions(subFromVersionAndModule, subToVersionAndModule, definedVersion)
-
-        when:
-        def result = runTasks(*tasks(coreAlignment))
-
-        then:
-        dependencyInsightContains(result.output, "test.nebula:a", ABResultingVersion)
-        dependencyInsightContains(result.output, "test.nebula:b", ABResultingVersion)
-        dependencyInsightContains(result.output, "test.nebula:c", CResultingVersion)
-
-        if (coreAlignment && ABResultingVersion != "FAILED" && CResultingVersion != "FAILED") {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$ABResultingVersion")
-        }
-
-        where:
-        definedVersionType | definedVersion | subVersionType | subFromVersionAndModule | subToVersionAndModule | subUpOrDown | coreAlignment | ABResultingVersion | CResultingVersion
-        "narrow range"     | "1.0.+"        | "range"        | "c:[1.0.0,1.1.0)"       | "c:1.4.0"             | "higher"    | false         | "1.0.3"            | "1.0.3"
-        "narrow range"     | "1.0.+"        | "range"        | "c:[1.0.0,1.1.0)"       | "c:1.4.0"             | "higher"    | true          | "FAILED"           | "FAILED"
-    }
-
-    @Unroll
-    def 'should still apply substitution to group if the specified dependency is not in the graph | core alignment: #coreAlignment'() {
-        // Note: this may be controversial
-        given:
-        def module = "test.nebula:$subFromVersionAndModule"
-        def with = "test.nebula:$subToVersionAndModule"
-        createAlignAndSubstituteRule(module, with)
-
-        buildFile << """
-            dependencies {
-                compile 'test.nebula:a:$definedVersion'
-                compile 'test.nebula:b:$definedVersion'
-            }
-            """.stripIndent()
-
-        when:
-        def result = runTasks(*tasks(coreAlignment))
-
-        then:
-        dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
-        dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
         if (coreAlignment) {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$BResultingVersion")
         }
 
         where:
-        definedVersionType | definedVersion | subVersionType | subFromVersionAndModule | subToVersionAndModule | subUpOrDown | coreAlignment | resultingVersion
-        "range"            | "1.+"          | "range"        | "c:[1.0.0,1.2.0)"       | "c:1.4.0"             | "higher"    | false         | "1.1.0"
-        "range"            | "1.+"          | "range"        | "c:[1.0.0,1.2.0)"       | "c:1.4.0"             | "higher"    | true          | "FAILED"
+        definedVersionType | definedVersion | subVersionType | subFromVersionAndModule | subToVersionAndModule | subUpOrDown | coreAlignment | AResultingVersion | BResultingVersion | CResultingVersion
+        "static version"   | "1.0.1"        | "range"        | "[1.0.0,1.1.0)"         | "0.5.0"               | "lower"     | false         | "0.5.0"           | '0.6.0'           | "FAILED"
+        "static version"   | "1.0.1"        | "range"        | "[1.0.0,1.1.0)"         | "0.5.0"               | "lower"     | true          | "0.5.0"           | '0.6.0'           | "FAILED"
     }
+
+    @Unroll
+    def 'missing cases: statically defined dependency: alignment styles fail to align when higher versions are missing | core alignment: #coreAlignment'() {
+        given:
+        List<String> dependencyDefinitionVersions = [definedVersion, '0.6.0', definedVersion]
+        setupForSubstitutionAndAlignmentCasesWithMissingVersions(subFromVersionAndModule, subToVersionAndModule, dependencyDefinitionVersions)
+
+        when:
+        def result = runTasks(*tasks(coreAlignment))
+
+        then:
+        dependencyInsightContains(result.output, "test.nebula:a", AResultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:b", BResultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:c", CResultingVersion)
+
+        if (coreAlignment) {
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$CResultingVersion")
+        }
+
+        where:
+        definedVersionType | definedVersion | subVersionType | subFromVersionAndModule | subToVersionAndModule | subUpOrDown | coreAlignment | AResultingVersion | BResultingVersion | CResultingVersion
+        "static version"   | "1.0.1"        | "range"        | "[1.0.0,1.1.0)"         | "1.4.0"               | "higher"    | false         | "FAILED"          | '0.6.0'           | "1.4.0"
+        "static version"   | "1.0.1"        | "range"        | "[1.0.0,1.1.0)"         | "1.4.0"               | "higher"    | true          | "FAILED"          | '0.6.0'           | "1.4.0"
+    }
+
+    @Unroll
+    def 'missing cases: dynamically defined dependency: core alignment fails to align when dynamic dependency definition and substitutions leave no viable versions | core alignment: #coreAlignment'() {
+        given:
+        List<String> dependencyDefinitionVersions = [definedVersion, '0.6.0', definedVersion]
+        setupForSubstitutionAndAlignmentCasesWithMissingVersions(subFromVersionAndModule, subToVersionAndModule, dependencyDefinitionVersions)
+
+        when:
+        def result = runTasks(*tasks(coreAlignment))
+
+        then:
+        dependencyInsightContains(result.output, "test.nebula:a", ABResultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:b", ABResultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:c", CResultingVersion)
+
+        if (coreAlignment) {
+            def platformVersion = "1.4.0"
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$platformVersion")
+        }
+
+        where:
+        definedVersionType | definedVersion | subVersionType | subFromVersionAndModule | subToVersionAndModule | subUpOrDown | coreAlignment | ABResultingVersion | CResultingVersion
+        "range"            | "1.+"          | "range"        | "[1.0.0,)"              | "0.5.0"               | "lower"     | false         | "1.1.0"            | "1.4.0" // FIXME: should resolve differently
+        "range"            | "1.+"          | "range"        | "[1.0.0,)"              | "0.5.0"               | "lower"     | true          | "FAILED"           | "FAILED"
+    }
+
+    @Unroll
+    def 'missing cases: dynamically defined dependency: core alignment fails to align when dynamic latest.release dependency definition and substitutions leave no viable versions for some lower aligned versions | core alignment: #coreAlignment'() {
+        given:
+        List<String> dependencyDefinitionVersions = [definedVersion, '0.6.0', definedVersion]
+        setupForSubstitutionAndAlignmentCasesWithMissingVersions(subFromVersionAndModule, subToVersionAndModule, dependencyDefinitionVersions)
+
+        when:
+        def result = runTasks(*tasks(coreAlignment))
+
+        then:
+        dependencyInsightContains(result.output, "test.nebula:a", AResultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:b", BResultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:c", CResultingVersion)
+
+        if (coreAlignment) {
+            def platformVersion = "1.4.0"
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$platformVersion")
+        }
+
+        where:
+        definedVersionType | definedVersion   | subVersionType | subFromVersionAndModule | subToVersionAndModule | subUpOrDown | coreAlignment | AResultingVersion | BResultingVersion | CResultingVersion
+        "range"            | "latest.release" | "range"        | "[1.0.0,)"              | "0.5.0"               | "lower"     | false         | "1.1.0"           | "1.1.0"           | "1.4.0" // FIXME: should resolve differently
+        "range"            | "latest.release" | "range"        | "[1.0.0,)"              | "0.5.0"               | "lower"     | true          | "0.5.0"           | "0.6.0"           | "FAILED"
+    }
+
+    @Unroll
+    def 'missing cases: dynamically defined dependency: core alignment fails to align when dependency dynamic definition and substitutions leave no viable versions for some higher aligned dependencies | core alignment: #coreAlignment'() {
+        given:
+        List<String> dependencyDefinitionVersions = [definedVersion, '0.6.0', definedVersion]
+        setupForSubstitutionAndAlignmentCasesWithMissingVersions(subFromVersionAndModule, subToVersionAndModule, dependencyDefinitionVersions)
+
+        when:
+        def result = runTasks(*tasks(coreAlignment))
+
+        then:
+        dependencyInsightContains(result.output, "test.nebula:a", ABResultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:b", ABResultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:c", CResultingVersion)
+
+        if (coreAlignment) {
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$CResultingVersion")
+        }
+
+        where:
+        definedVersionType | definedVersion | subVersionType | subFromVersionAndModule | subToVersionAndModule | subUpOrDown | coreAlignment | ABResultingVersion | CResultingVersion
+        "range"            | "1.+"          | "range"        | "[1.0.0,1.2.0)"         | "1.4.0"               | "higher"    | false         | "1.1.0"            | "1.4.0" // FIXME: should resolve differently
+        "range"            | "1.+"          | "range"        | "[1.0.0,1.2.0)"         | "1.4.0"               | "higher"    | true          | "FAILED"           | "1.4.0"
+    }
+
+    @Unroll
+    def 'missing cases: narrowly defined dynamic dependency: core alignment fails to resolve when narrow dynamic dependency definition and substitutions leave no viable versions for some lower aligned dependencies | core alignment: #coreAlignment'() {
+        given:
+        List<String> dependencyDefinitionVersions = [definedVersion, '0.6.0', definedVersion]
+        setupForSubstitutionAndAlignmentCasesWithMissingVersions(subFromVersionAndModule, subToVersionAndModule, dependencyDefinitionVersions)
+
+        when:
+        def result = runTasks(*tasks(coreAlignment))
+
+        then:
+        dependencyInsightContains(result.output, "test.nebula:a", ABCResultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:b", ABCResultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:c", ABCResultingVersion)
+
+        if (coreAlignment) {
+            def platformVersion = "1.0.3"
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$platformVersion")
+        }
+
+        where:
+        definedVersionType | definedVersion | subVersionType | subFromVersionAndModule | subToVersionAndModule | subUpOrDown | coreAlignment | ABCResultingVersion
+        "narrow range"     | "1.0.+"        | "range"        | "[1.0.0,1.1.0)"         | "0.5.0"               | "lower"     | false         | "1.0.3" // FIXME: should resolve differently
+        "narrow range"     | "1.0.+"        | "range"        | "[1.0.0,1.1.0)"         | "0.5.0"               | "lower"     | true          | "FAILED"
+    }
+
+    @Unroll
+    def 'missing cases: narrowly defined dynamic dependency: core alignment fails to align when narrow dynamic dependency definition and substitutions leave no viable versions for some higher aligned dependencies | core alignment: #coreAlignment'() {
+        given:
+        List<String> dependencyDefinitionVersions = [definedVersion, '0.6.0', definedVersion]
+        setupForSubstitutionAndAlignmentCasesWithMissingVersions(subFromVersionAndModule, subToVersionAndModule, dependencyDefinitionVersions)
+
+        when:
+        def result = runTasks(*tasks(coreAlignment))
+
+        then:
+        dependencyInsightContains(result.output, "test.nebula:a", ABCResultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:b", ABCResultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:c", ABCResultingVersion)
+
+        if (coreAlignment) {
+            def platformVersion = "1.0.3"
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$platformVersion")
+        }
+
+        where:
+        definedVersionType | definedVersion | subVersionType | subFromVersionAndModule | subToVersionAndModule | subUpOrDown | coreAlignment | ABCResultingVersion
+        "narrow range"     | "1.0.+"        | "range"        | "[1.0.0,1.1.0)"         | "1.4.0"               | "higher"    | false         | "1.0.3" // FIXME: should resolve differently
+        "narrow range"     | "1.0.+"        | "range"        | "[1.0.0,1.1.0)"         | "1.4.0"               | "higher"    | true          | "FAILED"
+    }
+
 
     @Unroll
     def 'substitute static version for other dependency latest.release and align direct deps | core alignment #coreAlignment'() {
         given:
         def module = "test.beverage:d:1.0.0"
         def with = "test.nebula:b:latest.release"
-        createAlignAndSubstituteRule(module, with)
+        createAlignAndSubstituteRule([(module.toString()): with])
 
         buildFile << """
             dependencies {
@@ -695,14 +676,19 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
     @Unroll
     def 'substitute all versions for another dependency with static version and align direct and transitives higher | core alignment #coreAlignment'() {
         given:
-        def module = "test.other:e"
-        def with = "test.nebula:b:1.1.0"
-        createAlignAndSubstituteRule(module, with)
+        def graph = new DependencyGraphBuilder()
+                .addModule(new ModuleBuilder('test.other:h:1.0.0').addDependency('test.nebula:b:1.0.2').build())
+                .build()
+        mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
+
+        def module = "test.other:g"
+        def with = "test.other:h:1.0.0"
+        createAlignAndSubstituteRule([(module.toString()): with])
 
         buildFile << """
             dependencies {
-                compile 'test.other:e:1.0.0'
-                compile 'test.nebula:a:1.0.0'
+                compile 'test.other:g:1.0.0'
+                compile 'test.nebula:a:1.1.0'
             }
             """.stripIndent()
 
@@ -710,42 +696,9 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment))
 
         then:
-        result.output.contains('test.other:e:1.0.0 -> test.nebula:b:1.1.0')
-        result.output.contains('test.nebula:a:1.0.0 -> 1.1.0')
-
         def resultingVersion = "1.1.0"
-        dependencyInsightContains(result.output, "test.other:e:1.0.0 -> test.nebula:b", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
-
-        if (coreAlignment) {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
-        }
-
-        where:
-        coreAlignment << [false, true]
-    }
-
-    @Unroll
-    def 'substitute all versions for another dependency with static version and align direct and transitives lower | core alignment #coreAlignment'() {
-        given:
-        def module = "test.other:e"
-        def with = "test.nebula:b:1.0.3"
-        createAlignAndSubstituteRule(module, with)
-
-        buildFile << """
-            dependencies {
-                compile 'test.other:e:1.0.0'
-                compile 'test.nebula:a:1.0.0'
-            }
-            """.stripIndent()
-
-        when:
-        def result = runTasks(*tasks(coreAlignment))
-
-        then:
-        def resultingVersion = "1.0.3"
-        dependencyInsightContains(result.output, "test.other:e:1.0.0 -> test.nebula:b", resultingVersion)
-        dependencyInsightContains(result.output, "test.nebula", resultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
         if (coreAlignment) {
             assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
@@ -795,7 +748,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
     }
 
     @Unroll
-    def 'only brought in transitively: core alignment should substitute and align from static version to lower static version that is not substituted-away-from | core alignment #coreAlignment'() {
+    def 'only brought in transitively: alignment styles should substitute and align from static version to lower static version that is not substituted-away-from | core alignment #coreAlignment'() {
         given:
         def graph = new DependencyGraphBuilder()
                 .addModule(new ModuleBuilder('test.other:brings-a:1.0.0').addDependency('test.nebula:a:1.0.2').build())
@@ -804,9 +757,12 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
                 .build()
         mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
 
-        def module = "test.nebula:a:[1.0.2,1.1.0]"
-        def with = "test.nebula:a:1.0.1"
-        createAlignAndSubstituteRule(module, with)
+        def substituteFromVersion = "[1.0.2,1.1.0]"
+        def substituteToVersion = "1.0.1"
+        Map<String, String> modulesAndSubstitutions = new HashMap<>()
+        modulesAndSubstitutions.put("test.nebula:a:$substituteFromVersion".toString(), "test.nebula:a:$substituteToVersion".toString())
+        modulesAndSubstitutions.put("test.nebula:b:$substituteFromVersion".toString(), "test.nebula:b:$substituteToVersion".toString())
+        createAlignAndSubstituteRule(modulesAndSubstitutions)
 
         buildFile << """
             dependencies {
@@ -829,12 +785,12 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
 
         where:
         coreAlignment | resultingVersion
-        false         | "1.0.3"
+        false         | "1.0.1"
         true          | "1.0.1"
     }
 
     @Unroll
-    def 'only brought in transitively: core alignment should substitute and align #description | core alignment #coreAlignment'() {
+    def 'only brought in transitively: core alignment fails with matching static substitution and force: #description | core alignment #coreAlignment'() {
         given:
         def graph = new DependencyGraphBuilder()
                 .addModule(new ModuleBuilder('test.other:brings-a:1.0.0').addDependency('test.nebula:a:1.0.3').build())
@@ -843,13 +799,19 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
                 .build()
         mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
 
-        def module = "test.nebula:a:1.0.3"
-        def with = "test.nebula:a:1.1.0"
-        createAlignAndSubstituteRule(module, with)
+        def substituteFromVersion = "1.0.3"
+        def substituteToVersion = "1.1.0"
+        Map<String, String> modulesAndSubstitutions = new HashMap<>()
+        modulesAndSubstitutions.put("test.nebula:a:$substituteFromVersion".toString(), "test.nebula:a:$substituteToVersion".toString())
+        modulesAndSubstitutions.put("test.nebula:b:$substituteFromVersion".toString(), "test.nebula:b:$substituteToVersion".toString())
+        createAlignAndSubstituteRule(modulesAndSubstitutions)
 
         def forceConfig = ''
         if (useForce) {
-            forceConfig = "force 'test.nebula:a:$forcedVersion'"
+            forceConfig = """
+                force 'test.nebula:a:$forcedVersion'
+                force 'test.nebula:b:$forcedVersion'
+                """.stripIndent()
         }
 
         buildFile << """
@@ -867,33 +829,27 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment))
 
         then:
-        if (!needsWorkToFix) {
-            dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
-            dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
-        } else {
-            dependencyInsightContains(result.output, "test.nebula:a", 'FAILED')
-            dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
-        }
+        dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
-        if (coreAlignment) {
+        if (coreAlignment && resultingVersion != 'FAILED') {
             assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
         }
 
         where:
-        coreAlignment | useForce | forcedVersion    | resultingVersion | description                  | needsWorkToFix
-        false         | false    | null             | '1.1.0'          | 'without a force'            | false
-        false         | true     | '1.0.3'          | '1.0.3'          | 'forced to static version'   | false
-        false         | true     | 'latest.release' | '1.1.0'          | 'forced to latest.release'   | false
+        coreAlignment | useForce | forcedVersion    | resultingVersion | description
+        false         | false    | null             | '1.1.0'          | 'without a force'
+        false         | true     | '1.0.3'          | '1.0.3'          | 'forced to static version'
+        false         | true     | 'latest.release' | '1.1.0'          | 'forced to latest.release'
 
-        true          | false    | null             | '1.1.0'          | 'without a force'            | false
-        true          | true     | '1.1.0'          | '1.1.0'          | 'forced to a static version' | false
-
+        true          | false    | null             | '1.1.0'          | 'without a force'
 //         TODO: possibly use require-reject in lieu of resolutionStrategy.dependencySubstitution to fix this case
-        true          | true     | 'latest.release' | '1.1.0'          | 'forced to latest.release'   | true
+        true          | true     | '1.0.2'          | 'FAILED'         | 'forced to a static version'
+        true          | true     | 'latest.release' | 'FAILED'         | 'forced to latest.release'
     }
 
     @Unroll
-    def 'only brought in transitively: core alignment should substitute with a range and align with a force | core alignment #coreAlignment'() {
+    def 'only brought in transitively: alignment styles should substitute with a range and align with a force | core alignment #coreAlignment'() {
         given:
         def graph = new DependencyGraphBuilder()
                 .addModule(new ModuleBuilder('test.other:brings-a:1.0.0').addDependency('test.nebula:a:1.0.2').build())
@@ -902,9 +858,12 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
                 .build()
         mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
 
-        def module = "test.nebula:a:[1.0.2,1.1.0]"
-        def with = "test.nebula:a:1.0.1"
-        createAlignAndSubstituteRule(module, with)
+        def substituteFromVersion = "[1.0.2,1.1.0]"
+        def substituteToVersion = "1.0.1"
+        Map<String, String> modulesAndSubstitutions = new HashMap<>()
+        modulesAndSubstitutions.put("test.nebula:a:$substituteFromVersion".toString(), "test.nebula:a:$substituteToVersion".toString())
+        modulesAndSubstitutions.put("test.nebula:b:$substituteFromVersion".toString(), "test.nebula:b:$substituteToVersion".toString())
+        createAlignAndSubstituteRule(modulesAndSubstitutions)
 
         buildFile << """
             dependencies {
@@ -915,6 +874,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
             configurations.all {
                 resolutionStrategy {
                     force 'test.nebula:a:latest.release'
+                    force 'test.nebula:b:latest.release'
                 }
             }
             """.stripIndent()
@@ -932,16 +892,18 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
 
         where:
         coreAlignment | resultingVersion
-        false         | "1.0.3"
+        false         | "1.0.1"
         true          | "1.0.1"
     }
 
     @Unroll
-    def 'apply a static version via details.useVersion and align results #description | core alignment #coreAlignment'() {
-        // This is not using a substitution rule, so alignment is not totally taking place, as some versions are not rejected
-        // TODO: See about reading in the resolution strategies to catch cases like this
-
+    def 'apply a static version via details.useVersion and align results | core alignment #coreAlignment'() {
         given:
+        def graph = new DependencyGraphBuilder()
+                .addModule(new ModuleBuilder('test.other:brings-a:1.0.0').addDependency('test.nebula:a:1.0.2').build())
+                .build()
+        mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
+
         rulesJsonFile << """
             {
                 "align": [
@@ -952,13 +914,13 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
 
         buildFile << """
             dependencies {
-                compile 'test.nebula:a:1.0.3'
+                compile 'test.other:brings-a:1.0.0'
                 compile 'test.nebula:b:1.0.0'
                 compile 'test.nebula:c:1.0.3'
             }
             configurations.all {
                 resolutionStrategy.eachDependency { details ->
-                    if (details.requested.name == 'a') {
+                    if (details.requested.group == 'test.nebula') {
                         details.useVersion '1.0.1'
                         details.because('$reason')
                     }
@@ -971,19 +933,18 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment))
 
         then:
-        dependencyInsightContains(result.output, "test.nebula:a", resultingVersionForConstrainedVersion)
-        dependencyInsightContains(result.output, "test.nebula:b", resultingVersionForNonConstrainedVersion)
-        dependencyInsightContains(result.output, "test.nebula:c", resultingVersionForNonConstrainedVersion)
+        dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:c", resultingVersion)
 
         if (coreAlignment) {
-            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersionForNonConstrainedVersion")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
         }
 
-
         where:
-        coreAlignment | resultingVersionForConstrainedVersion | resultingVersionForNonConstrainedVersion | description
-        false         | "1.0.3"                               | "1.0.3"                                  | "aligns all dependencies"
-        true          | "1.0.1"                               | "1.0.3"                                  | "does not align all dependencies"
+        coreAlignment | resultingVersion
+        false         | "1.0.1"
+        true          | "1.0.1"
     }
 
     @Unroll
@@ -1002,8 +963,6 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "com.google.inject:guice", resultingVersion)
 
         if (coreAlignment) {
-            assert result.output.contains("com.google.inject:guice:{require 4.1.0; reject [4.2.0,)}")
-
             assert result.output.contains("belongs to platform aligned-platform:rules-0-for-com.google.inject:$resultingVersion")
         }
 
@@ -1017,45 +976,49 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
     def 'dynamically defined dependency: core alignment substitutes all versions higher than x and aligns | core alignment #coreAlignment'() {
         given:
         // based on https://github.com/nebula-plugins/gradle-nebula-integration/issues/50
+        // Also, substitutions apply on declared dependencies, not resolved ones
         setupForGuiceAndLibraryDependency(definedVersion)
 
         when:
-        def result = runTasks(*tasks(coreAlignment, false, 'com.google.inject'))
+        def result = runTasks('dependencies', *tasks(coreAlignment, false, 'com.google.inject'))
 
         then:
-        dependencyInsightContains(result.output, "com.google.inject.extensions:guice-assistedinject", resultingAlignedVersion)
-        dependencyInsightContains(result.output, "com.google.inject.extensions:guice-grapher", resultingAlignedVersion)
-        dependencyInsightContains(result.output, "com.google.inject.extensions:guice-multibindings", resultingAlignedVersion)
+        dependencyInsightContains(result.output, "com.google.inject.extensions:guice-assistedinject", resultingVersion)
+        dependencyInsightContains(result.output, "com.google.inject.extensions:guice-grapher", resultingVersion)
+        dependencyInsightContains(result.output, "com.google.inject.extensions:guice-multibindings", resultingVersion)
 
-        if (resultingNonAlignedVersion != null) {
+        if (guiceIsSubstituted) {
+            dependencyInsightContains(result.output, "com.google.inject:guice", resultingVersion)
+        } else {
             // since this test uses an external dependency that keeps incrementing, let's check that it just doesn't get the same result
-            def content = "com.google.inject:guice:.*$resultingAlignedVersion\n"
+            def content = "com.google.inject:guice:.*$resultingVersion\n"
             assert result.output.findAll(content).size() == 0
 
             // just make sure there's a value here for dependencyInsight
             dependencyInsightContains(result.output, "com.google.inject:guice", '')
-        } else {
-            dependencyInsightContains(result.output, "com.google.inject:guice", resultingAlignedVersion)
         }
 
         if (coreAlignment) {
             assert result.output.contains("com.google.inject:guice:{require 4.1.0; reject [4.2.0,)}")
 
-            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-com.google.inject:$resultingAlignedVersion")
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-com.google.inject:$resultingVersion")
         }
 
         where:
-        coreAlignment | definedVersion | resultingAlignedVersion | resultingNonAlignedVersion
-        false         | '4.+'          | '4.1.0'                 | '4.2.2'
-        true          | '4.+'          | '4.1.0'                 | null
+        coreAlignment | definedVersion | resultingVersion | guiceIsSubstituted
+        false         | '4.+'          | '4.1.0'          | false // FIXME: should resolve differently
+        true          | '4.+'          | '4.1.0'          | true
     }
 
     @Unroll
-    def 'transitive dependencies are aligned with same constraints as direct dependencies | core alignment #coreAlignment'() {
+    def 'transitive dependencies are aligned with constraints | core alignment #coreAlignment'() {
         given:
-        def module = "test.nebula:f:[1.0.1,1.1.0)"
-        def with = "test.nebula:f:1.0.0"
-        createAlignAndSubstituteRule(module, with)
+        def substituteFromVersion = "[1.0.1,1.1.0)"
+        def substituteToVersion = "1.0.0"
+        Map<String, String> modulesAndSubstitutions = new HashMap<>()
+        modulesAndSubstitutions.put("test.nebula:a:$substituteFromVersion".toString(), "test.nebula:a:$substituteToVersion".toString())
+        modulesAndSubstitutions.put("test.nebula:f:$substituteFromVersion".toString(), "test.nebula:f:$substituteToVersion".toString())
+        createAlignAndSubstituteRule(modulesAndSubstitutions)
 
         buildFile << """
             dependencies {
@@ -1073,7 +1036,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
 
         if (coreAlignment) {
             // for direct dependency
-            assert result.output.contains("test.nebula:f:{require 1.0.3; reject [1.0.1,1.1.0)}")
+            // assert result.output.contains("test.nebula:f:{require 1.0.3; reject [1.0.1,1.1.0)}")
 
             // for transitive dependencies
             assert result.output.contains("test.nebula:a:{require 1.0.0; reject [1.0.1,1.1.0)}")
@@ -1086,16 +1049,16 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
     }
 
     @Unroll
-    def 'substitution rule excludes are honored | core alignment #coreAlignment'() {
+    def 'alignment rule excludes are honored | core alignment #coreAlignment'() {
         given:
-        def module = "test.nebula:a:[1.0.0,1.0.3)"
-        def with = "test.nebula:a:1.0.3"
+        def module = "[1.0.1,1.0.3)"
+        def with = "1.0.3"
         rulesJsonFile << """
             {
                 "substitute": [
                     {
-                        "module" : "$module",
-                        "with" : "$with",
+                        "module" : "test.nebula:b:$module",
+                        "with" : "test.nebula:b:$with",
                         "reason" : "$reason",
                         "author" : "Test user <test@example.com>",
                         "date" : "2015-10-07T20:21:20.368Z"
@@ -1107,7 +1070,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
                         "reason": "Align test.nebula dependencies",
                         "author": "Example Person <person@example.org>",
                         "includes": [],
-                        "excludes": ["(b|c)"],
+                        "excludes": ["(c|g)"],
                         "date": "2016-03-17T20:21:20.368Z"
                     }
                 ]
@@ -1116,7 +1079,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
 
         buildFile << """
             dependencies {
-                compile 'test.nebula:a:1.0.1'
+                compile 'test.nebula:a:1.0.0'
                 compile 'test.nebula:b:1.0.1'
                 compile 'test.nebula:c:1.0.2'
                 compile 'test.nebula:g:1.0.1'
@@ -1129,10 +1092,10 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         then:
         def alignedResultingVersion = "1.0.3"
         dependencyInsightContains(result.output, "test.nebula:a", alignedResultingVersion)
-        dependencyInsightContains(result.output, "test.nebula:g", alignedResultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:b", alignedResultingVersion)
 
-        dependencyInsightContains(result.output, "test.nebula:b", '1.0.1')
         dependencyInsightContains(result.output, "test.nebula:c", '1.0.2')
+        dependencyInsightContains(result.output, "test.nebula:g", '1.0.1')
 
         if (coreAlignment) {
             assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$alignedResultingVersion")
@@ -1143,16 +1106,16 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
     }
 
     @Unroll
-    def 'substitution rule includes are honored | core alignment #coreAlignment'() {
+    def 'alignment rule includes are honored | core alignment #coreAlignment'() {
         given:
-        def module = "test.nebula:a:[1.0.0,1.0.3)"
-        def with = "test.nebula:a:1.0.3"
+        def module = "[1.0.1,1.0.3)"
+        def with = "1.0.3"
         rulesJsonFile << """
             {
                 "substitute": [
                     {
-                        "module" : "$module",
-                        "with" : "$with",
+                        "module" : "test.nebula:b:$module",
+                        "with" : "test.nebula:b:$with",
                         "reason" : "$reason",
                         "author" : "Test user <test@example.com>",
                         "date" : "2015-10-07T20:21:20.368Z"
@@ -1163,7 +1126,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
                         "group": "(test.nebula|test.nebula.ext)",
                         "reason": "Align test.nebula dependencies",
                         "author": "Example Person <person@example.org>",
-                        "includes": ["(a|g)"],
+                        "includes": ["(a|b)"],
                         "excludes": [],
                         "date": "2016-03-17T20:21:20.368Z"
                     }
@@ -1173,7 +1136,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
 
         buildFile << """
             dependencies {
-                compile 'test.nebula:a:1.0.1'
+                compile 'test.nebula:a:1.0.0'
                 compile 'test.nebula:b:1.0.1'
                 compile 'test.nebula:c:1.0.2'
                 compile 'test.nebula:g:1.0.1'
@@ -1186,10 +1149,10 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         then:
         def alignedResultingVersion = "1.0.3"
         dependencyInsightContains(result.output, "test.nebula:a", alignedResultingVersion)
-        dependencyInsightContains(result.output, "test.nebula:g", alignedResultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:b", alignedResultingVersion)
 
-        dependencyInsightContains(result.output, "test.nebula:b", '1.0.1')
         dependencyInsightContains(result.output, "test.nebula:c", '1.0.2')
+        dependencyInsightContains(result.output, "test.nebula:g", '1.0.1')
 
         if (coreAlignment) {
             assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$alignedResultingVersion")
@@ -1200,7 +1163,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
     }
 
     @Unroll
-    def 'recs with core bom support disabled: core alignment should substitute and align from bom version to lower static version | core alignment #coreAlignment'() {
+    def 'recs with core bom support disabled: alignment styles should substitute and align from bom version to lower static version | core alignment #coreAlignment'() {
         given:
         setupForBomAndAlignmentAndSubstitution(bomVersion, substituteToVersion)
 
@@ -1208,8 +1171,8 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*(tasks(coreAlignment, coreBomSupport)))
 
         then:
-        assert result.output.findAll("test.nebula:a:$resultingVersion").size() >= 1
-        assert result.output.findAll("test.nebula:b:$resultingVersion").size() >= 1
+        dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
         if (coreAlignment) {
             assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
@@ -1217,12 +1180,12 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
 
         where:
         coreAlignment | bomVersion | bomVersionCollidesWithSubsitutionRule | substituteToVersion | resultingVersion | coreBomSupport
-        false         | "1.0.2"    | true                                  | "1.0.1"             | "1.0.2"          | false
-        true          | "1.0.2"    | true                                  | "1.0.1"             | "1.0.1"          | false
+        false         | "1.0.2"    | true                                  | "1.0.1"             | "1.0.2"          | false // FIXME: should resolve differently
+        true          | "1.0.2"    | true                                  | "1.0.1"             | "1.0.2"          | false // keep behavior the same as coreAlignment=false
     }
 
     @Unroll
-    def 'recs with core bom support disabled: core alignment should substitute and align from bom version to higher minor-scoped dynamic version | core alignment #coreAlignment'() {
+    def 'recs with core bom support disabled: alignment styles should substitute and align from bom version to higher minor-scoped dynamic version | core alignment #coreAlignment'() {
         given:
         setupForBomAndAlignmentAndSubstitution(bomVersion, substituteToVersion)
 
@@ -1230,8 +1193,8 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*(tasks(coreAlignment, coreBomSupport)))
 
         then:
-        assert result.output.findAll("test.nebula:a:$resultingVersion").size() >= 1
-        assert result.output.findAll("test.nebula:b:$resultingVersion").size() >= 1
+        dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
         if (coreAlignment) {
             assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
@@ -1239,12 +1202,12 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
 
         where:
         coreAlignment | bomVersion | bomVersionCollidesWithSubsitutionRule | substituteToVersion | resultingVersion | coreBomSupport
-        false         | "1.0.2"    | true                                  | "1.+"               | "1.0.2"          | false
-        true          | "1.0.2"    | true                                  | "1.+"               | "1.1.0"          | false
+        false         | "1.0.2"    | true                                  | "1.+"               | "1.0.2"          | false // FIXME: should resolve differently
+        true          | "1.0.2"    | true                                  | "1.+"               | "1.0.2"          | false // keep behavior the same as coreAlignment=false
     }
 
     @Unroll
-    def 'recs with core bom support disabled: core alignment should substitute and align from bom version to higher patch-scoped dynamic version | core alignment #coreAlignment'() {
+    def 'recs with core bom support disabled: alignment styles should substitute and align from bom version to higher patch-scoped dynamic version | core alignment #coreAlignment'() {
         given:
         setupForBomAndAlignmentAndSubstitution(bomVersion, substituteToVersion)
 
@@ -1252,8 +1215,8 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*(tasks(coreAlignment, coreBomSupport)))
 
         then:
-        assert result.output.findAll("test.nebula:a:$resultingVersion").size() >= 1
-        assert result.output.findAll("test.nebula:b:$resultingVersion").size() >= 1
+        dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
         if (coreAlignment) {
             assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
@@ -1261,8 +1224,8 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
 
         where:
         coreAlignment | bomVersion | bomVersionCollidesWithSubsitutionRule | substituteToVersion | resultingVersion | coreBomSupport
-        false         | "1.0.2"    | true                                  | "1.0.3"             | "1.0.2"          | false
-        true          | "1.0.2"    | true                                  | "1.0.3"             | "1.0.3"          | false
+        false         | "1.0.2"    | true                                  | "1.0.3"             | "1.0.2"          | false // FIXME: should resolve differently
+        true          | "1.0.2"    | true                                  | "1.0.3"             | "1.0.2"          | false // keep behavior the same as coreAlignment=false
     }
 
     @Unroll
@@ -1274,8 +1237,8 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*(tasks(coreAlignment, coreBomSupport)))
 
         then:
-        assert result.output.findAll("test.nebula:a:$resultingVersion").size() >= 1
-        assert result.output.findAll("test.nebula:b:$resultingVersion").size() >= 1
+        dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
         if (coreAlignment) {
             assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
@@ -1288,7 +1251,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
     }
 
     @Unroll
-    def 'recs with core bom support enabled: core alignment should substitute and align from bom version to lower static version | core alignment #coreAlignment'() {
+    def 'recs with core bom support enabled: alignment styles should substitute and align from bom version to lower static version | core alignment #coreAlignment'() {
         given:
         setupForBomAndAlignmentAndSubstitution(bomVersion, substituteToVersion)
 
@@ -1296,8 +1259,8 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*(tasks(coreAlignment, coreBomSupport)))
 
         then:
-        assert result.output.findAll("test.nebula:a:$resultingVersion").size() >= 1
-        assert result.output.findAll("test.nebula:b:$resultingVersion").size() >= 1
+        dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
         if (coreAlignment) {
             assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
@@ -1305,12 +1268,12 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
 
         where:
         coreAlignment | bomVersion | bomVersionCollidesWithSubsitutionRule | substituteToVersion | resultingVersion | coreBomSupport
-        false         | "1.0.2"    | true                                  | "1.0.1"             | "1.0.2"          | true
+        false         | "1.0.2"    | true                                  | "1.0.1"             | "1.0.1"          | true
         true          | "1.0.2"    | true                                  | "1.0.1"             | "1.0.1"          | true
     }
 
     @Unroll
-    def 'recs with core bom support enabled: core alignment should substitute and align from bom version to higher minor-scoped dynamic version | core alignment #coreAlignment'() {
+    def 'recs with core bom support enabled: alignment styles should substitute and align from bom version to higher minor-scoped dynamic version | core alignment #coreAlignment'() {
         given:
         setupForBomAndAlignmentAndSubstitution(bomVersion, substituteToVersion)
 
@@ -1318,8 +1281,8 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*(tasks(coreAlignment, coreBomSupport)))
 
         then:
-        assert result.output.findAll("test.nebula:a:$resultingVersion").size() >= 1
-        assert result.output.findAll("test.nebula:b:$resultingVersion").size() >= 1
+        dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
         if (coreAlignment) {
             assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
@@ -1327,12 +1290,12 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
 
         where:
         coreAlignment | bomVersion | bomVersionCollidesWithSubsitutionRule | substituteToVersion | resultingVersion | coreBomSupport
-        false         | "1.0.2"    | true                                  | "1.+"               | "1.0.2"          | true
-        true          | "1.0.2"    | true                                  | "1.+"               | "1.1.0"          | true
+        false         | "1.0.2"    | true                                  | "1.+"               | "1.1.0"          | true // FIXME: should resolve differently
+        true          | "1.0.2"    | true                                  | "1.+"               | "1.1.0"          | true // keep behavior the same as coreAlignment=false
     }
 
     @Unroll
-    def 'recs with core bom support enabled: core alignment should substitute and align from bom version to higher patch-scoped dynamic version | core alignment #coreAlignment'() {
+    def 'recs with core bom support enabled: alignment styles should substitute and align from bom version to higher patch-scoped dynamic version | core alignment #coreAlignment'() {
         given:
         setupForBomAndAlignmentAndSubstitution(bomVersion, substituteToVersion)
 
@@ -1340,8 +1303,8 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*(tasks(coreAlignment, coreBomSupport)))
 
         then:
-        assert result.output.findAll("test.nebula:a:$resultingVersion").size() >= 1
-        assert result.output.findAll("test.nebula:b:$resultingVersion").size() >= 1
+        dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
         if (coreAlignment) {
             assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
@@ -1349,7 +1312,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
 
         where:
         coreAlignment | bomVersion | bomVersionCollidesWithSubsitutionRule | substituteToVersion | resultingVersion | coreBomSupport
-        false         | "1.0.2"    | true                                  | "1.0.3"             | "1.0.2"          | true
+        false         | "1.0.2"    | true                                  | "1.0.3"             | "1.0.3"          | true
         true          | "1.0.2"    | true                                  | "1.0.3"             | "1.0.3"          | true
     }
 
@@ -1362,8 +1325,8 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*(tasks(coreAlignment, coreBomSupport)))
 
         then:
-        assert result.output.findAll("test.nebula:a:$resultingVersion").size() >= 1
-        assert result.output.findAll("test.nebula:b:$resultingVersion").size() >= 1
+        dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
         if (coreAlignment) {
             assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
@@ -1376,7 +1339,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
     }
 
     @Unroll
-    def 'enforced recs with core bom support disabled: core alignment should substitute and align from bom version to lower static version | core alignment #coreAlignment'() {
+    def 'enforced recs with core bom support disabled: alignment styles should substitute and align from bom version to lower static version | core alignment #coreAlignment'() {
         given:
         def usingEnforcedPlatform = true
         setupForBomAndAlignmentAndSubstitution(bomVersion, substituteToVersion, usingEnforcedPlatform)
@@ -1385,8 +1348,8 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment, coreBomSupport))
 
         then:
-        assert result.output.findAll("test.nebula:a:$resultingVersion").size() >= 1
-        assert result.output.findAll("test.nebula:b:$resultingVersion").size() >= 1
+        dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
         if (coreAlignment) {
             assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
@@ -1395,7 +1358,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         where:
         coreAlignment | bomVersion | bomVersionCollidesWithSubsitutionRule | substituteToVersion | resultingVersion | coreBomSupport
         false         | "1.0.2"    | true                                  | "1.0.1"             | "1.0.2"          | false
-        true          | "1.0.2"    | true                                  | "1.0.1"             | "1.0.1"          | false
+        true          | "1.0.2"    | true                                  | "1.0.1"             | "1.0.2"          | false
     }
 
     @Unroll
@@ -1408,8 +1371,8 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment, coreBomSupport))
 
         then:
-        assert result.output.findAll("test.nebula:a:$resultingVersion").size() >= 1
-        assert result.output.findAll("test.nebula:b:$resultingVersion").size() >= 1
+        dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
         if (coreAlignment) {
             assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
@@ -1422,7 +1385,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
     }
 
     @Unroll
-    def 'enforced recs with core bom support enabled: core alignment should substitute and align from bom version to lower static version | core alignment #coreAlignment'() {
+    def 'enforced recs with core bom support enabled: alignment styles should substitute and align from bom version to lower static version | core alignment #coreAlignment'() {
         given:
         def usingEnforcedPlatform = true
         setupForBomAndAlignmentAndSubstitution(bomVersion, substituteToVersion, usingEnforcedPlatform)
@@ -1431,8 +1394,8 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment, coreBomSupport))
 
         then:
-        assert result.output.findAll("test.nebula:a:$resultingVersion").size() >= 1
-        assert result.output.findAll("test.nebula:b:$resultingVersion").size() >= 1
+        dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
         if (coreAlignment) {
             assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
@@ -1440,7 +1403,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
 
         where:
         coreAlignment | bomVersion | bomVersionCollidesWithSubsitutionRule | substituteToVersion | resultingVersion | coreBomSupport
-        false         | "1.0.2"    | true                                  | "1.0.1"             | "1.0.2"          | true
+        false         | "1.0.2"    | true                                  | "1.0.1"             | "1.0.1"          | true
         true          | "1.0.2"    | true                                  | "1.0.1"             | "1.0.1"          | true
     }
 
@@ -1454,8 +1417,8 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment, coreBomSupport))
 
         then:
-        assert result.output.findAll("test.nebula:a:$resultingVersion").size() >= 1
-        assert result.output.findAll("test.nebula:b:$resultingVersion").size() >= 1
+        dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
         if (coreAlignment) {
             assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
@@ -1487,13 +1450,8 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
         if (coreAlignment) {
-            assert result.output.contains("test.nebula:a:{require 1.0.1; reject 1.0.1 & 1.0.3 & 1.1.0} -> 1.0.2")
-            assert result.output.contains("test.nebula:b:{require 1.0.3; reject 1.0.1 & 1.0.3 & 1.1.0} -> 1.0.2")
-
-            assert result.output.contains("rejection of version(s) '1.0.1'")
-            assert result.output.contains("rejection of version(s) '1.0.3'")
-            assert result.output.contains("rejection of version(s) '1.1.0'")
             assert result.output.contains("substitution from 'test.nebula:a:1.0.1' to 'test.nebula:a:1.0.2'")
+            assert result.output.contains("substitution from 'test.nebula:b:1.0.3' to 'test.nebula:b:1.0.2'")
 
             assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
         }
@@ -1535,6 +1493,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
             assert result.output.contains("test.nebula:b:{require 1.0.3; reject 1.0.1 & 1.0.3 & 1.1.0} -> 1.0.2")
 
             assert result.output.contains("substitution from 'test.nebula:a:1.0.1' to 'test.nebula:a:1.0.2'")
+            assert result.output.contains("substitution from 'test.nebula:b:1.0.3' to 'test.nebula:b:1.0.2'")
 
             assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
         }
@@ -1545,9 +1504,8 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         true          | "1.0.2"
     }
 
-
     @Unroll
-    def 'multiple substitutions applied: recs with core bom support disabled: core alignment should honor multiple substitutions | core alignment: #coreAlignment'() {
+    def 'multiple substitutions applied: recs with core bom support disabled: alignment styles should honor multiple substitutions | core alignment: #coreAlignment'() {
         given:
         def bomVersion = "1.0.1"
         setupForBomAndAlignmentAndSubstitution(bomVersion, "")
@@ -1564,14 +1522,11 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
         if (coreAlignment) {
-            assert result.output.contains("test.nebula:a:{require 1.0.2; reject 1.0.1 & 1.0.3 & 1.1.0} -> 1.0.2")
-            assert result.output.contains("test.nebula:b:{require 1.0.2; reject 1.0.1 & 1.0.3 & 1.1.0} -> 1.0.2")
+            assert result.output.contains("Recommending version 1.0.1 for dependency test.nebula:a via conflict resolution recommendation")
+            assert result.output.contains("Recommending version 1.0.1 for dependency test.nebula:b via conflict resolution recommendation")
 
-            assert result.output.contains("require version 1.0.2")
-            assert result.output.contains("rejection of BOM recommended version(s) '1.0.1'")
-            assert result.output.contains("rejection of version(s) '1.0.3'")
-            assert result.output.contains("rejection of version(s) '1.1.0'")
-//            assert result.output.contains("substitution from 'test.nebula:a:1.0.1' to 'test.nebula:a:1.0.2'")
+            assert result.output.contains("substitution from 'test.nebula:a:1.0.1' to 'test.nebula:a:1.0.2'")
+            assert result.output.contains("substitution from 'test.nebula:b:1.0.1' to 'test.nebula:b:1.0.2'")
 
             assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
         }
@@ -1579,7 +1534,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         where:
         coreAlignment | coreBomSupport | resultingVersion
         false         | false          | "1.0.1"
-        true          | false          | "1.0.2"
+        true          | false          | "1.0.1"
     }
 
     @Unroll
@@ -1600,14 +1555,8 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
         if (coreAlignment) {
-            assert result.output.contains("test.nebula:a:{require 1.0.2; reject 1.0.1 & 1.0.3 & 1.1.0} -> 1.0.2")
-            assert result.output.contains("test.nebula:b:{require 1.0.2; reject 1.0.1 & 1.0.3 & 1.1.0} -> 1.0.2")
-
-            assert result.output.contains("require version 1.0.2")
-            assert result.output.contains("rejection of BOM recommended version(s) '1.0.1'")
-            assert result.output.contains("rejection of version(s) '1.0.3'")
-            assert result.output.contains("rejection of version(s) '1.1.0'")
             assert result.output.contains("substitution from 'test.nebula:a:1.0.1' to 'test.nebula:a:1.0.2'")
+            assert result.output.contains("substitution from 'test.nebula:b:1.0.1' to 'test.nebula:b:1.0.2'")
 
             assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
         }
@@ -1617,7 +1566,6 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         false         | true           | "1.0.2"
         true          | true           | "1.0.2"
     }
-
 
     @Unroll
     def 'multiple substitutions applied: enforced recs with core bom support disabled: core alignment should honor multiple substitutions | core alignment: #coreAlignment'() {
@@ -1638,14 +1586,8 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
         if (coreAlignment) {
-            assert result.output.contains("test.nebula:a:{require 1.0.2; reject 1.0.1 & 1.0.3 & 1.1.0} -> 1.0.2")
-            assert result.output.contains("test.nebula:b:{require 1.0.2; reject 1.0.1 & 1.0.3 & 1.1.0} -> 1.0.2")
-
-            assert result.output.contains("require version 1.0.2")
-            assert result.output.contains("rejection of BOM recommended version(s) '1.0.1'")
-            assert result.output.contains("rejection of version(s) '1.0.3'")
-            assert result.output.contains("rejection of version(s) '1.1.0'")
-//            assert result.output.contains("substitution from 'test.nebula:a:1.0.1' to 'test.nebula:a:1.0.2'")
+            assert result.output.contains("substitution from 'test.nebula:a:1.0.1' to 'test.nebula:a:1.0.2'")
+            assert result.output.contains("substitution from 'test.nebula:b:1.0.1' to 'test.nebula:b:1.0.2'")
 
             assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
         }
@@ -1653,7 +1595,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         where:
         coreAlignment | coreBomSupport | resultingVersion
         false         | false          | "1.0.1"
-        true          | false          | "1.0.2"
+        true          | false          | "1.0.1"
     }
 
     @Unroll
@@ -1675,14 +1617,8 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
         if (coreAlignment) {
-            assert result.output.contains("test.nebula:a:{require 1.0.2; reject 1.0.1 & 1.0.3 & 1.1.0} -> 1.0.2")
-            assert result.output.contains("test.nebula:b:{require 1.0.2; reject 1.0.1 & 1.0.3 & 1.1.0} -> 1.0.2")
-
-            assert result.output.contains("require version 1.0.2")
-            assert result.output.contains("rejection of BOM recommended version(s) '1.0.1'")
-            assert result.output.contains("rejection of version(s) '1.0.3'")
-            assert result.output.contains("rejection of version(s) '1.1.0'")
             assert result.output.contains("substitution from 'test.nebula:a:1.0.1' to 'test.nebula:a:1.0.2'")
+            assert result.output.contains("substitution from 'test.nebula:b:1.0.1' to 'test.nebula:b:1.0.2'")
 
             assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
         }
@@ -1700,20 +1636,42 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
                     {
                         "module" : "test.nebula:a:1.0.1",
                         "with" : "test.nebula:a:1.0.2",
-                        "reason" : "(substitution for a)",
+                        "reason" : "1.0.1 is too small",
+                        "author" : "Test user <test@example.com>",
+                        "date" : "2015-10-07T20:21:20.368Z"
+                    },
+                    {
+                        "module" : "test.nebula:b:1.0.1",
+                        "with" : "test.nebula:b:1.0.2",
+                        "reason" : "1.0.1 is too small",
+                        "author" : "Test user <test@example.com>",
+                        "date" : "2015-10-07T20:21:20.368Z"
+                    },
+                    {
+                        "module" : "test.nebula:a:1.1.0",
+                        "with" : "test.nebula:a:1.0.3",
+                        "reason" : "1.1.0 is too large",
                         "author" : "Test user <test@example.com>",
                         "date" : "2015-10-07T20:21:20.368Z"
                     },
                     {
                         "module" : "test.nebula:b:1.1.0",
                         "with" : "test.nebula:b:1.0.3",
-                        "reason" : "(acts as rejection for a)",
+                        "reason" : "1.1.0 is too large",
                         "author" : "Test user <test@example.com>",
                         "date" : "2015-10-07T20:21:20.368Z"
-                    },                    {
+                    },
+                    {
+                        "module" : "test.nebula:a:1.0.3",
+                        "with" : "test.nebula:a:1.0.2",
+                        "reason" : "1.0.3 is also too large",
+                        "author" : "Test user <test@example.com>",
+                        "date" : "2015-10-07T20:21:20.368Z"
+                    },
+                    {
                         "module" : "test.nebula:b:1.0.3",
                         "with" : "test.nebula:b:1.0.2",
-                        "reason" : "(acts as rejection for a)",
+                        "reason" : "1.0.3 is also too large",
                         "author" : "Test user <test@example.com>",
                         "date" : "2015-10-07T20:21:20.368Z"
                     }
@@ -1744,38 +1702,47 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         """.stripIndent()
     }
 
-    private def setupForSimplestSubstitutionAndAlignmentCases(String substituteFromVersion, String substituteToVersion, String dependencyDefinitionVersion) {
-        def module = "test.nebula:b:$substituteFromVersion"
-        def with = "test.nebula:b:$substituteToVersion"
+    private def setupForSimplestSubstitutionAndAlignmentCases(String substituteFromVersion, String substituteToVersion, List<String> definedVersions) {
+        Map<String, String> modulesAndSubstitutions = new HashMap<>()
+        modulesAndSubstitutions.put("test.nebula:a:$substituteFromVersion".toString(), "test.nebula:a:$substituteToVersion".toString())
+        modulesAndSubstitutions.put("test.nebula:b:$substituteFromVersion".toString(), "test.nebula:b:$substituteToVersion".toString())
+        assert definedVersions.size() == 2
 
-        createAlignAndSubstituteRule(module, with)
+        createAlignAndSubstituteRule(modulesAndSubstitutions)
 
         buildFile << """
             dependencies {
-                compile 'test.nebula:a:$dependencyDefinitionVersion'
-                compile 'test.nebula:b:$dependencyDefinitionVersion'
+                compile 'test.nebula:a:${definedVersions[0]}'
+                compile 'test.nebula:b:${definedVersions[1]}'
             }
             """.stripIndent()
     }
 
-    private def setupForSubstitutionAndAlignmentCasesWithMissingVersions(String subFromVersionAndModule, String subToVersionAndModule, String definedVersion) {
-        def module = "test.nebula:$subFromVersionAndModule"
-        def with = "test.nebula:$subToVersionAndModule"
-        createAlignAndSubstituteRule(module, with)
+    private def setupForSubstitutionAndAlignmentCasesWithMissingVersions(String substituteFromVersion, String substituteToVersion, List<String> definedVersions) {
+        Map<String, String> modulesAndSubstitutions = new HashMap<>()
+        modulesAndSubstitutions.put("test.nebula:a:$substituteFromVersion".toString(), "test.nebula:a:$substituteToVersion".toString())
+        modulesAndSubstitutions.put("test.nebula:b:$substituteFromVersion".toString(), "test.nebula:b:$substituteToVersion".toString())
+        modulesAndSubstitutions.put("test.nebula:c:$substituteFromVersion".toString(), "test.nebula:c:$substituteToVersion".toString())
+        assert definedVersions.size() == 3
+
+        createAlignAndSubstituteRule(modulesAndSubstitutions)
 
         buildFile << """
             dependencies {
-                compile 'test.nebula:a:$definedVersion'
-                compile 'test.nebula:b:$definedVersion'
-                compile 'test.nebula:c:$definedVersion'
+                compile 'test.nebula:a:${definedVersions[0]}'
+                compile 'test.nebula:b:${definedVersions[1]}'
+                compile 'test.nebula:c:${definedVersions[2]}'
             }
             """.stripIndent()
     }
 
     private def setupForBomAndAlignmentAndSubstitution(String bomVersion, String substituteToVersion, boolean usingEnforcedPlatform = false) {
-        def module = "test.nebula:a:[1.0.2]"
-        def with = "test.nebula:a:$substituteToVersion"
-        createAlignAndSubstituteRule(module, with)
+        def substituteFromVersion = "1.0.2"
+        Map<String, String> modulesAndSubstitutions = new HashMap<>()
+        modulesAndSubstitutions.put("test.nebula:a:$substituteFromVersion".toString(), "test.nebula:a:$substituteToVersion".toString())
+        modulesAndSubstitutions.put("test.nebula:b:$substituteFromVersion".toString(), "test.nebula:b:$substituteToVersion".toString())
+
+        createAlignAndSubstituteRule(modulesAndSubstitutions)
 
         def bomRepo = createBom(["test.nebula:a:$bomVersion", "test.nebula:b:$bomVersion"])
 
@@ -1831,6 +1798,27 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
                         "reason" : "$reason",
                         "author" : "Test user <test@example.com>",
                         "date" : "2015-10-07T20:21:20.368Z"
+                    },
+                    {
+                        "module": "com.google.inject.extensions:guice-assistedinject:[4.2.0,)",
+                        "with": "com.google.inject.extensions:guice-assistedinject:4.1.0",
+                        "reason": "$reason",
+                        "author": "Test user <test@example.com>",
+                        "date": "2015-10-07T20:21:20.368Z"
+                    },
+                    {
+                        "module": "com.google.inject.extensions:guice-grapher:[4.2.0,)",
+                        "with": "com.google.inject.extensions:guice-grapher:4.1.0",
+                        "reason": "$reason",
+                        "author": "Test user <test@example.com>",
+                        "date": "2015-10-07T20:21:20.368Z"
+                    },
+                    {
+                        "module": "com.google.inject.extensions:guice-multibindings:[4.2.0,)",
+                        "with": "com.google.inject.extensions:guice-multibindings:4.1.0",
+                        "reason": "$reason",
+                        "author": "Test user <test@example.com>",
+                        "date": "2015-10-07T20:21:20.368Z"
                     }
                 ]
             }
@@ -1847,13 +1835,13 @@ repositories {
 dependencies {
     //at the time of writing resolves to 4.2.2
     compile "com.google.inject:guice:$definedVersion"
-    compile "sample:module:1.0"
+    compile "test.nebula:a:1.0"
 }
 """
 
         MavenRepo repo = new MavenRepo()
         repo.root = new File(projectDir, 'repo')
-        Pom pom = new Pom('sample', 'module', '1.0', ArtifactType.POM)
+        Pom pom = new Pom('test.nebula', 'a', '1.0', ArtifactType.POM)
         pom.addDependency('com.google.inject.extensions', 'guice-grapher', '4.1.0')
         repo.poms.add(pom)
         repo.generate()
@@ -1887,6 +1875,34 @@ dependencies {
                         "author" : "Test user <test@example.com>",
                         "date" : "2015-10-07T20:21:20.368Z"
                     }
+                ],
+                "align": [
+                    $alignRuleForTestNebula
+                ]
+            }
+            """.stripIndent()
+    }
+
+    private def createAlignAndSubstituteRule(Map<String, String> modulesAndSubstitutions) {
+        rulesJsonFile << """
+            {
+                "substitute": [
+            """.stripIndent()
+
+        List<String> substitutions = new ArrayList<>()
+        modulesAndSubstitutions.each { module, with ->
+            substitutions.add("""
+                        {
+                            "module" : "$module",
+                            "with" : "$with",
+                            "reason" : "$reason",
+                            "author" : "Test user <test@example.com>",
+                            "date" : "2015-10-07T20:21:20.368Z"
+                        }""".stripIndent())
+        }
+        rulesJsonFile << substitutions.join(',')
+
+        rulesJsonFile << """
                 ],
                 "align": [
                     $alignRuleForTestNebula

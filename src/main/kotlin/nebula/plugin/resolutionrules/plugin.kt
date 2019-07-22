@@ -87,13 +87,6 @@ class ResolutionRulesPlugin : Plugin<Project> {
                             rule.apply(project, config, config.resolutionStrategy, extension, reasons)
                         }
 
-                        if (isCoreAlignmentEnabled()) {
-                            val alignedPlatformRules = generateAlignedPlatformRules(ruleSet.align, ruleSet.substitute)
-                            alignedPlatformRules.forEach { rule ->
-                                rule.apply(project, config, config.resolutionStrategy, extension, reasons)
-                            }
-                        }
-
                         ruleSet.dependencyRulesPartTwo().forEach { rule ->
                             rule.apply(project, config, config.resolutionStrategy, extension, reasons)
                         }
@@ -112,28 +105,6 @@ class ResolutionRulesPlugin : Plugin<Project> {
                 }
             }
         }
-    }
-
-    private fun generateAlignedPlatformRules(alignRules: List<AlignRule>, substituteRules: List<SubstituteRule>): List<AlignedPlatformRule> {
-        val alignToSubstitutes: MutableMap<AlignRule, MutableList<SubstituteRule>> = mutableMapOf()
-        val forAlignedPlatform: MutableList<AlignedPlatformRule> = mutableListOf()
-
-        alignRules.forEach { alignRule ->
-            substituteRules.forEach { substituteRule ->
-                val substitution = ModuleVersionIdentifier.valueOf(substituteRule.module)
-                if (alignRule.ruleMatches(substitution.organization, substitution.name)) {
-                    if (!alignToSubstitutes.containsKey(alignRule)) {
-                        alignToSubstitutes[alignRule] = mutableListOf()
-                    }
-                    alignToSubstitutes[alignRule]!!.add(substituteRule)
-                }
-            }
-        }
-
-        alignToSubstitutes.forEach { (alignRule, listOfSubstituteRules) ->
-            forAlignedPlatform.add(AlignedPlatformRule(alignRule, listOfSubstituteRules))
-        }
-        return forAlignedPlatform
     }
 
     private fun rulesFromConfiguration(project: Project, extension: NebulaResolutionRulesExtension): RuleSet {
