@@ -9,7 +9,7 @@ import nebula.test.dependencies.maven.Pom
 import nebula.test.dependencies.repositories.MavenRepo
 import spock.lang.Unroll
 
-class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
+class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
     File rulesJsonFile
     File mavenrepo
     String reason = "★ custom reason"
@@ -80,7 +80,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
     }
 
     @Unroll
-    def 'statically defined dependency: alignment styles should substitute and align from static version to higher static version | core alignment: #coreAlignment'() {
+    def 'statically defined dependency: sub & align from static version to higher static version | core alignment: #coreAlignment'() {
         given:
         List<String> dependencyDefinitionVersions = ['1.0.1', '1.0.0']
         setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersions)
@@ -97,13 +97,14 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         }
 
         where:
-        substituteVersionType | substituteFromVersion | substituteToVersion | substituteUpOrDown | coreAlignment | resultingVersion
-        "static version"      | "1.0.1"               | "1.0.3"             | "higher"           | false         | "1.0.3"
-        "static version"      | "1.0.1"               | "1.0.3"             | "higher"           | true          | "1.0.3"
+        substituteFromVersion = "1.0.1"
+        substituteToVersion = "1.0.3"
+        resultingVersion = "1.0.3"
+        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'statically defined dependency: alignment styles should substitute and align from static version to higher latest.release dynamic version | core alignment: #coreAlignment'() {
+    def 'statically defined dependency: sub & align from static version to higher latest.release dynamic version | core alignment: #coreAlignment'() {
         given:
         List<String> dependencyDefinitionVersions = ['1.0.1', '1.0.0']
         setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersions)
@@ -120,13 +121,14 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         }
 
         where:
-        substituteVersionType | substituteFromVersion | substituteToVersion | substituteUpOrDown | coreAlignment | resultingVersion
-        "static version"      | "1.0.1"               | "latest.release"    | "higher"           | false         | "1.1.0"
-        "static version"      | "1.0.1"               | "latest.release"    | "higher"           | true          | "1.1.0"
+        substituteFromVersion = "1.0.1"
+        substituteToVersion = "latest.release"
+        resultingVersion = "1.1.0"
+        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'statically defined dependency: alignment styles should substitute and align from static version to higher minor-scoped dynamic version | core alignment: #coreAlignment'() {
+    def 'statically defined dependency: sub & align from static version to higher minor-scoped dynamic version | core alignment: #coreAlignment'() {
         given:
         List<String> dependencyDefinitionVersions = ['1.0.1', '1.0.0']
         setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersions)
@@ -143,13 +145,14 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         }
 
         where:
-        substituteVersionType | substituteFromVersion | substituteToVersion | substituteUpOrDown | coreAlignment | resultingVersion
-        "static version"      | "1.0.1"               | "1.+"               | "higher"           | false         | "1.1.0"
-        "static version"      | "1.0.1"               | "1.+"               | "higher"           | true          | "1.1.0"
+        substituteFromVersion = "1.0.1"
+        substituteToVersion = "1.+"
+        resultingVersion = "1.1.0"
+        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'statically defined dependency: alignment styles should substitute and align from static version to lower substitute-to version | core alignment: #coreAlignment'() {
+    def 'statically defined dependency: sub & align from static version to lower substitute-to version | core alignment: #coreAlignment'() {
         given:
         List<String> dependencyDefinitionVersions = ['1.0.1', '1.0.0']
         setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersions)
@@ -166,13 +169,14 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         }
 
         where:
-        substituteVersionType | substituteFromVersion | substituteToVersion | substituteUpOrDown | coreAlignment | resultingVersion
-        "static version"      | "1.0.1"               | "1.0.0"             | "lower"            | false         | "1.0.0"
-        "static version"      | "1.0.1"               | "1.0.0"             | "lower"            | true          | "1.0.0"
+        substituteFromVersion = "1.0.1"
+        substituteToVersion = "1.0.0"
+        resultingVersion = "1.0.0"
+        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'statically defined dependency: alignment styles should substitute and align from range to higher static version | core alignment: #coreAlignment'() {
+    def 'statically defined dependency: sub & align from range to higher static version | core alignment: #coreAlignment'() {
         given:
         List<String> dependencyDefinitionVersions = ['1.0.1', '1.0.0']
         setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersions)
@@ -189,13 +193,14 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         }
 
         where:
-        substituteVersionType | substituteFromVersion | substituteToVersion | substituteUpOrDown | coreAlignment | resultingVersion
-        "range"               | "[1.0.1,1.0.2]"       | "1.0.3"             | "higher"           | false         | "1.0.3"
-        "range"               | "[1.0.1,1.0.2]"       | "1.0.3"             | "higher"           | true          | "1.0.3"
+        substituteFromVersion = "[1.0.1,1.0.2]"
+        substituteToVersion = "1.0.3"
+        resultingVersion = "1.0.3"
+        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'statically defined dependency: alignment styles should substitute and align from range to higher latest.release dynamic version | core alignment: #coreAlignment'() {
+    def 'statically defined dependency: sub & align from range to higher latest.release dynamic version | core alignment: #coreAlignment'() {
         given:
         List<String> dependencyDefinitionVersions = ['1.0.1', '1.0.0']
         setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersions)
@@ -212,13 +217,14 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         }
 
         where:
-        substituteVersionType | substituteFromVersion | substituteToVersion | substituteUpOrDown | coreAlignment | resultingVersion
-        "range"               | "[1.0.1,1.0.2]"       | "latest.release"    | "higher"           | false         | "1.1.0"
-        "range"               | "[1.0.1,1.0.2]"       | "latest.release"    | "higher"           | true          | "1.1.0"
+        substituteFromVersion = "[1.0.1,1.0.2]"
+        substituteToVersion = "latest.release"
+        resultingVersion = "1.1.0"
+        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'statically defined dependency: alignment styles should substitute and align from range to higher minor-scoped dynamic version | core alignment: #coreAlignment'() {
+    def 'statically defined dependency: sub & align from range to higher minor-scoped dynamic version | core alignment: #coreAlignment'() {
         given:
         List<String> dependencyDefinitionVersions = ['1.0.1', '1.0.0']
         setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersions)
@@ -235,13 +241,14 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         }
 
         where:
-        substituteVersionType | substituteFromVersion | substituteToVersion | substituteUpOrDown | coreAlignment | resultingVersion
-        "range"               | "[1.0.1,1.0.2]"       | "1.+"               | "higher"           | false         | "1.1.0"
-        "range"               | "[1.0.1,1.0.2]"       | "1.+"               | "higher"           | true          | "1.1.0"
+        substituteFromVersion = "[1.0.1,1.0.2]"
+        substituteToVersion = "1.+"
+        resultingVersion = "1.1.0"
+        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'statically defined dependency: alignment styles should substitute and align from range to higher static version with higher minor version | core alignment: #coreAlignment'() {
+    def 'statically defined dependency: sub & align from range to higher static version with higher minor version | core alignment: #coreAlignment'() {
         given:
         List<String> dependencyDefinitionVersions = ['1.0.1', '1.0.0']
         setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersions)
@@ -258,13 +265,14 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         }
 
         where:
-        substituteVersionType | substituteFromVersion | substituteToVersion | substituteUpOrDown | coreAlignment | resultingVersion
-        "range"               | "[1.0.1,1.0.2]"       | "1.1.0"             | "higher"           | false         | "1.1.0"
-        "range"               | "[1.0.1,1.0.2]"       | "1.1.0"             | "higher"           | true          | "1.1.0"
+        substituteFromVersion = "[1.0.1,1.0.2]"
+        substituteToVersion = "1.1.0"
+        resultingVersion = "1.1.0"
+        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'statically defined dependency: alignment styles should substitute and align from range to lower substitute-to version | core alignment: #coreAlignment'() {
+    def 'statically defined dependency: sub & align from range to lower substitute-to version | core alignment: #coreAlignment'() {
         given:
         List<String> dependencyDefinitionVersions = ['1.0.1', '1.0.0']
         setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersions)
@@ -281,13 +289,14 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         }
 
         where:
-        substituteVersionType | substituteFromVersion | substituteToVersion | substituteUpOrDown | coreAlignment | resultingVersion
-        "range"               | "[1.0.1,1.0.2]"       | "1.0.0"             | "lower"            | false         | "1.0.0"
-        "range"               | "[1.0.1,1.0.2]"       | "1.0.0"             | "lower"            | true          | "1.0.0"
+        substituteFromVersion = "[1.0.1,1.0.2]"
+        substituteToVersion = "1.0.0"
+        resultingVersion = "1.0.0"
+        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'narrowly defined dynamic dependency: alignment styles should substitute and align from static version to higher static version that is not substituted-away-from | core alignment: #coreAlignment'() {
+    def 'narrowly defined dynamic dependency: sub & align from static version to higher static version that is not substituted-away-from | core alignment: #coreAlignment'() {
         given:
         List<String> dependencyDefinitionVersions = ['1.0.+', '1.0.0']
         setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersions)
@@ -304,13 +313,14 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         }
 
         where:
-        substituteVersionType | substituteFromVersion | substituteToVersion | substituteUpOrDown | coreAlignment | resultingVersion
-        "static version"      | "1.0.3"               | "1.1.0"             | "higher"           | false         | "1.0.3" // FIXME: should resolve differently
-        "static version"      | "1.0.3"               | "1.1.0"             | "higher"           | true          | "1.0.3" // keep behavior the same as coreAlignment=false
+        substituteFromVersion = "1.0.3"
+        substituteToVersion = "1.1.0"
+        resultingVersion = "1.0.3"  // FIXME: should resolve differently
+        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'narrowly defined dynamic dependency: alignment styles should substitute and align from static version to higher latest.release dynamic version in narrow definition that is not substituted-away-from | core alignment: #coreAlignment'() {
+    def 'narrowly defined dynamic dependency: sub & align from static version to higher latest.release dynamic version in narrow definition that is not substituted-away-from | core alignment: #coreAlignment'() {
         given:
         List<String> dependencyDefinitionVersions = ['1.0.+', '1.0.0']
         setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersions)
@@ -327,13 +337,14 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         }
 
         where:
-        substituteVersionType | substituteFromVersion | substituteToVersion | substituteUpOrDown | coreAlignment | resultingVersion
-        "static version"      | "1.0.3"               | "latest.release"    | "higher"           | false         | "1.0.3" // FIXME: should resolve differently
-        "static version"      | "1.0.3"               | "latest.release"    | "higher"           | true          | "1.0.3" // keep behavior the same as coreAlignment=false
+        substituteFromVersion = "1.0.3"
+        substituteToVersion = "latest.release"
+        resultingVersion = "1.0.3"  // FIXME: should resolve differently
+        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'narrowly defined dynamic dependency: alignment styles should substitute and align from static version to higher minor-scoped dynamic version that is not substituted-away-from | core alignment: #coreAlignment'() {
+    def 'narrowly defined dynamic dependency: sub & align from static version to higher minor-scoped dynamic version that is not substituted-away-from | core alignment: #coreAlignment'() {
         given:
         List<String> dependencyDefinitionVersions = ['1.0.+', '1.0.0']
         setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersions)
@@ -350,13 +361,14 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         }
 
         where:
-        substituteVersionType | substituteFromVersion | substituteToVersion | substituteUpOrDown | coreAlignment | resultingVersion
-        "static version"      | "1.0.3"               | "1.+"               | "higher"           | false         | "1.0.3" // FIXME: should resolve differently
-        "static version"      | "1.0.3"               | "1.+"               | "higher"           | true          | "1.0.3" // keep behavior the same as coreAlignment=false
+        substituteFromVersion = "1.0.3"
+        substituteToVersion = "1.+"
+        resultingVersion = "1.0.3" // FIXME: should resolve differently
+        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'narrowly defined dynamic dependency: alignment styles should substitute and align from static version to conflict-resolved version that is is not substituted-away-from | core alignment: #coreAlignment'() {
+    def 'narrowly defined dynamic dependency: sub & align from static version to conflict-resolved version that is is not substituted-away-from | core alignment: #coreAlignment'() {
         given:
         List<String> dependencyDefinitionVersions = ['1.0.+', '1.0.0']
         setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersions)
@@ -373,13 +385,14 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         }
 
         where:
-        substituteVersionType | substituteFromVersion | substituteToVersion | substituteUpOrDown | coreAlignment | resultingVersion
-        "static version"      | "1.0.3"               | "1.0.0"             | "lower"            | false         | "1.0.3" // FIXME: should resolve differently
-        "static version"      | "1.0.3"               | "1.0.0"             | "lower"            | true          | "1.0.3" // keep behavior the same as coreAlignment=false
+        substituteFromVersion = "1.0.3"
+        substituteToVersion = "1.0.0"
+        resultingVersion = "1.0.3" // FIXME: should resolve differently
+        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'narrowly defined dynamic dependency: alignment styles should substitute and align from range to higher static version | core alignment: #coreAlignment'() {
+    def 'narrowly defined dynamic dependency: sub & align from range to higher static version | core alignment: #coreAlignment'() {
         given:
         List<String> dependencyDefinitionVersions = ['1.0.+', '1.0.0']
         setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersions)
@@ -396,13 +409,14 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         }
 
         where:
-        substituteVersionType | substituteFromVersion | substituteToVersion | substituteUpOrDown | coreAlignment | resultingVersion
-        "range"               | "(,1.1.0)"            | "1.1.0"             | "higher"           | false         | "1.1.0"
-        "range"               | "(,1.1.0)"            | "1.1.0"             | "higher"           | true          | "1.1.0"
+        substituteFromVersion = "(,1.1.0)"
+        substituteToVersion = "1.1.0"
+        resultingVersion = "1.1.0"
+        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'narrowly defined dynamic dependency: alignment styles should substitute and align from range to higher latest.release dynamic version | core alignment: #coreAlignment'() {
+    def 'narrowly defined dynamic dependency: sub & align from range to higher latest.release dynamic version | core alignment: #coreAlignment'() {
         given:
         List<String> dependencyDefinitionVersions = ['1.0.+', '1.0.0']
         setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersions)
@@ -419,13 +433,14 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         }
 
         where:
-        substituteVersionType | substituteFromVersion | substituteToVersion | substituteUpOrDown | coreAlignment | resultingVersion
-        "range"               | "(,1.1.0)"            | "latest.release"    | "higher"           | false         | "1.1.0"
-        "range"               | "(,1.1.0)"            | "latest.release"    | "higher"           | true          | "1.1.0"
+        substituteFromVersion = "(,1.1.0)"
+        substituteToVersion = "latest.release"
+        resultingVersion = "1.1.0"
+        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'narrowly defined dynamic dependency: alignment styles should substitute and align from range to higher minor-scoped static version | core alignment: #coreAlignment'() {
+    def 'narrowly defined dynamic dependency: sub & align from range to higher minor-scoped static version | core alignment: #coreAlignment'() {
         given:
         List<String> dependencyDefinitionVersions = ['1.0.+', '1.0.0']
         setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersions)
@@ -442,13 +457,14 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         }
 
         where:
-        substituteVersionType | substituteFromVersion | substituteToVersion | substituteUpOrDown | coreAlignment | resultingVersion
-        "range"               | "(,1.1.0)"            | "1.+"               | "higher"           | false         | "1.1.0"
-        "range"               | "(,1.1.0)"            | "1.+"               | "higher"           | true          | "1.1.0"
+        substituteFromVersion = "(,1.1.0)"
+        substituteToVersion = "1.+"
+        resultingVersion = "1.1.0"
+        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'narrowly defined dynamic dependency: alignment styles should substitute and align from range to lower substitute-to version | core alignment: #coreAlignment'() {
+    def 'narrowly defined dynamic dependency: sub & align from range to lower substitute-to version | core alignment: #coreAlignment'() {
         given:
         List<String> dependencyDefinitionVersions = ['1.0.+', '1.0.0']
         setupForSimplestSubstitutionAndAlignmentCases(substituteFromVersion, substituteToVersion, dependencyDefinitionVersions)
@@ -465,16 +481,17 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         }
 
         where:
-        substituteVersionType | substituteFromVersion | substituteToVersion | substituteUpOrDown | coreAlignment | resultingVersion
-        "range"               | "(,1.1.0)"            | "0.5.0"             | "lower"            | false         | "0.5.0"
-        "range"               | "(,1.1.0)"            | "0.5.0"             | "lower"            | true          | "0.5.0"
+        substituteFromVersion = "(,1.1.0)"
+        substituteToVersion = "0.5.0"
+        resultingVersion = "0.5.0"
+        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'missing cases: statically defined dependency: alignment styles fail to align when lower versions are missing | core alignment: #coreAlignment'() {
+    def 'missing cases: statically defined dependency: fail to align when lower versions are missing | core alignment: #coreAlignment'() {
         given:
         List<String> dependencyDefinitionVersions = [definedVersion, '0.6.0', definedVersion]
-        setupForSubstitutionAndAlignmentCasesWithMissingVersions(subFromVersionAndModule, subToVersionAndModule, dependencyDefinitionVersions)
+        setupForSubstitutionAndAlignmentCasesWithMissingVersions(substituteFromVersion, substituteToVersion, dependencyDefinitionVersions)
 
         when:
         def result = runTasks(*tasks(coreAlignment))
@@ -489,16 +506,20 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         }
 
         where:
-        definedVersionType | definedVersion | subVersionType | subFromVersionAndModule | subToVersionAndModule | subUpOrDown | coreAlignment | AResultingVersion | BResultingVersion | CResultingVersion
-        "static version"   | "1.0.1"        | "range"        | "[1.0.0,1.1.0)"         | "0.5.0"               | "lower"     | false         | "0.5.0"           | '0.6.0'           | "FAILED"
-        "static version"   | "1.0.1"        | "range"        | "[1.0.0,1.1.0)"         | "0.5.0"               | "lower"     | true          | "0.5.0"           | '0.6.0'           | "FAILED"
+        definedVersion = "1.0.1"
+        substituteFromVersion = "[1.0.0,1.1.0)"
+        substituteToVersion = "0.5.0"
+        AResultingVersion = "0.5.0"
+        BResultingVersion = '0.6.0'
+        CResultingVersion = "FAILED"
+        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'missing cases: statically defined dependency: alignment styles fail to align when higher versions are missing | core alignment: #coreAlignment'() {
+    def 'missing cases: statically defined dependency: fail to align when higher versions are missing | core alignment: #coreAlignment'() {
         given:
         List<String> dependencyDefinitionVersions = [definedVersion, '0.6.0', definedVersion]
-        setupForSubstitutionAndAlignmentCasesWithMissingVersions(subFromVersionAndModule, subToVersionAndModule, dependencyDefinitionVersions)
+        setupForSubstitutionAndAlignmentCasesWithMissingVersions(substituteFromVersion, substituteToVersion, dependencyDefinitionVersions)
 
         when:
         def result = runTasks(*tasks(coreAlignment))
@@ -513,16 +534,20 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         }
 
         where:
-        definedVersionType | definedVersion | subVersionType | subFromVersionAndModule | subToVersionAndModule | subUpOrDown | coreAlignment | AResultingVersion | BResultingVersion | CResultingVersion
-        "static version"   | "1.0.1"        | "range"        | "[1.0.0,1.1.0)"         | "1.4.0"               | "higher"    | false         | "FAILED"          | '0.6.0'           | "1.4.0"
-        "static version"   | "1.0.1"        | "range"        | "[1.0.0,1.1.0)"         | "1.4.0"               | "higher"    | true          | "FAILED"          | '0.6.0'           | "1.4.0"
+        definedVersion = "1.0.1"
+        substituteFromVersion = "[1.0.0,1.1.0)"
+        substituteToVersion = "1.4.0"
+        AResultingVersion = "FAILED"
+        BResultingVersion = '0.6.0'
+        CResultingVersion = "1.4.0"
+        coreAlignment << [false, true]
     }
 
     @Unroll
     def 'missing cases: dynamically defined dependency: when dynamic dependency definition and substitutions leave no viable versions | core alignment: #coreAlignment'() {
         given:
         List<String> dependencyDefinitionVersions = [definedVersion, '0.6.0', definedVersion]
-        setupForSubstitutionAndAlignmentCasesWithMissingVersions(subFromVersionAndModule, subToVersionAndModule, dependencyDefinitionVersions)
+        setupForSubstitutionAndAlignmentCasesWithMissingVersions(substituteFromVersion, substituteToVersion, dependencyDefinitionVersions)
 
         when:
         def result = runTasks(*tasks(coreAlignment))
@@ -538,16 +563,19 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         }
 
         where:
-        definedVersionType | definedVersion | subVersionType | subFromVersionAndModule | subToVersionAndModule | subUpOrDown | coreAlignment | ABResultingVersion | CResultingVersion
-        "range"            | "1.+"          | "range"        | "[1.0.0,)"              | "0.5.0"               | "lower"     | false         | "1.1.0"            | "1.4.0" // FIXME: should resolve differently
-        "range"            | "1.+"          | "range"        | "[1.0.0,)"              | "0.5.0"               | "lower"     | true          | "1.1.0"            | "1.4.0" // keep behavior the same as coreAlignment=false
+        definedVersion = "1.+"
+        substituteFromVersion = "[1.0.0,)"
+        substituteToVersion = "0.5.0"
+        ABResultingVersion = "1.1.0"
+        CResultingVersion = "1.4.0"
+        coreAlignment << [false, true]
     }
 
     @Unroll
     def 'missing cases: dynamically defined dependency: when dynamic latest.release dependency definition and substitutions leave no viable versions for some lower aligned versions | core alignment: #coreAlignment'() {
         given:
         List<String> dependencyDefinitionVersions = [definedVersion, '0.6.0', definedVersion]
-        setupForSubstitutionAndAlignmentCasesWithMissingVersions(subFromVersionAndModule, subToVersionAndModule, dependencyDefinitionVersions)
+        setupForSubstitutionAndAlignmentCasesWithMissingVersions(substituteFromVersion, substituteToVersion, dependencyDefinitionVersions)
 
         when:
         def result = runTasks(*tasks(coreAlignment))
@@ -563,16 +591,20 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         }
 
         where:
-        definedVersionType | definedVersion   | subVersionType | subFromVersionAndModule | subToVersionAndModule | subUpOrDown | coreAlignment | AResultingVersion | BResultingVersion | CResultingVersion
-        "range"            | "latest.release" | "range"        | "[1.0.0,)"              | "0.5.0"               | "lower"     | false         | "1.1.0"           | "1.1.0"           | "1.4.0" // FIXME: should resolve differently
-        "range"            | "latest.release" | "range"        | "[1.0.0,)"              | "0.5.0"               | "lower"     | true          | "1.1.0"           | "1.1.0"           | "1.4.0" // keep behavior the same as coreAlignment=false
+        definedVersion = "latest.release"
+        substituteFromVersion = "[1.0.0,)"
+        substituteToVersion = "0.5.0"
+        AResultingVersion = "1.1.0"
+        BResultingVersion = "1.1.0"
+        CResultingVersion = "1.4.0"
+        coreAlignment << [false, true]
     }
 
     @Unroll
     def 'missing cases: dynamically defined dependency: when dependency dynamic definition and substitutions leave no viable versions for some higher aligned dependencies | core alignment: #coreAlignment'() {
         given:
         List<String> dependencyDefinitionVersions = [definedVersion, '0.6.0', definedVersion]
-        setupForSubstitutionAndAlignmentCasesWithMissingVersions(subFromVersionAndModule, subToVersionAndModule, dependencyDefinitionVersions)
+        setupForSubstitutionAndAlignmentCasesWithMissingVersions(substituteFromVersion, substituteToVersion, dependencyDefinitionVersions)
 
         when:
         def result = runTasks(*tasks(coreAlignment))
@@ -587,16 +619,19 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         }
 
         where:
-        definedVersionType | definedVersion | subVersionType | subFromVersionAndModule | subToVersionAndModule | subUpOrDown | coreAlignment | ABResultingVersion | CResultingVersion
-        "range"            | "1.+"          | "range"        | "[1.0.0,1.2.0)"         | "1.4.0"               | "higher"    | false         | "1.1.0"            | "1.4.0" // FIXME: should resolve differently
-        "range"            | "1.+"          | "range"        | "[1.0.0,1.2.0)"         | "1.4.0"               | "higher"    | true          | "1.1.0"            | "1.4.0" // keep behavior the same as coreAlignment=false
+        definedVersion = "1.+"
+        substituteFromVersion = "[1.0.0,1.2.0)"
+        substituteToVersion = "1.4.0"
+        CResultingVersion = "1.4.0"
+        ABResultingVersion = "1.1.0"
+        coreAlignment << [false, true]
     }
 
     @Unroll
     def 'missing cases: narrowly defined dynamic dependency: when narrow dynamic dependency definition and substitutions leave no viable versions for some lower aligned dependencies | core alignment: #coreAlignment'() {
         given:
         List<String> dependencyDefinitionVersions = [definedVersion, '0.6.0', definedVersion]
-        setupForSubstitutionAndAlignmentCasesWithMissingVersions(subFromVersionAndModule, subToVersionAndModule, dependencyDefinitionVersions)
+        setupForSubstitutionAndAlignmentCasesWithMissingVersions(substituteFromVersion, substituteToVersion, dependencyDefinitionVersions)
 
         when:
         def result = runTasks(*tasks(coreAlignment))
@@ -612,16 +647,18 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         }
 
         where:
-        definedVersionType | definedVersion | subVersionType | subFromVersionAndModule | subToVersionAndModule | subUpOrDown | coreAlignment | ABCResultingVersion
-        "narrow range"     | "1.0.+"        | "range"        | "[1.0.0,1.1.0)"         | "0.5.0"               | "lower"     | false         | "1.0.3" // FIXME: should resolve differently
-        "narrow range"     | "1.0.+"        | "range"        | "[1.0.0,1.1.0)"         | "0.5.0"               | "lower"     | true          | "1.0.3" // keep behavior the same as coreAlignment=false
+        definedVersion = "1.0.+"
+        substituteFromVersion = "[1.0.0,1.1.0)"
+        substituteToVersion = "0.5.0"
+        ABCResultingVersion = "1.0.3" // FIXME: should resolve differently
+        coreAlignment << [false, true]
     }
 
     @Unroll
     def 'missing cases: narrowly defined dynamic dependency: when narrow dynamic dependency definition and substitutions leave no viable versions for some higher aligned dependencies | core alignment: #coreAlignment'() {
         given:
         List<String> dependencyDefinitionVersions = [definedVersion, '0.6.0', definedVersion]
-        setupForSubstitutionAndAlignmentCasesWithMissingVersions(subFromVersionAndModule, subToVersionAndModule, dependencyDefinitionVersions)
+        setupForSubstitutionAndAlignmentCasesWithMissingVersions(substituteFromVersion, substituteToVersion, dependencyDefinitionVersions)
 
         when:
         def result = runTasks(*tasks(coreAlignment))
@@ -637,9 +674,11 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         }
 
         where:
-        definedVersionType | definedVersion | subVersionType | subFromVersionAndModule | subToVersionAndModule | subUpOrDown | coreAlignment | ABCResultingVersion
-        "narrow range"     | "1.0.+"        | "range"        | "[1.0.0,1.1.0)"         | "1.4.0"               | "higher"    | false         | "1.0.3" // FIXME: should resolve differently
-        "narrow range"     | "1.0.+"        | "range"        | "[1.0.0,1.1.0)"         | "1.4.0"               | "higher"    | true          | "1.0.3" // keep behavior the same as coreAlignment=false
+        definedVersion = "1.0.+"
+        substituteFromVersion = "[1.0.0,1.1.0)"
+        substituteToVersion = "1.4.0"
+        ABCResultingVersion = "1.0.3" // FIXME: should resolve differently
+        coreAlignment << [false, true]
     }
 
 
@@ -748,7 +787,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
     }
 
     @Unroll
-    def 'only brought in transitively: alignment styles should substitute and align from static version to lower static version that is not substituted-away-from | core alignment #coreAlignment'() {
+    def 'only brought in transitively: sub & align from static version to lower static version that is not substituted-away-from | core alignment #coreAlignment'() {
         given:
         def graph = new DependencyGraphBuilder()
                 .addModule(new ModuleBuilder('test.other:brings-a:1.0.0').addDependency('test.nebula:a:1.0.2').build())
@@ -784,9 +823,8 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         }
 
         where:
-        coreAlignment | resultingVersion
-        false         | "1.0.1"
-        true          | "1.0.1"
+        resultingVersion = "1.0.1"
+        coreAlignment << [false, true]
     }
 
     @Unroll
@@ -849,7 +887,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
     }
 
     @Unroll
-    def 'only brought in transitively: alignment styles should substitute with a range and align with a force | core alignment #coreAlignment'() {
+    def 'only brought in transitively: substitute with a range and align with a force | core alignment #coreAlignment'() {
         given:
         def graph = new DependencyGraphBuilder()
                 .addModule(new ModuleBuilder('test.other:brings-a:1.0.0').addDependency('test.nebula:a:1.0.2').build())
@@ -891,9 +929,8 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         }
 
         where:
-        coreAlignment | resultingVersion
-        false         | "1.0.1"
-        true          | "1.0.1"
+        resultingVersion = "1.0.1"
+        coreAlignment << [false, true]
     }
 
     @Unroll
@@ -942,13 +979,12 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         }
 
         where:
-        coreAlignment | resultingVersion
-        false         | "1.0.1"
-        true          | "1.0.1"
+        resultingVersion = "1.0.1"
+        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'statically defined dependency: alignment styles substitute all versions higher than x and align | core alignment #coreAlignment'() {
+    def 'statically defined dependency: sub & align all versions higher than x and align | core alignment #coreAlignment'() {
         given:
         // based on https://github.com/nebula-plugins/gradle-nebula-integration/issues/50
         setupForGuiceAndLibraryDependency(definedVersion)
@@ -967,9 +1003,9 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         }
 
         where:
-        coreAlignment | definedVersion | resultingVersion
-        false         | '4.2.0'        | '4.1.0'
-        true          | '4.2.0'        | '4.1.0'
+        definedVersion = "4.2.0"
+        resultingVersion = '4.1.0'
+        coreAlignment << [false, true]
     }
 
     @Unroll
@@ -980,7 +1016,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         setupForGuiceAndLibraryDependency(definedVersion)
 
         when:
-        def result = runTasks('dependencies', *tasks(coreAlignment, false, 'com.google.inject'))
+        def result = runTasks(*tasks(coreAlignment, false, 'com.google.inject'))
 
         then:
         dependencyInsightContains(result.output, "com.google.inject.extensions:guice-assistedinject", resultingVersionForDepsOtherThanCoreGuice)
@@ -1000,13 +1036,13 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         }
 
         where:
-        coreAlignment | definedVersion | resultingVersionForDepsOtherThanCoreGuice
-        false         | '4.+'          | '4.1.0' // FIXME: should resolve differently
-        true          | '4.+'          | '4.1.0' // keep behavior the same as coreAlignment=false
+        definedVersion = "4.+"
+        resultingVersionForDepsOtherThanCoreGuice = '4.1.0'
+        coreAlignment << [false, true] // FIXME: should resolve differently
     }
 
     @Unroll
-    def 'transitive dependencies are aligned with constraints | core alignment #coreAlignment'() {
+    def 'transitive dependencies are aligned | core alignment #coreAlignment'() {
         given:
         def substituteFromVersion = "[1.0.1,1.1.0)"
         def substituteToVersion = "1.0.0"
@@ -1025,7 +1061,6 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment))
 
         then:
-        def resultingVersion = "1.0.0"
         dependencyInsightContains(result.output, "test.nebula:f", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
 
@@ -1034,6 +1069,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         }
 
         where:
+        resultingVersion = "1.0.0"
         coreAlignment << [false, true]
     }
 
@@ -1152,7 +1188,7 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
     }
 
     @Unroll
-    def 'recs with core bom support disabled: alignment styles should substitute and align from bom version to lower static version | core alignment #coreAlignment'() {
+    def 'recs with core bom support disabled: sub & align from bom version to lower static version | core alignment #coreAlignment'() {
         given:
         setupForBomAndAlignmentAndSubstitution(bomVersion, substituteToVersion)
 
@@ -1168,13 +1204,15 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         }
 
         where:
-        coreAlignment | bomVersion | bomVersionCollidesWithSubsitutionRule | substituteToVersion | resultingVersion | coreBomSupport
-        false         | "1.0.2"    | true                                  | "1.0.1"             | "1.0.2"          | false // FIXME: should resolve differently
-        true          | "1.0.2"    | true                                  | "1.0.1"             | "1.0.2"          | false // keep behavior the same as coreAlignment=false
+        bomVersion = "1.0.2"
+        substituteToVersion = "1.0.1"
+        resultingVersion = "1.0.2" // FIXME: should resolve differently
+        coreBomSupport = false
+        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'recs with core bom support disabled: alignment styles should substitute and align from bom version to higher minor-scoped dynamic version | core alignment #coreAlignment'() {
+    def 'recs with core bom support disabled: sub & align from bom version to higher static version | core alignment #coreAlignment'() {
         given:
         setupForBomAndAlignmentAndSubstitution(bomVersion, substituteToVersion)
 
@@ -1190,13 +1228,15 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         }
 
         where:
-        coreAlignment | bomVersion | bomVersionCollidesWithSubsitutionRule | substituteToVersion | resultingVersion | coreBomSupport
-        false         | "1.0.2"    | true                                  | "1.+"               | "1.0.2"          | false // FIXME: should resolve differently
-        true          | "1.0.2"    | true                                  | "1.+"               | "1.0.2"          | false // keep behavior the same as coreAlignment=false
+        bomVersion = "1.0.2"
+        substituteToVersion = "1.0.3"
+        resultingVersion = "1.0.2" // FIXME: should resolve differently
+        coreBomSupport = false
+        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'recs with core bom support disabled: alignment styles should substitute and align from bom version to higher patch-scoped dynamic version | core alignment #coreAlignment'() {
+    def 'recs with core bom support disabled: sub & align from bom version to higher minor-scoped dynamic version | core alignment #coreAlignment'() {
         given:
         setupForBomAndAlignmentAndSubstitution(bomVersion, substituteToVersion)
 
@@ -1212,13 +1252,15 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         }
 
         where:
-        coreAlignment | bomVersion | bomVersionCollidesWithSubsitutionRule | substituteToVersion | resultingVersion | coreBomSupport
-        false         | "1.0.2"    | true                                  | "1.0.3"             | "1.0.2"          | false // FIXME: should resolve differently
-        true          | "1.0.2"    | true                                  | "1.0.3"             | "1.0.2"          | false // keep behavior the same as coreAlignment=false
+        bomVersion = "1.0.2"
+        substituteToVersion = "1.+"
+        resultingVersion = "1.0.2"  // FIXME: should resolve differently
+        coreBomSupport = false
+        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'recs with core bom support disabled: alignment styles should not substitute when resulting version is not in substitute-away-from range | core alignment #coreAlignment'() {
+    def 'recs with core bom support disabled: sub & align from bom version to higher patch-scoped dynamic version | core alignment #coreAlignment'() {
         given:
         setupForBomAndAlignmentAndSubstitution(bomVersion, substituteToVersion)
 
@@ -1234,13 +1276,15 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         }
 
         where:
-        coreAlignment | bomVersion | bomVersionCollidesWithSubsitutionRule | substituteToVersion | resultingVersion | coreBomSupport
-        false         | "1.0.0"    | false                                 | "1.0.1"             | "1.0.0"          | false
-        true          | "1.0.0"    | false                                 | "1.0.1"             | "1.0.0"          | false
+        bomVersion = "1.0.2"
+        substituteToVersion = "1.0.3"
+        resultingVersion = "1.0.2" // FIXME: should resolve differently
+        coreBomSupport = false
+        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'recs with core bom support enabled: alignment styles should substitute and align from bom version to lower static version | core alignment #coreAlignment'() {
+    def 'recs with core bom support disabled: not substitute when resulting version is not in substitute-away-from range | core alignment #coreAlignment'() {
         given:
         setupForBomAndAlignmentAndSubstitution(bomVersion, substituteToVersion)
 
@@ -1256,13 +1300,15 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         }
 
         where:
-        coreAlignment | bomVersion | bomVersionCollidesWithSubsitutionRule | substituteToVersion | resultingVersion | coreBomSupport
-        false         | "1.0.2"    | true                                  | "1.0.1"             | "1.0.1"          | true
-        true          | "1.0.2"    | true                                  | "1.0.1"             | "1.0.1"          | true
+        bomVersion = "1.0.0"
+        substituteToVersion = "1.0.1"
+        resultingVersion = "1.0.0"
+        coreBomSupport = false
+        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'recs with core bom support enabled: alignment styles should substitute and align from bom version to higher minor-scoped dynamic version | core alignment #coreAlignment'() {
+    def 'recs with core bom support enabled: sub & align from bom version to lower static version | core alignment #coreAlignment'() {
         given:
         setupForBomAndAlignmentAndSubstitution(bomVersion, substituteToVersion)
 
@@ -1278,13 +1324,15 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         }
 
         where:
-        coreAlignment | bomVersion | bomVersionCollidesWithSubsitutionRule | substituteToVersion | resultingVersion | coreBomSupport
-        false         | "1.0.2"    | true                                  | "1.+"               | "1.1.0"          | true // FIXME: should resolve differently
-        true          | "1.0.2"    | true                                  | "1.+"               | "1.1.0"          | true // keep behavior the same as coreAlignment=false
+        bomVersion = "1.0.2"
+        substituteToVersion = "1.0.1"
+        resultingVersion = "1.0.1"
+        coreBomSupport = true
+        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'recs with core bom support enabled: alignment styles should substitute and align from bom version to higher patch-scoped dynamic version | core alignment #coreAlignment'() {
+    def 'recs with core bom support enabled: sub & align from bom version to higher static version | core alignment #coreAlignment'() {
         given:
         setupForBomAndAlignmentAndSubstitution(bomVersion, substituteToVersion)
 
@@ -1300,13 +1348,15 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         }
 
         where:
-        coreAlignment | bomVersion | bomVersionCollidesWithSubsitutionRule | substituteToVersion | resultingVersion | coreBomSupport
-        false         | "1.0.2"    | true                                  | "1.0.3"             | "1.0.3"          | true
-        true          | "1.0.2"    | true                                  | "1.0.3"             | "1.0.3"          | true
+        bomVersion = "1.0.2"
+        substituteToVersion = "1.0.3"
+        resultingVersion = "1.0.3"
+        coreBomSupport = true
+        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'recs with core bom support enabled: alignment styles should not substitute when resulting version is not in substitute-away-from range | core alignment #coreAlignment'() {
+    def 'recs with core bom support enabled: sub & align from bom version to higher minor-scoped dynamic version | core alignment #coreAlignment'() {
         given:
         setupForBomAndAlignmentAndSubstitution(bomVersion, substituteToVersion)
 
@@ -1322,13 +1372,63 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         }
 
         where:
-        coreAlignment | bomVersion | bomVersionCollidesWithSubsitutionRule | substituteToVersion | resultingVersion | coreBomSupport
-        false         | "1.0.0"    | false                                 | "1.0.1"             | "1.0.0"          | true
-        true          | "1.0.0"    | false                                 | "1.0.1"             | "1.0.0"          | true
+        bomVersion = "1.0.2"
+        substituteToVersion = "1.+"
+        resultingVersion = "1.1.0"
+        coreBomSupport = true
+        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'enforced recs with core bom support disabled: alignment styles should substitute and align from bom version to lower static version | core alignment #coreAlignment'() {
+    def 'recs with core bom support enabled: sub & align from bom version to higher patch-scoped dynamic version | core alignment #coreAlignment'() {
+        given:
+        setupForBomAndAlignmentAndSubstitution(bomVersion, substituteToVersion)
+
+        when:
+        def result = runTasks(*(tasks(coreAlignment, coreBomSupport)))
+
+        then:
+        dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
+
+        if (coreAlignment) {
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
+        }
+
+        where:
+        bomVersion = "1.0.2"
+        substituteToVersion = "1.0.3"
+        resultingVersion = "1.0.3"
+        coreBomSupport = true
+        coreAlignment << [false, true]
+    }
+
+    @Unroll
+    def 'recs with core bom support enabled: do not substitute when resulting version is not in substitute-away-from range | core alignment #coreAlignment'() {
+        given:
+        setupForBomAndAlignmentAndSubstitution(bomVersion, substituteToVersion)
+
+        when:
+        def result = runTasks(*(tasks(coreAlignment, coreBomSupport)))
+
+        then:
+        dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
+
+        if (coreAlignment) {
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
+        }
+
+        where:
+        bomVersion = "1.0.0"
+        substituteToVersion = "1.0.1"
+        resultingVersion = "1.0.0"
+        coreBomSupport = true
+        coreAlignment << [false, true]
+    }
+
+    @Unroll
+    def 'enforced recs with core bom support disabled: sub & align from bom version to lower static version | core alignment #coreAlignment'() {
         given:
         def usingEnforcedPlatform = true
         setupForBomAndAlignmentAndSubstitution(bomVersion, substituteToVersion, usingEnforcedPlatform)
@@ -1345,13 +1445,90 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         }
 
         where:
-        coreAlignment | bomVersion | bomVersionCollidesWithSubsitutionRule | substituteToVersion | resultingVersion | coreBomSupport
-        false         | "1.0.2"    | true                                  | "1.0.1"             | "1.0.2"          | false
-        true          | "1.0.2"    | true                                  | "1.0.1"             | "1.0.2"          | false
+        bomVersion = "1.0.2"
+        substituteToVersion = "1.0.1"
+        resultingVersion = "1.0.2" // FIXME: should resolve differently
+        coreBomSupport = false
+        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'enforced recs with core bom support disabled: alignment styles should not substitute when resulting version is not in substitute-away-from range | core alignment #coreAlignment'() {
+    def 'enforced recs with core bom support disabled: sub & align from bom version to higher static version | core alignment #coreAlignment'() {
+        given:
+        def usingEnforcedPlatform = true
+        setupForBomAndAlignmentAndSubstitution(bomVersion, substituteToVersion, usingEnforcedPlatform)
+
+        when:
+        def result = runTasks(*(tasks(coreAlignment, coreBomSupport)))
+
+        then:
+        dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
+
+        if (coreAlignment) {
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
+        }
+
+        where:
+        bomVersion = "1.0.2"
+        substituteToVersion = "1.0.3"
+        resultingVersion = "1.0.2" // FIXME: should resolve differently
+        coreBomSupport = false
+        coreAlignment << [false, true]
+    }
+
+    @Unroll
+    def 'enforced recs with core bom support disabled: sub & align from bom version to higher minor-scoped dynamic version | core alignment #coreAlignment'() {
+        given:
+        def usingEnforcedPlatform = true
+        setupForBomAndAlignmentAndSubstitution(bomVersion, substituteToVersion, usingEnforcedPlatform)
+
+        when:
+        def result = runTasks(*(tasks(coreAlignment, coreBomSupport)))
+
+        then:
+        dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
+
+        if (coreAlignment) {
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
+        }
+
+        where:
+        bomVersion = "1.0.2"
+        substituteToVersion = "1.+"
+        resultingVersion = "1.0.2" // FIXME: should resolve differently
+        coreBomSupport = false
+        coreAlignment << [false, true]
+    }
+
+    @Unroll
+    def 'enforced recs with core bom support disabled: sub & align from bom version to higher patch-scoped dynamic version | core alignment #coreAlignment'() {
+        given:
+        def usingEnforcedPlatform = true
+        setupForBomAndAlignmentAndSubstitution(bomVersion, substituteToVersion, usingEnforcedPlatform)
+
+        when:
+        def result = runTasks(*(tasks(coreAlignment, coreBomSupport)))
+
+        then:
+        dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
+
+        if (coreAlignment) {
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
+        }
+
+        where:
+        bomVersion = "1.0.2"
+        substituteToVersion = "1.0.3"
+        resultingVersion = "1.0.2" // FIXME: should resolve differently
+        coreBomSupport = false
+        coreAlignment << [false, true]
+    }
+
+    @Unroll
+    def 'enforced recs with core bom support disabled: do not substitute when resulting version is not in substitute-away-from range | core alignment #coreAlignment'() {
         given:
         def usingEnforcedPlatform = true
         setupForBomAndAlignmentAndSubstitution(bomVersion, substituteToVersion, usingEnforcedPlatform)
@@ -1368,13 +1545,15 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         }
 
         where:
-        coreAlignment | bomVersion | bomVersionCollidesWithSubsitutionRule | substituteToVersion | resultingVersion | coreBomSupport
-        false         | "1.0.0"    | false                                 | "1.0.1"             | "1.0.0"          | false
-        true          | "1.0.0"    | false                                 | "1.0.1"             | "1.0.0"          | false
+        bomVersion = "1.0.0"
+        substituteToVersion = "1.0.1"
+        resultingVersion = "1.0.0"
+        coreBomSupport = false
+        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'enforced recs with core bom support enabled: alignment styles should substitute and align from bom version to lower static version | core alignment #coreAlignment'() {
+    def 'enforced recs with core bom support enabled: sub & align from bom version to lower static version | core alignment #coreAlignment'() {
         given:
         def usingEnforcedPlatform = true
         setupForBomAndAlignmentAndSubstitution(bomVersion, substituteToVersion, usingEnforcedPlatform)
@@ -1391,13 +1570,91 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         }
 
         where:
-        coreAlignment | bomVersion | bomVersionCollidesWithSubsitutionRule | substituteToVersion | resultingVersion | coreBomSupport
-        false         | "1.0.2"    | true                                  | "1.0.1"             | "1.0.1"          | true
-        true          | "1.0.2"    | true                                  | "1.0.1"             | "1.0.1"          | true
+        bomVersion = "1.0.2"
+        substituteToVersion = "1.0.1"
+        resultingVersion = "1.0.1"
+        coreBomSupport = true
+        coreAlignment << [false, true]
+    }
+
+
+    @Unroll
+    def 'enforced recs with core bom support enabled: sub & align from bom version to higher static version | core alignment #coreAlignment'() {
+        given:
+        def usingEnforcedPlatform = true
+        setupForBomAndAlignmentAndSubstitution(bomVersion, substituteToVersion, usingEnforcedPlatform)
+
+        when:
+        def result = runTasks(*(tasks(coreAlignment, coreBomSupport)))
+
+        then:
+        dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
+
+        if (coreAlignment) {
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
+        }
+
+        where:
+        bomVersion = "1.0.2"
+        substituteToVersion = "1.0.3"
+        resultingVersion = "1.0.3"
+        coreBomSupport = true
+        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'enforced recs with core bom support enabled: alignment styles should not substitute when resulting version is not in substitute-away-from range | core alignment #coreAlignment'() {
+    def 'enforced recs with core bom support enabled: sub & align from bom version to higher minor-scoped dynamic version | core alignment #coreAlignment'() {
+        given:
+        def usingEnforcedPlatform = true
+        setupForBomAndAlignmentAndSubstitution(bomVersion, substituteToVersion, usingEnforcedPlatform)
+
+        when:
+        def result = runTasks(*(tasks(coreAlignment, coreBomSupport)))
+
+        then:
+        dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
+
+        if (coreAlignment) {
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
+        }
+
+        where:
+        bomVersion = "1.0.2"
+        substituteToVersion = "1.+"
+        resultingVersion = "1.1.0"
+        coreBomSupport = true
+        coreAlignment << [false, true]
+    }
+
+    @Unroll
+    def 'enforced recs with core bom support enabled: sub & align from bom version to higher patch-scoped dynamic version | core alignment #coreAlignment'() {
+        given:
+        def usingEnforcedPlatform = true
+        setupForBomAndAlignmentAndSubstitution(bomVersion, substituteToVersion, usingEnforcedPlatform)
+
+        when:
+        def result = runTasks(*(tasks(coreAlignment, coreBomSupport)))
+
+        then:
+        dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
+
+        if (coreAlignment) {
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
+        }
+
+        where:
+        bomVersion = "1.0.2"
+        substituteToVersion = "1.0.3"
+        resultingVersion = "1.0.3"
+        coreBomSupport = true
+        coreAlignment << [false, true]
+    }
+
+    @Unroll
+    def 'enforced recs with core bom support enabled: do not substitute when resulting version is not in substitute-away-from range | core alignment #coreAlignment'() {
         given:
         def usingEnforcedPlatform = true
         setupForBomAndAlignmentAndSubstitution(bomVersion, substituteToVersion, usingEnforcedPlatform)
@@ -1414,13 +1671,15 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         }
 
         where:
-        coreAlignment | bomVersion | bomVersionCollidesWithSubsitutionRule | substituteToVersion | resultingVersion | coreBomSupport
-        false         | "1.0.0"    | false                                 | "1.0.1"             | "1.0.0"          | true
-        true          | "1.0.0"    | false                                 | "1.0.1"             | "1.0.0"          | true
+        bomVersion = "1.0.0"
+        substituteToVersion = "1.0.1"
+        resultingVersion = "1.0.0"
+        coreBomSupport = true
+        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'multiple substitutions applied: direct static dependency: alignment styles should honor multiple substitutions | core alignment: #coreAlignment'() {
+    def 'multiple substitutions applied: direct static dependency: honor multiple substitutions | core alignment: #coreAlignment'() {
         given:
         createMultipleSubstitutionRules()
 
@@ -1446,13 +1705,12 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         }
 
         where:
-        coreAlignment | resultingVersion
-        false         | "1.0.2"
-        true          | "1.0.2"
+        resultingVersion = "1.0.2"
+        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'multiple substitutions applied: only brought in transitively: alignment styles should honor multiple substitutions | core alignment: #coreAlignment'() {
+    def 'multiple substitutions applied: only brought in transitively: honor multiple substitutions | core alignment: #coreAlignment'() {
         given:
         def graph = new DependencyGraphBuilder()
                 .addModule(new ModuleBuilder('test.other:brings-a:1.0.0').addDependency('test.nebula:a:1.0.1').build())
@@ -1485,13 +1743,12 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         }
 
         where:
-        coreAlignment | resultingVersion
-        false         | "1.0.2"
-        true          | "1.0.2"
+        resultingVersion = "1.0.2"
+        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'multiple substitutions applied: recs with core bom support disabled: alignment styles should honor multiple substitutions | core alignment: #coreAlignment'() {
+    def 'multiple substitutions applied: recs with core bom support disabled: honor multiple substitutions | core alignment: #coreAlignment'() {
         given:
         def bomVersion = "1.0.1"
         setupForBomAndAlignmentAndSubstitution(bomVersion, "")
@@ -1518,13 +1775,13 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         }
 
         where:
-        coreAlignment | coreBomSupport | resultingVersion
-        false         | false          | "1.0.1"
-        true          | false          | "1.0.1"
+        resultingVersion = "1.0.1"
+        coreBomSupport = false
+        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'multiple substitutions applied: recs with core bom support enabled: alignment styles should honor multiple substitutions | core alignment: #coreAlignment'() {
+    def 'multiple substitutions applied: recs with core bom support enabled: honor multiple substitutions | core alignment: #coreAlignment'() {
         given:
         def bomVersion = "1.0.1"
         setupForBomAndAlignmentAndSubstitution(bomVersion, "")
@@ -1548,13 +1805,13 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         }
 
         where:
-        coreAlignment | coreBomSupport | resultingVersion
-        false         | true           | "1.0.2"
-        true          | true           | "1.0.2"
+        resultingVersion = "1.0.2"
+        coreBomSupport = true
+        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'multiple substitutions applied: enforced recs with core bom support disabled: alignment styles should honor multiple substitutions | core alignment: #coreAlignment'() {
+    def 'multiple substitutions applied: enforced recs with core bom support disabled: honor multiple substitutions | core alignment: #coreAlignment'() {
         given:
         def bomVersion = "1.0.1"
         def usingEnforcedPlatform = true
@@ -1579,13 +1836,13 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         }
 
         where:
-        coreAlignment | coreBomSupport | resultingVersion
-        false         | false          | "1.0.1"
-        true          | false          | "1.0.1"
+        resultingVersion = "1.0.1"
+        coreBomSupport = false
+        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'multiple substitutions applied: enforced recs with core bom support enabled: alignment styles should honor multiple substitutions | core alignment: #coreAlignment'() {
+    def 'multiple substitutions applied: enforced recs with core bom support enabled: honor multiple substitutions | core alignment: #coreAlignment'() {
         given:
         def bomVersion = "1.0.1"
         def usingEnforcedPlatform = true
@@ -1610,9 +1867,9 @@ class AlignedPlatformRulesSpec extends IntegrationTestKitSpec {
         }
 
         where:
-        coreAlignment | coreBomSupport | resultingVersion
-        false         | true           | "1.0.2"
-        true          | true           | "1.0.2"
+        resultingVersion = "1.0.2"
+        coreBomSupport = true
+        coreAlignment << [false, true]
     }
 
     private File createMultipleSubstitutionRules() {
