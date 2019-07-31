@@ -89,6 +89,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
@@ -113,6 +114,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
@@ -137,6 +139,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
@@ -161,6 +164,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
@@ -185,6 +189,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
@@ -209,6 +214,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
@@ -233,6 +239,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
@@ -257,6 +264,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
@@ -281,6 +289,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
@@ -305,6 +314,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
@@ -329,6 +339,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
@@ -353,6 +364,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
@@ -377,6 +389,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
@@ -401,6 +414,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
@@ -425,6 +439,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
@@ -449,6 +464,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
@@ -473,6 +489,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
@@ -497,6 +514,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", AResultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", BResultingVersion)
         dependencyInsightContains(result.output, "test.nebula:c", CResultingVersion)
@@ -525,6 +543,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", AResultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", BResultingVersion)
         dependencyInsightContains(result.output, "test.nebula:c", CResultingVersion)
@@ -553,6 +572,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", ABResultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", ABResultingVersion)
         dependencyInsightContains(result.output, "test.nebula:c", CResultingVersion)
@@ -581,6 +601,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", AResultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", BResultingVersion)
         dependencyInsightContains(result.output, "test.nebula:c", CResultingVersion)
@@ -610,6 +631,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", ABResultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", ABResultingVersion)
         dependencyInsightContains(result.output, "test.nebula:c", CResultingVersion)
@@ -637,6 +659,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", ABCResultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", ABCResultingVersion)
         dependencyInsightContains(result.output, "test.nebula:c", ABCResultingVersion)
@@ -664,6 +687,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", ABCResultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", ABCResultingVersion)
         dependencyInsightContains(result.output, "test.nebula:c", ABCResultingVersion)
@@ -700,6 +724,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment))
 
         then:
+        writeOutputToProjectDir(result.output)
         def resultingVersion = "1.1.0"
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
@@ -735,6 +760,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment))
 
         then:
+        writeOutputToProjectDir(result.output)
         def resultingVersion = "1.1.0"
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
@@ -774,6 +800,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment))
 
         then:
+        writeOutputToProjectDir(result.output)
         def resultingVersion = "1.0.2"
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
@@ -815,6 +842,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
@@ -867,6 +895,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
@@ -921,6 +950,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
@@ -970,6 +1000,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:c", resultingVersion)
@@ -993,6 +1024,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment, false, 'com.google.inject'))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "com.google.inject.extensions:guice-assistedinject", resultingVersion)
         dependencyInsightContains(result.output, "com.google.inject.extensions:guice-grapher", resultingVersion)
         dependencyInsightContains(result.output, "com.google.inject.extensions:guice-multibindings", resultingVersion)
@@ -1019,6 +1051,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment, false, 'com.google.inject'))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "com.google.inject.extensions:guice-assistedinject", resultingVersionForDepsOtherThanCoreGuice)
         dependencyInsightContains(result.output, "com.google.inject.extensions:guice-grapher", resultingVersionForDepsOtherThanCoreGuice)
         dependencyInsightContains(result.output, "com.google.inject.extensions:guice-multibindings", resultingVersionForDepsOtherThanCoreGuice)
@@ -1061,6 +1094,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:f", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
 
@@ -1115,6 +1149,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment))
 
         then:
+        writeOutputToProjectDir(result.output)
         def alignedResultingVersion = "1.0.3"
         dependencyInsightContains(result.output, "test.nebula:a", alignedResultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", alignedResultingVersion)
@@ -1172,6 +1207,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment))
 
         then:
+        writeOutputToProjectDir(result.output)
         def alignedResultingVersion = "1.0.3"
         dependencyInsightContains(result.output, "test.nebula:a", alignedResultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", alignedResultingVersion)
@@ -1196,6 +1232,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*(tasks(coreAlignment, coreBomSupport)))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
@@ -1220,6 +1257,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*(tasks(coreAlignment, coreBomSupport)))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
@@ -1244,6 +1282,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*(tasks(coreAlignment, coreBomSupport)))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
@@ -1268,6 +1307,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*(tasks(coreAlignment, coreBomSupport)))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
@@ -1292,6 +1332,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*(tasks(coreAlignment, coreBomSupport)))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
@@ -1316,6 +1357,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*(tasks(coreAlignment, coreBomSupport)))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
@@ -1340,6 +1382,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*(tasks(coreAlignment, coreBomSupport)))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
@@ -1364,6 +1407,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*(tasks(coreAlignment, coreBomSupport)))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
@@ -1388,6 +1432,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*(tasks(coreAlignment, coreBomSupport)))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
@@ -1412,6 +1457,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*(tasks(coreAlignment, coreBomSupport)))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
@@ -1437,6 +1483,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment, coreBomSupport))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
@@ -1462,6 +1509,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*(tasks(coreAlignment, coreBomSupport)))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
@@ -1487,6 +1535,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*(tasks(coreAlignment, coreBomSupport)))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
@@ -1512,6 +1561,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*(tasks(coreAlignment, coreBomSupport)))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
@@ -1537,6 +1587,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment, coreBomSupport))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
@@ -1562,6 +1613,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment, coreBomSupport))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
@@ -1588,6 +1640,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*(tasks(coreAlignment, coreBomSupport)))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
@@ -1613,6 +1666,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*(tasks(coreAlignment, coreBomSupport)))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
@@ -1638,6 +1692,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*(tasks(coreAlignment, coreBomSupport)))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
@@ -1663,6 +1718,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment, coreBomSupport))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
@@ -1694,6 +1750,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
@@ -1732,6 +1789,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
@@ -1761,6 +1819,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment, coreBomSupport))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
@@ -1794,6 +1853,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment, coreBomSupport))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
@@ -1825,6 +1885,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment, coreBomSupport))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
@@ -1856,6 +1917,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         def result = runTasks(*tasks(coreAlignment, coreBomSupport))
 
         then:
+        writeOutputToProjectDir(result.output)
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
@@ -2167,6 +2229,12 @@ dependencies {
     private static void dependencyInsightContains(String resultOutput, String groupAndName, String resultingVersion) {
         def content = "$groupAndName:.*$resultingVersion\n"
         assert resultOutput.findAll(content).size() >= 1
+    }
+
+    private void writeOutputToProjectDir(String output) {
+        def file = new File(projectDir, "result.txt")
+        file.createNewFile()
+        file << output
     }
 
 }
