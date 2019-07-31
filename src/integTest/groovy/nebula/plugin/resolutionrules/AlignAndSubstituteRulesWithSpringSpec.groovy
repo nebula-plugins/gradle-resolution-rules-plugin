@@ -17,7 +17,7 @@ class AlignAndSubstituteRulesWithSpringSpec extends IntegrationTestKitSpec {
     def 'spring boot 1.x plugin: direct dependencies | with provided version | core alignment #coreAlignment'() {
         given:
         // in Spring Boot 1.x plugin, dependency management is added automatically
-        setupForDirectDependencyScenario(extSpringBootVersion, extSpringVersion, forcedVersion, '')
+        setupForDirectDependencyScenario(extSpringBootVersion, forcedVersion, '', "\n\tspringVersion = \"$extSpringVersion\"")
         addSpringDependenciesWhenUsingManagedDependencies(requestedVersion)
 
         when:
@@ -45,7 +45,7 @@ class AlignAndSubstituteRulesWithSpringSpec extends IntegrationTestKitSpec {
     def 'spring boot 1.x plugin: direct dependencies | with requested version | core alignment #coreAlignment'() {
         given:
         // in Spring Boot 1.x plugin, dependency management is added automatically
-        setupForDirectDependencyScenario(extSpringBootVersion, extSpringVersion, forcedVersion, '')
+        setupForDirectDependencyScenario(extSpringBootVersion, forcedVersion, '', "\n\tspringVersion = \"$extSpringVersion\"")
         addSpringDependenciesWhenUsingManagedDependencies(requestedVersion)
 
         when:
@@ -78,7 +78,7 @@ class AlignAndSubstituteRulesWithSpringSpec extends IntegrationTestKitSpec {
     def 'spring boot 1.x plugin: direct dependencies | without requested version and forced | core alignment #coreAlignment'() {
         given:
         // in Spring Boot 1.x plugin, dependency management is added automatically
-        setupForDirectDependencyScenario(extSpringBootVersion, extSpringVersion, forcedVersion, '')
+        setupForDirectDependencyScenario(extSpringBootVersion, forcedVersion, '', "\n\tspringVersion = \"$extSpringVersion\"")
         addSpringDependenciesWhenUsingManagedDependencies(requestedVersion)
 
         when:
@@ -110,10 +110,10 @@ class AlignAndSubstituteRulesWithSpringSpec extends IntegrationTestKitSpec {
     }
 
     @Unroll
-    def 'spring boot 1.x plugin: direct dependencies | with requested version and forced | core alignment #coreAlignment'() {
+    def 'spring boot 1.x plugin: direct dependencies | with requested version and forced to different versions | core alignment #coreAlignment'() {
         given:
         // in Spring Boot 1.x plugin, dependency management is added automatically
-        setupForDirectDependencyScenario(extSpringBootVersion, extSpringVersion, forcedVersion, '')
+        setupForDirectDependencyScenario(extSpringBootVersion, forcedVersion, '', "\n\tspringVersion = \"$extSpringVersion\"")
         addSpringDependenciesWhenUsingManagedDependencies(requestedVersion)
 
         when:
@@ -123,11 +123,13 @@ class AlignAndSubstituteRulesWithSpringSpec extends IntegrationTestKitSpec {
         then:
         writeOutputToProjectDir(output)
         if (coreAlignment) {
-            dependencyInsightContains(output, 'org.springframework:spring-aop', managedSpringVersion)
-            dependencyInsightContains(output, 'org.springframework:spring-beans', managedSpringVersion)
-            dependencyInsightContains(output, 'org.springframework:spring-expression', managedSpringVersion)
+            dependencyInsightContains(output, 'org.springframework:spring-core', 'FAILED')
 
-            dependencyInsightContains(output, 'org.springframework:spring-core', extSpringVersion)
+            dependencyInsightContains(output, 'org.springframework:spring-context', 'FAILED')
+            dependencyInsightContains(output, 'org.springframework:spring-web', 'FAILED')
+            dependencyInsightContains(output, 'org.springframework:spring-webmvc', 'FAILED')
+
+            assert output.contains('Multiple forces on different versions for virtual platform aligned-platform')
 
         } else {
             dependencyInsightContains(output, 'org.springframework:spring-aop', forcedVersion)
@@ -147,10 +149,51 @@ class AlignAndSubstituteRulesWithSpringSpec extends IntegrationTestKitSpec {
     }
 
     @Unroll
+    def 'spring boot 1.x plugin: direct dependencies | with requested version and forced to the same version | core alignment #coreAlignment'() {
+        given:
+        // in Spring Boot 1.x plugin, dependency management is added automatically
+        setupForDirectDependencyScenario(extSpringBootVersion, forcedVersion, '', "\n\tspringVersion = \"$extSpringVersion\"")
+        addSpringDependenciesWhenUsingManagedDependencies(requestedVersion)
+
+        when:
+        def result = runTasks(*tasks(coreAlignment))
+        def output = result.output
+
+        then:
+        writeOutputToProjectDir(output)
+        if (coreAlignment) {
+            dependencyInsightContains(output, 'org.springframework:spring-core', 'FAILED')
+
+            dependencyInsightContains(output, 'org.springframework:spring-context', 'FAILED')
+            dependencyInsightContains(output, 'org.springframework:spring-web', 'FAILED')
+            dependencyInsightContains(output, 'org.springframework:spring-webmvc', 'FAILED')
+
+            assert output.contains('Multiple forces on different versions for virtual platform aligned-platform')
+
+        } else {
+            dependencyInsightContains(output, 'org.springframework:spring-aop', forcedVersion)
+            dependencyInsightContains(output, 'org.springframework:spring-beans', forcedVersion)
+            dependencyInsightContains(output, 'org.springframework:spring-expression', forcedVersion)
+            dependencyInsightContains(output, 'org.springframework:spring-core', forcedVersion)
+        }
+
+        where:
+        extSpringVersion = '4.2.4.RELEASE'
+        extSpringBootVersion = '1.5.6.RELEASE'
+        managedSpringVersion = '4.3.10.RELEASE' // from https://repo1.maven.org/maven2/org/springframework/boot/spring-boot-dependencies/1.5.6.RELEASE/spring-boot-dependencies-1.5.6.RELEASE.pom
+
+        requestedVersion = ':\$springVersion'
+        forcedVersion = extSpringVersion
+        coreAlignment << [false, true]
+    }
+
+    @Unroll
     def 'spring boot 2.x plugin with Spring dependency management: direct dependencies | with provided version | core alignment #coreAlignment'() {
         given:
         // in Spring Boot 2.x plugin, the `io.spring.dependency-management` plugin is added for dependency management
-        setupForDirectDependencyScenario(extSpringBootVersion, extSpringVersion, forcedVersion, "\napply plugin: \"io.spring.dependency-management\"")
+        setupForDirectDependencyScenario(extSpringBootVersion, forcedVersion,
+                "\napply plugin: \"io.spring.dependency-management\"",
+                "\n\tspringVersion = \"$extSpringVersion\"")
         addSpringDependenciesWhenUsingManagedDependencies(requestedVersion)
 
         when:
@@ -178,7 +221,9 @@ class AlignAndSubstituteRulesWithSpringSpec extends IntegrationTestKitSpec {
     def 'spring boot 2.x plugin with Spring dependency management: direct dependencies | with requested version | core alignment #coreAlignment'() {
         given:
         // in Spring Boot 2.x plugin, the `io.spring.dependency-management` plugin is added for dependency management
-        setupForDirectDependencyScenario(extSpringBootVersion, extSpringVersion, forcedVersion, "\napply plugin: \"io.spring.dependency-management\"")
+        setupForDirectDependencyScenario(extSpringBootVersion, forcedVersion,
+                "\napply plugin: \"io.spring.dependency-management\"",
+                "\n\tspringVersion = \"$extSpringVersion\"")
         addSpringDependenciesWhenUsingManagedDependencies(requestedVersion)
 
         when:
@@ -211,7 +256,9 @@ class AlignAndSubstituteRulesWithSpringSpec extends IntegrationTestKitSpec {
     def 'spring boot 2.x plugin with Spring dependency management: direct dependencies | without requested version and forced | core alignment #coreAlignment'() {
         given:
         // in Spring Boot 2.x plugin, the `io.spring.dependency-management` plugin is added for dependency management
-        setupForDirectDependencyScenario(extSpringBootVersion, extSpringVersion, forcedVersion, "\napply plugin: \"io.spring.dependency-management\"")
+        setupForDirectDependencyScenario(extSpringBootVersion, forcedVersion,
+                "\napply plugin: \"io.spring.dependency-management\"",
+                "\n\tspringVersion = \"$extSpringVersion\"")
         addSpringDependenciesWhenUsingManagedDependencies(requestedVersion)
 
         when:
@@ -242,12 +289,13 @@ class AlignAndSubstituteRulesWithSpringSpec extends IntegrationTestKitSpec {
         coreAlignment << [false, true]
     }
 
-
     @Unroll
-    def 'spring boot 2.x plugin with Spring dependency management: direct dependencies | with requested version and forced | core alignment #coreAlignment'() {
+    def 'spring boot 2.x plugin with Spring dependency management: direct dependencies | with requested version and forced to different versions | core alignment #coreAlignment'() {
         given:
         // in Spring Boot 2.x plugin, the `io.spring.dependency-management` plugin is added for dependency management
-        setupForDirectDependencyScenario(extSpringBootVersion, extSpringVersion, forcedVersion, "\napply plugin: \"io.spring.dependency-management\"")
+        setupForDirectDependencyScenario(extSpringBootVersion, forcedVersion,
+                "\napply plugin: \"io.spring.dependency-management\"",
+                "\n\tspringVersion = \"$extSpringVersion\"")
         addSpringDependenciesWhenUsingManagedDependencies(requestedVersion)
 
         when:
@@ -257,11 +305,14 @@ class AlignAndSubstituteRulesWithSpringSpec extends IntegrationTestKitSpec {
         then:
         writeOutputToProjectDir(output)
         if (coreAlignment) {
-            dependencyInsightContains(output, 'org.springframework:spring-aop', managedSpringVersion)
-            dependencyInsightContains(output, 'org.springframework:spring-beans', managedSpringVersion)
-            dependencyInsightContains(output, 'org.springframework:spring-expression', managedSpringVersion)
+            dependencyInsightContains(output, 'org.springframework:spring-core', 'FAILED')
 
-            dependencyInsightContains(output, 'org.springframework:spring-core', extSpringVersion)
+            dependencyInsightContains(output, 'org.springframework:spring-context', 'FAILED')
+            dependencyInsightContains(output, 'org.springframework:spring-web', 'FAILED')
+            dependencyInsightContains(output, 'org.springframework:spring-webmvc', 'FAILED')
+
+            assert output.contains('Multiple forces on different versions for virtual platform aligned-platform')
+
         } else {
             dependencyInsightContains(output, 'org.springframework:spring-aop', forcedVersion)
             dependencyInsightContains(output, 'org.springframework:spring-beans', forcedVersion)
@@ -280,10 +331,52 @@ class AlignAndSubstituteRulesWithSpringSpec extends IntegrationTestKitSpec {
     }
 
     @Unroll
+    def 'spring boot 2.x plugin with Spring dependency management: direct dependencies | with requested version and forced to same version | core alignment #coreAlignment'() {
+        given:
+        // in Spring Boot 2.x plugin, the `io.spring.dependency-management` plugin is added for dependency management
+        setupForDirectDependencyScenario(extSpringBootVersion, forcedVersion,
+                "\napply plugin: \"io.spring.dependency-management\"",
+                "\n\tspringVersion = \"$extSpringVersion\"")
+        addSpringDependenciesWhenUsingManagedDependencies(requestedVersion)
+
+        when:
+        def result = runTasks(*tasks(coreAlignment))
+        def output = result.output
+
+        then:
+        writeOutputToProjectDir(output)
+        if (coreAlignment) {
+            dependencyInsightContains(output, 'org.springframework:spring-core', 'FAILED')
+
+            dependencyInsightContains(output, 'org.springframework:spring-context', 'FAILED')
+            dependencyInsightContains(output, 'org.springframework:spring-web', 'FAILED')
+            dependencyInsightContains(output, 'org.springframework:spring-webmvc', 'FAILED')
+
+            assert output.contains('Multiple forces on different versions for virtual platform aligned-platform')
+
+        } else {
+            dependencyInsightContains(output, 'org.springframework:spring-aop', forcedVersion)
+            dependencyInsightContains(output, 'org.springframework:spring-beans', forcedVersion)
+            dependencyInsightContains(output, 'org.springframework:spring-expression', forcedVersion)
+            dependencyInsightContains(output, 'org.springframework:spring-core', forcedVersion)
+        }
+
+        where:
+        extSpringVersion = '4.2.4.RELEASE'
+        extSpringBootVersion = '2.1.4.RELEASE'
+        managedSpringVersion = '5.1.6.RELEASE' // from https://repo1.maven.org/maven2/org/springframework/boot/spring-boot-dependencies/2.1.4.RELEASE/spring-boot-dependencies-2.1.4.RELEASE.pom
+
+        requestedVersion = ':\${springVersion}'
+        forcedVersion = extSpringVersion
+        coreAlignment << [false, true]
+    }
+
+    @Unroll
     def 'spring boot 2.x plugin without Spring dependency management: direct dependencies | with requested version | core alignment #coreAlignment'() {
         given:
         // in Spring Boot 2.x plugin, the `io.spring.dependency-management` plugin is added for dependency management. We are not including it here.
-        setupForDirectDependencyScenario(extSpringBootVersion, extSpringVersion, forcedVersion, '')
+        setupForDirectDependencyScenario(extSpringBootVersion, forcedVersion, '',
+                "\n\tspringVersion = \"$extSpringVersion\"")
         buildFile << """
             dependencies {
                 compile "org.springframework:spring-core$requestedVersion"
@@ -317,7 +410,8 @@ class AlignAndSubstituteRulesWithSpringSpec extends IntegrationTestKitSpec {
     def 'spring boot 2.x plugin without Spring dependency management: direct dependencies | with requested version and forced | core alignment #coreAlignment'() {
         given:
         // in Spring Boot 2.x plugin, the `io.spring.dependency-management` plugin is added for dependency management. We are not including it here.
-        setupForDirectDependencyScenario(extSpringBootVersion, extSpringVersion, forcedVersion, '')
+        setupForDirectDependencyScenario(extSpringBootVersion, forcedVersion, '',
+                "\n\tspringVersion = \"$extSpringVersion\"")
         buildFile << """
             dependencies {
                 compile "org.springframework:spring-core$requestedVersion"
@@ -347,45 +441,217 @@ class AlignAndSubstituteRulesWithSpringSpec extends IntegrationTestKitSpec {
         coreAlignment << [false, true]
     }
 
-//    @Unroll
-//    def 'spring boot 1.x plugin: transitive dependencies | with #versionType | core alignment #coreAlignment'() {
-//        given:
-//        def extSpringVersion = '4.2.4.RELEASE'
-//        def extSpringBootVersion = '1.5.6.RELEASE'
-//        def extSlf4jVersion = '1.6.0'
-//
-//        // in Spring Boot 1.x plugin, dependency management is added automatically
-//        setupForTransitiveDependencyScenario(extSpringBootVersion, extSpringVersion, forcedVersion, requestedVersion,
-//                "\napply plugin: \"io.spring.dependency-management\"",
-//                "\n\tslf4jVersion = \"$extSlf4jVersion\"")
-//        buildFile << """
-//            dependencies {
-//                compile "org.slf4j:slf4j-simple$requestedVersion"
-//            }
-//            """.stripIndent()
-//
-//        new File("${projectDir}/gradle.properties").delete()
-//
-//        when:
-//        def result = runTasks('dependencyInsight', '--dependency', 'org.slf4j', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
-//        def output = result.output
-//
-//        then:
-//        writeOutputToProjectDir(output)
-//        dependencyInsightContains(output, 'org.slf4j:slf4j-simple', resultingVersionForMost)
-//        dependencyInsightContains(output, 'org.slf4j:slf4j-api', resultingVersionForMost)
-//
-//        where:
-//        versionType                   | coreAlignment | requestedVersion  | resultingVersionForMost | forcedVersion | resultsAreAligned
-//        'provided version'            | false         | ''                | '1.7.25'                | false     | true
-//        'provided version'            | true          | ''                | '1.7.25'                | false     | true
-//
-//        'requested version'            | false         | ':\$slf4jVersion' | '1.7.25'                | false     | true
-//        'requested version'            | true          | ':\$slf4jVersion' | '1.7.25'                | false     | false
-//
-//        'requested version and forced' | false         | ':\$slf4jVersion' | '1.6.0'                 | true      | true
-//        'requested version and forced' | true          | ':\$slf4jVersion' | '1.6.0'                 | true      | false
-//    }
+    @Unroll
+    def 'spring boot 1.x plugin: transitive dependencies | with provided version | core alignment #coreAlignment'() {
+        given:
+        // in Spring Boot 1.x plugin, dependency management is added automatically
+        setupForTransitiveDependencyScenario(extSpringBootVersion, forcedVersion, '',
+                '')
+        buildFile << """
+            dependencies {
+                compile "org.slf4j:slf4j-simple$requestedVersion"
+            }
+            """.stripIndent()
+
+        when:
+        def result = runTasks(*tasks(coreAlignment, 'org.slf4j'))
+        def output = result.output
+
+        then:
+        writeOutputToProjectDir(output)
+        dependencyInsightContains(output, 'org.slf4j:slf4j-simple', managedSlf4jVersion)
+        dependencyInsightContains(output, 'org.slf4j:slf4j-api', managedSlf4jVersion)
+
+        where:
+        extSpringVersion = '4.2.4.RELEASE'
+        extSpringBootVersion = '1.5.6.RELEASE'
+        extSlf4jVersion = '1.6.0'
+        managedSlf4jVersion = '1.7.25'
+
+        requestedVersion = ''
+        forcedVersion = ''
+        coreAlignment << [false, true]
+    }
+
+    @Unroll
+    def 'spring boot 1.x plugin: transitive dependencies | with requested version | core alignment #coreAlignment'() {
+        given:
+        // in Spring Boot 1.x plugin, dependency management is added automatically
+        setupForTransitiveDependencyScenario(extSpringBootVersion, forcedVersion, '',
+                "\n\tslf4jVersion = \"$extSlf4jVersion\"")
+        buildFile << """
+            dependencies {
+                compile "org.slf4j:slf4j-simple$requestedVersion"
+            }
+            """.stripIndent()
+
+        when:
+        def result = runTasks(*tasks(coreAlignment, 'org.slf4j'))
+        def output = result.output
+
+        then:
+        writeOutputToProjectDir(output)
+        dependencyInsightContains(output, 'org.slf4j:slf4j-simple', managedSlf4jVersion)
+        dependencyInsightContains(output, 'org.slf4j:slf4j-api', managedSlf4jVersion)
+
+        where:
+        extSpringVersion = '4.2.4.RELEASE'
+        extSpringBootVersion = '1.5.6.RELEASE'
+        extSlf4jVersion = '1.6.0'
+        managedSlf4jVersion = '1.7.25'
+
+        requestedVersion = ':\$slf4jVersion'
+        forcedVersion = ''
+        coreAlignment << [false, true]
+    }
+
+    @Unroll
+    def 'spring boot 1.x plugin: transitive dependencies | without requested version and forced | core alignment #coreAlignment'() {
+        given:
+        // in Spring Boot 1.x plugin, dependency management is added automatically
+        setupForTransitiveDependencyScenario(extSpringBootVersion, forcedVersion, '',
+                "\n\tslf4jVersion = \"$extSlf4jVersion\"")
+        buildFile << """
+            dependencies {
+                compile "org.slf4j:slf4j-simple$requestedVersion"
+            }
+            """.stripIndent()
+
+        when:
+        def result = runTasks(*tasks(coreAlignment, 'org.slf4j'))
+        def output = result.output
+
+        then:
+        writeOutputToProjectDir(output)
+        if (coreAlignment) {
+            dependencyInsightContains(output, 'org.slf4j:slf4j-simple', managedSlf4jVersion)
+            dependencyInsightContains(output, 'org.slf4j:slf4j-api', managedSlf4jVersion)
+        } else {
+            dependencyInsightContains(output, 'org.slf4j:slf4j-simple', forcedVersion)
+            dependencyInsightContains(output, 'org.slf4j:slf4j-api', forcedVersion)
+        }
+
+        where:
+        extSpringVersion = '4.2.4.RELEASE'
+        extSpringBootVersion = '1.5.6.RELEASE'
+        extSlf4jVersion = '1.6.0'
+        managedSlf4jVersion = '1.7.25'
+
+        requestedVersion = ''
+        forcedVersion = '1.7.10'
+        coreAlignment << [false, true]
+    }
+
+    @Unroll
+    def 'spring boot 1.x plugin: transitive dependencies | with lower requested version and forced to different version | core alignment #coreAlignment'() {
+        given:
+        // in Spring Boot 1.x plugin, dependency management is added automatically
+        setupForTransitiveDependencyScenario(extSpringBootVersion, forcedVersion, '',
+                "\n\tslf4jVersion = \"$extSlf4jVersion\"")
+        buildFile << """
+            dependencies {
+                compile "org.slf4j:slf4j-simple$requestedVersion"
+            }
+            """.stripIndent()
+
+        when:
+        def result = runTasks(*tasks(coreAlignment, 'org.slf4j'))
+        def output = result.output
+
+        then:
+        writeOutputToProjectDir(output)
+        if (coreAlignment) {
+            dependencyInsightContains(output, 'org.slf4j:slf4j-simple', managedSlf4jVersion)
+            dependencyInsightContains(output, 'org.slf4j:slf4j-api', managedSlf4jVersion)
+        } else {
+            dependencyInsightContains(output, 'org.slf4j:slf4j-simple', forcedVersion)
+            dependencyInsightContains(output, 'org.slf4j:slf4j-api', forcedVersion)
+        }
+
+        where:
+        extSpringVersion = '4.2.4.RELEASE'
+        extSpringBootVersion = '1.5.6.RELEASE'
+        extSlf4jVersion = '1.6.0'
+        managedSlf4jVersion = '1.7.25'
+
+        requestedVersion = ':\$slf4jVersion'
+        forcedVersion = '1.7.10'
+        coreAlignment << [false, true]
+    }
+
+    @Unroll
+    def 'spring boot 1.x plugin: transitive dependencies | with higher requested version and forced to different version | core alignment #coreAlignment'() {
+        given:
+        // in Spring Boot 1.x plugin, dependency management is added automatically
+        setupForTransitiveDependencyScenario(extSpringBootVersion, forcedVersion, '',
+                "\n\tslf4jVersion = \"$extSlf4jVersion\"")
+        buildFile << """
+            dependencies {
+                compile "org.slf4j:slf4j-simple$requestedVersion"
+            }
+            """.stripIndent()
+
+        when:
+        def result = runTasks(*tasks(coreAlignment, 'org.slf4j'))
+        def output = result.output
+
+        then:
+        writeOutputToProjectDir(output)
+        if (coreAlignment) {
+            dependencyInsightContains(output, 'org.slf4j:slf4j-simple', 'FAILED')
+            assert output.contains('Multiple forces on different versions for virtual platform aligned-platform')
+        } else {
+            dependencyInsightContains(output, 'org.slf4j:slf4j-simple', forcedVersion)
+            dependencyInsightContains(output, 'org.slf4j:slf4j-api', forcedVersion)
+        }
+
+        where:
+        extSpringVersion = '4.2.4.RELEASE'
+        extSpringBootVersion = '1.5.6.RELEASE'
+        extSlf4jVersion = '1.7.26'
+        managedSlf4jVersion = '1.7.25'
+
+        requestedVersion = ':\$slf4jVersion'
+        forcedVersion = '1.7.10'
+        coreAlignment << [false, true]
+    }
+
+    @Unroll
+    def 'spring boot 1.x plugin: transitive dependencies | with requested version and forced to same version | core alignment #coreAlignment'() {
+        given:
+        // in Spring Boot 1.x plugin, dependency management is added automatically
+        setupForTransitiveDependencyScenario(extSpringBootVersion, forcedVersion, '',
+                "\n\tslf4jVersion = \"$extSlf4jVersion\"")
+        buildFile << """
+            dependencies {
+                compile "org.slf4j:slf4j-simple$requestedVersion"
+            }
+            """.stripIndent()
+
+        when:
+        def result = runTasks(*tasks(coreAlignment, 'org.slf4j'))
+        def output = result.output
+
+        then:
+        writeOutputToProjectDir(output)
+        if (coreAlignment) {
+            dependencyInsightContains(output, 'org.slf4j:slf4j-simple', managedSlf4jVersion)
+            dependencyInsightContains(output, 'org.slf4j:slf4j-api', managedSlf4jVersion)
+        } else {
+            dependencyInsightContains(output, 'org.slf4j:slf4j-simple', forcedVersion)
+            dependencyInsightContains(output, 'org.slf4j:slf4j-api', forcedVersion)
+        }
+
+        where:
+        extSpringVersion = '4.2.4.RELEASE'
+        extSpringBootVersion = '1.5.6.RELEASE'
+        extSlf4jVersion = '1.6.0'
+        managedSlf4jVersion = '1.7.25'
+
+        requestedVersion = ':\$slf4jVersion'
+        forcedVersion = extSlf4jVersion
+        coreAlignment << [false, true]
+    }
 
     private static void dependencyInsightContains(String resultOutput, String groupAndName, String resultingVersion) {
         def content = "$groupAndName:.*$resultingVersion\n"
@@ -402,7 +668,7 @@ class AlignAndSubstituteRulesWithSpringSpec extends IntegrationTestKitSpec {
             """.stripIndent()
     }
 
-    private static def tasks(Boolean usingCoreAlignment, String groupForInsight = 'org.springframework') {
+    private static def tasks(Boolean usingCoreAlignment, String groupForInsight = 'org.springframework:') {
         return [
                 'dependencyInsight',
                 '--dependency',
@@ -411,14 +677,20 @@ class AlignAndSubstituteRulesWithSpringSpec extends IntegrationTestKitSpec {
         ]
     }
 
-    private void setupForDirectDependencyScenario(String extSpringBootVersion, String extSpringVersion, String forcedVersion, String additionalPlugin = '', String additionalExtProperty = '') {
-        setupBaseSpringBootBasedBuildFileWith(extSpringBootVersion, extSpringVersion, additionalPlugin, additionalExtProperty)
+    private void setupForDirectDependencyScenario(String extSpringBootVersion, String forcedVersion, String additionalPlugin = '', String additionalExtProperty = '') {
+        setupBaseSpringBootBasedBuildFileWith(extSpringBootVersion, additionalPlugin, additionalExtProperty)
 
         if (forcedVersion != '' && forcedVersion != null) {
             buildFile << """
                 configurations.all {
                     resolutionStrategy {
+                        force "org.springframework:spring-aop:$forcedVersion"
+                        force "org.springframework:spring-beans:$forcedVersion"
+                        force "org.springframework:spring-context:$forcedVersion"
                         force "org.springframework:spring-core:$forcedVersion"
+                        force "org.springframework:spring-expression:$forcedVersion"
+                        force "org.springframework:spring-web:$forcedVersion"
+                        force "org.springframework:spring-webmvc:$forcedVersion"
                     }
                 }
                 """.stripIndent()
@@ -427,14 +699,15 @@ class AlignAndSubstituteRulesWithSpringSpec extends IntegrationTestKitSpec {
         rulesJsonFile << alignSpringRule()
     }
 
-    private void setupForTransitiveDependencyScenario(String extSpringBootVersion, String extSpringVersion, String forcedVersion, String additionalPlugin = '', String additionalExtProperty = '') {
-        setupBaseSpringBootBasedBuildFileWith(extSpringBootVersion, extSpringVersion, additionalPlugin, additionalExtProperty)
+    private void setupForTransitiveDependencyScenario(String extSpringBootVersion, String forcedVersion, String additionalPlugin = '', String additionalExtProperty = '') {
+        setupBaseSpringBootBasedBuildFileWith(extSpringBootVersion, additionalPlugin, additionalExtProperty)
 
         if (forcedVersion != '' && forcedVersion != null) {
             buildFile << """
                 configurations.all {
                     resolutionStrategy {
                         force "org.slf4j:slf4j-simple:$forcedVersion"
+                        force "org.slf4j:slf4j-api:$forcedVersion"
                     }
                 }
                 """.stripIndent()
@@ -443,7 +716,7 @@ class AlignAndSubstituteRulesWithSpringSpec extends IntegrationTestKitSpec {
         rulesJsonFile << alignSlf4jRule()
     }
 
-    private File setupBaseSpringBootBasedBuildFileWith(String extSpringBootVersion, String extSpringVersion, String additionalPlugin = '', String additionalExtProperty = '') {
+    private File setupBaseSpringBootBasedBuildFileWith(String extSpringBootVersion, String additionalPlugin = '', String additionalExtProperty = '') {
         buildFile << """
 buildscript {
     dependencies {
@@ -467,9 +740,7 @@ repositories {
 dependencies {
     resolutionRules files('$rulesJsonFile')
 }
-ext {
-    springVersion = "$extSpringVersion"
-    springBootVersion = "$extSpringBootVersion"$additionalExtProperty
+ext {$additionalExtProperty
 }
 """.stripIndent()
 
