@@ -42,7 +42,7 @@ class AlignAndSubstituteRulesWithSpringBoot1xPluginSpec extends AbstractRulesWit
     }
 
     @Unroll
-    def 'direct dep | with requested version | core alignment #coreAlignment'() {
+    def 'direct dep | with lower requested version | core alignment #coreAlignment'() {
         given:
         // in Spring Boot 1.x plugin, dependency management is added automatically
         setupForDirectDependencyScenario(extSpringBootVersion, forcedVersion, '', "\n\tspringVersion = \"$extSpringVersion\"")
@@ -66,6 +66,43 @@ class AlignAndSubstituteRulesWithSpringBoot1xPluginSpec extends AbstractRulesWit
 
         where:
         extSpringVersion = '4.2.4.RELEASE'
+        extSpringBootVersion = '1.5.6.RELEASE'
+        managedSpringVersion = '4.3.10.RELEASE' // from https://repo1.maven.org/maven2/org/springframework/boot/spring-boot-dependencies/1.5.6.RELEASE/spring-boot-dependencies-1.5.6.RELEASE.pom
+
+        requestedVersion = ':\$springVersion'
+        forcedVersion = ''
+        coreAlignment << [false, true]
+    }
+
+    @Unroll
+    def 'direct dep | with higher requested version | core alignment #coreAlignment'() {
+        given:
+        // in Spring Boot 1.x plugin, dependency management is added automatically
+        setupForDirectDependencyScenario(extSpringBootVersion, forcedVersion, '', "\n\tspringVersion = \"$extSpringVersion\"")
+        addSpringDependenciesWhenUsingManagedDependencies(requestedVersion)
+
+        when:
+        def result = runTasks(*tasks(coreAlignment))
+        def output = result.output
+
+        then:
+        writeOutputToProjectDir(output)
+        if (coreAlignment) {
+            dependencyInsightContains(output, 'org.springframework:spring-aop', managedSpringVersion)
+            dependencyInsightContains(output, 'org.springframework:spring-beans', managedSpringVersion)
+            dependencyInsightContains(output, 'org.springframework:spring-expression', managedSpringVersion)
+
+            dependencyInsightContains(output, 'org.springframework:spring-core', extSpringVersion)
+
+        } else {
+            dependencyInsightContains(output, 'org.springframework:spring-aop', extSpringVersion)
+            dependencyInsightContains(output, 'org.springframework:spring-beans', extSpringVersion)
+            dependencyInsightContains(output, 'org.springframework:spring-expression', extSpringVersion)
+            dependencyInsightContains(output, 'org.springframework:spring-core', extSpringVersion)
+        }
+
+        where:
+        extSpringVersion = '5.1.8.RELEASE'
         extSpringBootVersion = '1.5.6.RELEASE'
         managedSpringVersion = '4.3.10.RELEASE' // from https://repo1.maven.org/maven2/org/springframework/boot/spring-boot-dependencies/1.5.6.RELEASE/spring-boot-dependencies-1.5.6.RELEASE.pom
 
@@ -212,7 +249,7 @@ class AlignAndSubstituteRulesWithSpringBoot1xPluginSpec extends AbstractRulesWit
         extSpringVersion = '4.2.4.RELEASE'
         extSpringBootVersion = '1.5.6.RELEASE'
         extSlf4jVersion = '1.6.0'
-        managedSlf4jVersion = '1.7.25'
+        managedSlf4jVersion = '1.7.25' // from https://repo1.maven.org/maven2/org/springframework/boot/spring-boot-dependencies/1.5.6.RELEASE/spring-boot-dependencies-1.5.6.RELEASE.pom
 
         requestedVersion = ''
         forcedVersion = ''
@@ -244,7 +281,7 @@ class AlignAndSubstituteRulesWithSpringBoot1xPluginSpec extends AbstractRulesWit
         extSpringVersion = '4.2.4.RELEASE'
         extSpringBootVersion = '1.5.6.RELEASE'
         extSlf4jVersion = '1.6.0'
-        managedSlf4jVersion = '1.7.25'
+        managedSlf4jVersion = '1.7.25' // from https://repo1.maven.org/maven2/org/springframework/boot/spring-boot-dependencies/1.5.6.RELEASE/spring-boot-dependencies-1.5.6.RELEASE.pom
 
         requestedVersion = ':\$slf4jVersion'
         forcedVersion = ''
@@ -281,7 +318,7 @@ class AlignAndSubstituteRulesWithSpringBoot1xPluginSpec extends AbstractRulesWit
         extSpringVersion = '4.2.4.RELEASE'
         extSpringBootVersion = '1.5.6.RELEASE'
         extSlf4jVersion = '1.6.0'
-        managedSlf4jVersion = '1.7.25'
+        managedSlf4jVersion = '1.7.25' // from https://repo1.maven.org/maven2/org/springframework/boot/spring-boot-dependencies/1.5.6.RELEASE/spring-boot-dependencies-1.5.6.RELEASE.pom
 
         requestedVersion = ''
         forcedVersion = '1.7.10'
@@ -318,7 +355,7 @@ class AlignAndSubstituteRulesWithSpringBoot1xPluginSpec extends AbstractRulesWit
         extSpringVersion = '4.2.4.RELEASE'
         extSpringBootVersion = '1.5.6.RELEASE'
         extSlf4jVersion = '1.6.0'
-        managedSlf4jVersion = '1.7.25'
+        managedSlf4jVersion = '1.7.25' // from https://repo1.maven.org/maven2/org/springframework/boot/spring-boot-dependencies/1.5.6.RELEASE/spring-boot-dependencies-1.5.6.RELEASE.pom
 
         requestedVersion = ':\$slf4jVersion'
         forcedVersion = '1.7.10'
@@ -355,7 +392,7 @@ class AlignAndSubstituteRulesWithSpringBoot1xPluginSpec extends AbstractRulesWit
         extSpringVersion = '4.2.4.RELEASE'
         extSpringBootVersion = '1.5.6.RELEASE'
         extSlf4jVersion = '1.7.26'
-        managedSlf4jVersion = '1.7.25'
+        managedSlf4jVersion = '1.7.25' // from https://repo1.maven.org/maven2/org/springframework/boot/spring-boot-dependencies/1.5.6.RELEASE/spring-boot-dependencies-1.5.6.RELEASE.pom
 
         requestedVersion = ':\$slf4jVersion'
         forcedVersion = '1.7.10'
@@ -392,7 +429,7 @@ class AlignAndSubstituteRulesWithSpringBoot1xPluginSpec extends AbstractRulesWit
         extSpringVersion = '4.2.4.RELEASE'
         extSpringBootVersion = '1.5.6.RELEASE'
         extSlf4jVersion = '1.6.0'
-        managedSlf4jVersion = '1.7.25'
+        managedSlf4jVersion = '1.7.25' // from https://repo1.maven.org/maven2/org/springframework/boot/spring-boot-dependencies/1.5.6.RELEASE/spring-boot-dependencies-1.5.6.RELEASE.pom
 
         requestedVersion = ':\$slf4jVersion'
         forcedVersion = extSlf4jVersion
