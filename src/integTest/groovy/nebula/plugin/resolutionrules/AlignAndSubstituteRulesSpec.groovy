@@ -7,6 +7,7 @@ import nebula.test.dependencies.ModuleBuilder
 import nebula.test.dependencies.maven.ArtifactType
 import nebula.test.dependencies.maven.Pom
 import nebula.test.dependencies.repositories.MavenRepo
+import spock.lang.Issue
 import spock.lang.Unroll
 
 class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
@@ -963,8 +964,64 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         coreAlignment << [false, true]
     }
 
+    @Issue("Based on https://github.com/nebula-plugins/gradle-nebula-integration/issues/11")
     @Unroll
-    def 'apply a static version via details.useVersion and align results | core alignment #coreAlignment'() {
+    def 'apply a static version via details.useVersion for 1 direct dep and align results | core alignment #coreAlignment'() {
+        given:
+        def graph = new DependencyGraphBuilder()
+                .addModule('test.nebula:c:0.5.0')
+                .build()
+        mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
+
+        rulesJsonFile << """
+            {
+                "align": [
+                    $alignRuleForTestNebula
+                ]
+            }
+            """.stripIndent()
+
+        buildFile << """
+            dependencies {
+                compile 'test.nebula:a:1.0.0'
+                compile 'test.nebula:b:0.5.0'
+                compile 'test.nebula:c:1.0.0'
+            }
+            configurations.all {
+                resolutionStrategy.eachDependency { details ->
+                    if (details.requested.name == 'a') {
+                        details.useVersion '0.5.0'
+                        details.because('$reason')
+                    }
+                }
+            }
+            """.stripIndent()
+
+        when:
+
+        def result = runTasks(*tasks(coreAlignment))
+
+        then:
+        writeOutputToProjectDir(result.output)
+        dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:c", resultingVersion)
+
+        if (coreAlignment) {
+            dependencyInsightContains(result.output, "test.nebula:a", '0.5.0')
+
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
+        } else {
+            dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
+        }
+
+        where:
+        resultingVersion = "1.0.0"
+        coreAlignment << [false, true]
+    }
+
+    @Issue("Based on https://github.com/nebula-plugins/gradle-nebula-integration/issues/11")
+    @Unroll
+    def 'apply a static version via details.useVersion for each dependency and align results | core alignment #coreAlignment'() {
         given:
         def graph = new DependencyGraphBuilder()
                 .addModule(new ModuleBuilder('test.other:brings-a:1.0.0').addDependency('test.nebula:a:1.0.2').build())
@@ -1011,6 +1068,115 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
 
         where:
         resultingVersion = "1.0.1"
+        coreAlignment << [false, true]
+    }
+
+    @Issue("Based on https://github.com/nebula-plugins/gradle-nebula-integration/issues/11")
+    @Unroll
+    def 'apply a static version via details.useVersion for 1 direct dep and align results with conflict resolution involved | core alignment #coreAlignment'() {
+        given:
+        def graph = new DependencyGraphBuilder()
+                .addModule('test.nebula:c:0.5.0')
+                .addModule(new ModuleBuilder('test.other:brings-a:1.0.0').addDependency('test.nebula:a:1.0.2').build())
+                .build()
+        mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
+
+        rulesJsonFile << """
+            {
+                "align": [
+                    $alignRuleForTestNebula
+                ]
+            }
+            """.stripIndent()
+
+        buildFile << """
+            dependencies {
+                compile 'test.other:brings-a:1.0.0'
+                compile 'test.nebula:b:0.5.0'
+                compile 'test.nebula:c:1.0.0'
+            }
+            configurations.all {
+                resolutionStrategy.eachDependency { details ->
+                    if (details.requested.name == 'c') {
+                        details.useVersion '0.5.0'
+                        details.because('$reason')
+                    }
+                }
+            }
+            """.stripIndent()
+
+        when:
+
+        def result = runTasks(*tasks(coreAlignment))
+
+        then:
+        writeOutputToProjectDir(result.output)
+        dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:c", resultingVersion)
+
+        if (coreAlignment) {
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
+        }
+
+        where:
+        resultingVersion = "1.0.2"
+        coreAlignment << [false, true]
+    }
+
+    @Issue("Based on https://github.com/nebula-plugins/gradle-nebula-integration/issues/11")
+    @Unroll
+    def 'apply a static version via details.useVersion for 1 direct dep and align results without conflict resolution involved | core alignment #coreAlignment'() {
+        given:
+        def graph = new DependencyGraphBuilder()
+                .addModule('test.nebula:c:0.5.0')
+                .addModule(new ModuleBuilder('test.other:brings-a:1.0.0').addDependency('test.nebula:a:1.0.0').build())
+                .build()
+        mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
+
+        rulesJsonFile << """
+            {
+                "align": [
+                    $alignRuleForTestNebula
+                ]
+            }
+            """.stripIndent()
+
+        buildFile << """
+            dependencies {
+                compile 'test.other:brings-a:1.0.0'
+                compile 'test.nebula:b:0.5.0'
+                compile 'test.nebula:c:1.0.0'
+            }
+            configurations.all {
+                resolutionStrategy.eachDependency { details ->
+                    if (details.requested.name == 'c') {
+                        details.useVersion '0.5.0'
+                        details.because('$reason')
+                    }
+                }
+            }
+            """.stripIndent()
+
+        when:
+
+        def result = runTasks(*tasks(coreAlignment))
+
+        then:
+        writeOutputToProjectDir(result.output)
+        dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
+        dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
+
+        if (coreAlignment) {
+            dependencyInsightContains(result.output, "test.nebula:c", '0.5.0')
+
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
+        } else {
+            dependencyInsightContains(result.output, "test.nebula:c", resultingVersion)
+        }
+
+        where:
+        resultingVersion = "1.0.0"
         coreAlignment << [false, true]
     }
 
