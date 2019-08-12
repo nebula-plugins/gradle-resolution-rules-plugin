@@ -14,6 +14,7 @@ import org.gradle.api.artifacts.component.ModuleComponentSelector
 import org.gradle.api.artifacts.result.ComponentSelectionCause
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.artifacts.result.UnresolvedDependencyResult
+import org.gradle.api.internal.ReusableAction
 import org.gradle.api.internal.artifacts.DefaultModuleIdentifier
 import org.gradle.api.internal.artifacts.DefaultModuleVersionIdentifier
 import org.gradle.api.internal.artifacts.DefaultModuleVersionSelector
@@ -92,7 +93,7 @@ data class AlignRule(val name: String?,
 }
 
 @CacheableRule
-open class AlignedPlatformMetadataRule : ComponentMetadataRule, Serializable {
+open class AlignedPlatformMetadataRule : ComponentMetadataRule, Serializable, ReusableAction {
     val rule: AlignRule
     val logger: Logger = Logging.getLogger(AlignedPlatformMetadataRule::class.java)
 
