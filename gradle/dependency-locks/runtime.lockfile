@@ -7,7 +7,7 @@ com.fasterxml.jackson.core:jackson-databind:2.9.2
 com.fasterxml.jackson.module:jackson-module-kotlin:2.9.2
 com.google.guava:guava:20.0
 com.netflix.nebula:nebula-dependency-recommender:7.5.6
-com.netflix.nebula:nebula-gradle-interop:1.0.7
+com.netflix.nebula:nebula-gradle-interop:1.0.8
 org.apache.commons:commons-lang3:3.8.1
 org.apache.maven:maven-artifact:3.6.0
 org.apache.maven:maven-builder-support:3.6.0
