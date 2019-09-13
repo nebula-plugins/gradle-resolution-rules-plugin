@@ -2183,8 +2183,8 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
 
         buildFile << """
             dependencies {
-                compile 'test.nebula:a:${definedVersions[0]}'
-                compile 'test.nebula:b:${definedVersions[1]}'
+                implementation 'test.nebula:a:${definedVersions[0]}'
+                implementation 'test.nebula:b:${definedVersions[1]}'
             }
             """.stripIndent()
     }
@@ -2200,9 +2200,9 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
 
         buildFile << """
             dependencies {
-                compile 'test.nebula:a:${definedVersions[0]}'
-                compile 'test.nebula:b:${definedVersions[1]}'
-                compile 'test.nebula:c:${definedVersions[2]}'
+                implementation 'test.nebula:a:${definedVersions[0]}'
+                implementation 'test.nebula:b:${definedVersions[1]}'
+                implementation 'test.nebula:c:${definedVersions[2]}'
             }
             """.stripIndent()
     }
@@ -2242,8 +2242,8 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
 
         buildFile << """
             dependencies {
-                compile 'test.nebula:a'
-                compile 'test.nebula:b'
+                implementation 'test.nebula:a'
+                implementation 'test.nebula:b'
             }
             repositories {
                  maven { url '${bomRepo.root.absoluteFile.toURI()}' }
@@ -2305,8 +2305,8 @@ repositories {
 
 dependencies {
     //at the time of writing resolves to 4.2.2
-    compile "com.google.inject:guice:$definedVersion"
-    compile "test.nebula:a:1.0"
+    implementation "com.google.inject:guice:$definedVersion"
+    implementation "test.nebula:a:1.0"
 }
 """
 

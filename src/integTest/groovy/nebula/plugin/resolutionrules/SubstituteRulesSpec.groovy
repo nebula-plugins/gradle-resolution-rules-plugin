@@ -55,12 +55,12 @@ class SubstituteRulesSpec extends IntegrationSpec {
         given:
         buildFile << """
                      dependencies {
-                        compile 'bouncycastle:bcmail-jdk16:1.40'
+                        implementation'bouncycastle:bcmail-jdk16:1.40'
                      }
                      """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+        def result = runTasksSuccessfully('dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.standardOutput.contains('bouncycastle:bcmail-jdk16:1.40 -> org.bouncycastle:bcmail-jdk16:')
@@ -70,12 +70,12 @@ class SubstituteRulesSpec extends IntegrationSpec {
         given:
         buildFile << """\
              dependencies {
-                compile 'bouncycastle:bcmail-jdk16:1.40'
+                implementation'bouncycastle:bcmail-jdk16:1.40'
              }
              """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencyInsight', '--configuration', 'compile', '--dependency', 'bcmail-jdk16')
+        def result = runTasksSuccessfully('dependencyInsight', '--configuration', 'compileClasspath', '--dependency', 'bcmail-jdk16')
 
         then:
         !result.standardOutput.contains('org.bouncycastle:bcmail-jdk16:1.40')
@@ -87,12 +87,12 @@ class SubstituteRulesSpec extends IntegrationSpec {
         given:
         buildFile << """
                      dependencies {
-                        compile 'com.google.guava:guava:19.0-rc2'
+                        implementation'com.google.guava:guava:19.0-rc2'
                      }
                      """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+        def result = runTasksSuccessfully('dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.standardOutput.contains('com.google.guava:guava:19.0-rc2 -> 19.0-rc1')
@@ -102,12 +102,12 @@ class SubstituteRulesSpec extends IntegrationSpec {
         given:
         buildFile << """
                      dependencies {
-                        compile 'com.sun.jersey:jersey-bundle:1.17'
+                        implementation'com.sun.jersey:jersey-bundle:1.17'
                      }
                      """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+        def result = runTasksSuccessfully('dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.standardOutput.contains('om.sun.jersey:jersey-bundle:1.17 -> 1.18')
@@ -117,12 +117,12 @@ class SubstituteRulesSpec extends IntegrationSpec {
         given:
         buildFile << """
                      dependencies {
-                        compile 'com.sun.jersey:jersey-bundle:1.18'
+                        implementation'com.sun.jersey:jersey-bundle:1.18'
                      }
                      """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+        def result = runTasksSuccessfully('dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.standardOutput.contains('om.sun.jersey:jersey-bundle:1.18\n')
@@ -147,12 +147,12 @@ class SubstituteRulesSpec extends IntegrationSpec {
 
         buildFile << """
                      dependencies {
-                        compile 'asm:asm:3.3.1'
+                        implementation'asm:asm:3.3.1'
                      }
                      """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compile')
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
 
         then:
         def rootCause = StackTraceUtils.extractRootCause(result.failure)

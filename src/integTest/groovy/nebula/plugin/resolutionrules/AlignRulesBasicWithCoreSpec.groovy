@@ -4,6 +4,7 @@ import nebula.test.IntegrationTestKitSpec
 import nebula.test.dependencies.DependencyGraphBuilder
 import nebula.test.dependencies.GradleDependencyGenerator
 import nebula.test.dependencies.ModuleBuilder
+import org.gradle.util.GradleVersion
 import spock.lang.Unroll
 
 class AlignRulesBasicWithCoreSpec extends IntegrationTestKitSpec {
@@ -13,9 +14,12 @@ class AlignRulesBasicWithCoreSpec extends IntegrationTestKitSpec {
         debug = true
         keepFiles = true
         new File("${projectDir}/gradle.properties").text = "systemProp.nebula.features.coreAlignmentSupport=true"
-        settingsFile << """
-        enableFeaturePreview("GRADLE_METADATA")
-        """
+        if (GradleVersion.current().baseVersion < GradleVersion.version("6.0")) {
+            settingsFile << '''\
+                enableFeaturePreview("GRADLE_METADATA")
+            '''.stripIndent()
+        }
+
         rulesJsonFile = new File(projectDir, "rules.json")
         rulesJsonFile.createNewFile()
 
@@ -53,8 +57,8 @@ class AlignRulesBasicWithCoreSpec extends IntegrationTestKitSpec {
                 ${mavenrepo.mavenRepositoryBlock}
             }
             dependencies {
-                compile 'test.nebula:a:1.0.0'
-                compile 'test.nebula:b:1.1.0'
+                implementation 'test.nebula:a:1.0.0'
+                implementation 'test.nebula:b:1.1.0'
             }
             configurations.all {
                 resolutionStrategy { 
@@ -97,9 +101,9 @@ class AlignRulesBasicWithCoreSpec extends IntegrationTestKitSpec {
                 ${mavenrepo.mavenRepositoryBlock}
             }
             dependencies {
-                compile 'test.other:brings-a:latest.release'
-                compile 'test.other:also-brings-a:latest.release'
-                compile 'test.other:brings-b:latest.release'
+                implementation 'test.other:brings-a:latest.release'
+                implementation 'test.other:also-brings-a:latest.release'
+                implementation 'test.other:brings-b:latest.release'
             }
             configurations.all {
                 resolutionStrategy { 
@@ -160,15 +164,15 @@ class AlignRulesBasicWithCoreSpec extends IntegrationTestKitSpec {
                 ${mavenrepo.mavenRepositoryBlock}
             }
             dependencies {
-                compile 'test.nebula:a:1.0.0'
-                compile 'test.nebula:b:1.1.0'
-                compile 'test.other:c:1.0.0'
-                compile 'test.other:d:0.12.+'
+                implementation 'test.nebula:a:1.0.0'
+                implementation 'test.nebula:b:1.1.0'
+                implementation 'test.other:c:1.0.0'
+                implementation 'test.other:d:0.12.+'
             }
         """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compile')
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.output.contains 'test.nebula:a:1.0.0 -> 1.1.0\n'
@@ -216,7 +220,7 @@ class AlignRulesBasicWithCoreSpec extends IntegrationTestKitSpec {
                 ${mavenrepo.mavenRepositoryBlock}
             }
             dependencies {
-                compile 'test.nebula:exampleapp-client:80.0.139'
+                implementation 'test.nebula:exampleapp-client:80.0.139'
             }
             """.stripIndent()
         when:

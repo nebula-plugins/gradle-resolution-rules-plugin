@@ -34,13 +34,13 @@ class AlignRulesDirectDependenciesSpec extends AbstractAlignRulesSpec {
                 maven { url '${mavenrepo.absolutePath}' }
             }
             dependencies {
-                compile 'test.nebula:a:1.0.0'
-                compile 'test.nebula:b:0.15.0'
+                implementation 'test.nebula:a:1.0.0'
+                implementation 'test.nebula:b:0.15.0'
             }
         """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compile')
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.output.contains '+--- test.nebula:a:1.0.0\n'
@@ -77,13 +77,13 @@ class AlignRulesDirectDependenciesSpec extends AbstractAlignRulesSpec {
                 ${ivyrepo.ivyRepositoryBlock}
             }
             dependencies {
-                compile 'test.nebula:a:1.0.0'
-                compile 'test.nebula:b:0.15.0'
+                implementation 'test.nebula:a:1.0.0'
+                implementation 'test.nebula:b:0.15.0'
             }
         """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compile')
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.output.contains '+--- test.nebula:a:1.0.0\n'
@@ -117,12 +117,12 @@ class AlignRulesDirectDependenciesSpec extends AbstractAlignRulesSpec {
                 maven { url '${mavenrepo.absolutePath}' }
             }
             dependencies {
-                compile 'test.nebula:a:1.+'
+                implementation 'test.nebula:a:1.+'
             }
         """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compile')
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.output.contains '\\--- test.nebula:a:1.+ -> 1.0.1\n'
@@ -155,12 +155,12 @@ class AlignRulesDirectDependenciesSpec extends AbstractAlignRulesSpec {
                 maven { url '${mavenrepo.absolutePath}' }
             }
             dependencies {
-                compile 'test.nebula:a:[1.0.0, 2.0.0)'
+                implementation 'test.nebula:a:[1.0.0, 2.0.0)'
             }
         """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compile')
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.output.contains '\\--- test.nebula:a:[1.0.0, 2.0.0) -> 1.0.1\n'
@@ -185,8 +185,8 @@ class AlignRulesDirectDependenciesSpec extends AbstractAlignRulesSpec {
         buildFile << """\
             repositories { jcenter() }
             dependencies {
-                compile 'org.slf4j:slf4j-api:1.7.21'
-                compile 'com.google.guava:guava:oops'
+                implementation 'org.slf4j:slf4j-api:1.7.21'
+                implementation 'com.google.guava:guava:oops'
             }
         """
 
@@ -209,8 +209,8 @@ class AlignRulesDirectDependenciesSpec extends AbstractAlignRulesSpec {
             repositories { jcenter() }
 
             dependencies {
-                compile 'org.slf4j:slf4j-api:1.7.21'
-                compile 'com.google.guava:guava:oops'
+                implementation 'org.slf4j:slf4j-api:1.7.21'
+                implementation 'com.google.guava:guava:oops'
             }
         """.stripIndent()
 
@@ -222,7 +222,7 @@ class AlignRulesDirectDependenciesSpec extends AbstractAlignRulesSpec {
 
         where:
         tasks | _
-        ['dependencies', '--configuration', 'compile'] | _
+        ['dependencies', '--configuration', 'compileClasspath'] | _
         ['dependencyInsight', '--dependency', 'guava'] | _
     }
 
@@ -246,8 +246,8 @@ class AlignRulesDirectDependenciesSpec extends AbstractAlignRulesSpec {
         buildFile << """\
             repositories { jcenter() }
             dependencies {
-                compile 'org.slf4j:slf4j-api:1.7.21'
-                compile 'com.google.guava:guava:oops'
+                implementation 'org.slf4j:slf4j-api:1.7.21'
+                implementation 'com.google.guava:guava:oops'
             }
         """
 
@@ -256,12 +256,12 @@ class AlignRulesDirectDependenciesSpec extends AbstractAlignRulesSpec {
 
         then:
         noExceptionThrown()
-        result.output.contains("Resolution rules could not resolve all dependencies to align configuration ':compile'")
+        result.output.contains("Resolution rules could not resolve all dependencies to align configuration ':compileClasspath'")
 
         where:
         tasks | _
-        ['dependencies', '--configuration', 'compile'] | _
-        ['dependencyInsight', '--dependency', 'guava', '--configuration', 'compile'] | _
+        ['dependencies', '--configuration', 'compileClasspath'] | _
+        ['dependencyInsight', '--dependency', 'guava', '--configuration', 'compileClasspath'] | _
     }
 
     @Unroll('unresolvable dependencies caused by alignment do not cause #tasks to fail')
@@ -290,8 +290,8 @@ class AlignRulesDirectDependenciesSpec extends AbstractAlignRulesSpec {
             repositories { jcenter() }
 
             dependencies {
-                compile 'io.grpc:grpc-netty:1.3.0' // grpc-netty brings in dependencies added in Netty 4.1, and will be broken by the force
-                compile 'io.netty:netty-all:4.0.43.Final'
+                implementation 'io.grpc:grpc-netty:1.3.0' // grpc-netty brings in dependencies added in Netty 4.1, and will be broken by the force
+                implementation 'io.netty:netty-all:4.0.43.Final'
             }
         """
 
@@ -300,11 +300,11 @@ class AlignRulesDirectDependenciesSpec extends AbstractAlignRulesSpec {
 
         then:
         noExceptionThrown()
-        result.output.contains("Resolution rules could not resolve all dependencies to align configuration ':compile'")
+        result.output.contains("Resolution rules could not resolve all dependencies to align configuration ':compileClasspath'")
 
         where:
         tasks | _
-        ['dependencies', '--configuration', 'compile'] | _
-        ['dependencyInsight', '--dependency', 'guava', '--configuration', 'compile'] | _
+        ['dependencies', '--configuration', 'compileClasspath'] | _
+        ['dependencyInsight', '--dependency', 'guava', '--configuration', 'compileClasspath'] | _
     }
 }

@@ -31,9 +31,17 @@ class AlignRulesMultiprojectSpec extends IntegrationSpec {
         buildFile << """\
             subprojects {
                 ${applyPlugin(ResolutionRulesPlugin)}
-                apply plugin: 'java'
+                
 
                 group = 'test.nebula'
+            }
+
+            project(':a') {
+                apply plugin: 'java'
+            }
+            
+            project(':b') {
+                apply plugin: 'java-library'
             }
 
             dependencies {
@@ -69,7 +77,7 @@ class AlignRulesMultiprojectSpec extends IntegrationSpec {
         // project b depends on a
         new File(bDir, 'build.gradle') << '''\
             dependencies {
-                compile project(':a')
+                implementation project(':a')
             }
         '''.stripIndent()
 
@@ -94,7 +102,7 @@ class AlignRulesMultiprojectSpec extends IntegrationSpec {
         '''.stripIndent()
 
         when:
-        def results = runTasksSuccessfully(':b:dependencies', '--configuration', 'compile')
+        def results = runTasksSuccessfully(':b:dependencies', '--configuration', 'compileClasspath')
 
         then:
         results.standardOutput.contains('\\--- project :a\n')
@@ -118,13 +126,13 @@ class AlignRulesMultiprojectSpec extends IntegrationSpec {
 
         new File(aDir, 'build.gradle') << '''\
             dependencies {
-                testCompile project(':b')
+                testImplementation project(':b')
             }
         '''.stripIndent()
 
         new File(bDir, 'build.gradle') << '''\
             dependencies {
-                compile project(':a')
+                implementation project(':a')
             }
         '''.stripIndent()
 
@@ -173,21 +181,21 @@ class AlignRulesMultiprojectSpec extends IntegrationSpec {
 
             project(':a') {
                 dependencies {
-                   compile project(':b')
+                   implementation project(':b')
                 }
             }
 
             project(':b') {
                 dependencies {
-                    compile 'other.nebula:a:1.0.0'
-                    compile 'other.nebula:b:1.1.0'
-                    compile 'other.nebula:c:0.42.0'
+                    api 'other.nebula:a:1.0.0'
+                    api 'other.nebula:b:1.1.0'
+                    api 'other.nebula:c:0.42.0'
                 }
             }
         """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully(':a:dependencies', '--configuration', 'compile')
+        def result = runTasksSuccessfully(':a:dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.standardOutput.contains '+--- other.nebula:a:1.0.0 -> 1.1.0'
@@ -234,27 +242,27 @@ class AlignRulesMultiprojectSpec extends IntegrationSpec {
             }
 
             dependencies {
-                compile project(':a')
-                compile project(':b')
+                implementation project(':a')
+                implementation project(':b')
             }
 
             project(':a') {
                 dependencies {
-                   compile project(':b')
+                   implementation project(':b')
                 }
             }
 
             project(':b') {
                 dependencies {
-                    compile 'other.nebula:a:1.0.0'
-                    compile 'other.nebula:b:1.1.0'
-                    compile 'other.nebula:c:0.42.0'
+                    api 'other.nebula:a:1.0.0'
+                    api 'other.nebula:b:1.1.0'
+                    api 'other.nebula:c:0.42.0'
                 }
             }
         """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully(':a:dependencies', '--configuration', 'compile')
+        def result = runTasksSuccessfully(':a:dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.standardOutput.contains '+--- other.nebula:a:1.0.0 -> 1.1.0'

@@ -24,9 +24,11 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ConfigurationContainer
+import org.gradle.api.internal.artifacts.configurations.ConfigurationInternal
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import java.io.File
+import java.lang.reflect.Field
 import java.util.*
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
@@ -81,7 +83,7 @@ class ResolutionRulesPlugin : Plugin<Project> {
             var dependencyRulesApplied = false
             project.onExecute {
                 when {
-                    config.state != Configuration.State.UNRESOLVED -> logger.warn("Dependency resolution rules will not be applied to $config, it was resolved before the project was executed")
+                    config.state != Configuration.State.UNRESOLVED || config.getObservedState() != Configuration.State.UNRESOLVED -> logger.warn("Dependency resolution rules will not be applied to $config, it was resolved before the project was executed")
                     else -> {
                         ruleSet.dependencyRulesPartOne().forEach { rule ->
                             rule.apply(project, config, config.resolutionStrategy, extension, reasons)

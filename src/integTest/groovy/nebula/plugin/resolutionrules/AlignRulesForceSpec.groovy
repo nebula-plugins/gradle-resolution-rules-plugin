@@ -39,10 +39,10 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
                 maven { url '${mavenrepo.absolutePath}' }
             }
             dependencies {
-                compile 'test.nebula:a:1.0.0'
-                compile 'test.nebula:b:1.0.0'
-                compile 'test.nebula:c:0.15.0'
-                compile 'test.nebula.other:a:1.0.0'
+                implementation 'test.nebula:a:1.0.0'
+                implementation 'test.nebula:b:1.0.0'
+                implementation 'test.nebula:c:0.15.0'
+                implementation 'test.nebula.other:a:1.0.0'
             }
             $force
         """.stripIndent()
@@ -50,7 +50,7 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
         logLevel = LogLevel.DEBUG
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compile')
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.output.contains "Found force(s) [test.nebula:a:0.15.0] that supersede resolution rule"
@@ -64,8 +64,8 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
         name << ["all", "configuration", "dependency"]
         force << [
                 "configurations.all { resolutionStrategy { force 'test.nebula:a:0.15.0' } }",
-                "configurations.compile { resolutionStrategy { force 'test.nebula:a:0.15.0' } }",
-                "dependencies { compile ('test.nebula:a:0.15.0') { force = true } }"
+                "configurations.compileClasspath { resolutionStrategy { force 'test.nebula:a:0.15.0' } }",
+                "dependencies { implementation ('test.nebula:a:0.15.0') { force = true } }"
         ]
     }
 
@@ -103,11 +103,11 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
                 maven { url '${mavenrepo.absolutePath}' }
             }
             dependencies {
-                compile 'test.nebula:a:2.0.0'
-                compile 'test.nebula:b:2.0.0'
-                compile 'test.nebula:c:1.0.0'
+                implementation 'test.nebula:a:2.0.0'
+                implementation 'test.nebula:b:2.0.0'
+                implementation 'test.nebula:c:1.0.0'
             }
-            configurations.compile.resolutionStrategy {
+            configurations.compileClasspath.resolutionStrategy {
                 force 'test.nebula:a:2.0.0'
                 force 'test.nebula:b:1.0.0'
                 force 'test.nebula:c:0.15.0'
@@ -115,7 +115,7 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compile')
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.output.contains '+--- test.nebula:a:2.0.0 -> 0.15.0\n'
@@ -157,11 +157,11 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
                 maven { url '${mavenrepo.absolutePath}' }
             }
             dependencies {
-                compile 'test.nebula:a:2.0.0'
-                compile 'test.nebula:b:2.0.0'
-                compile 'test.nebula:c:1.0.0'
+                implementation 'test.nebula:a:2.0.0'
+                implementation 'test.nebula:b:2.0.0'
+                implementation 'test.nebula:c:1.0.0'
             }
-            configurations.compile.resolutionStrategy {
+            configurations.compileClasspath.resolutionStrategy {
                 force 'test.nebula:a:latest.release'
                 force 'test.nebula:b:1.+'
                 force 'test.nebula:c:0.15.0'
@@ -171,7 +171,7 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
         logLevel = LogLevel.DEBUG
 
         when:
-        def output = runTasks('dependencies', '--configuration', 'compile').output
+        def output = runTasks('dependencies', '--configuration', 'compileClasspath').output
 
         then:
         output.contains('Found force(s) [test.nebula:a:latest.release, test.nebula:b:1.+, test.nebula:c:0.15.0] that supersede resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-outputs-warnings-and-honors-static-force-when-dynamic-forces-are-present, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z, belongsToName=alignment-outputs-warnings-and-honors-static-force-when-dynamic-forces-are-present-0-for-test.nebula). Will use 0.15.0')
@@ -214,11 +214,11 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
                 maven { url '${mavenrepo.absolutePath}' }
             }
             dependencies {
-                compile 'test.nebula:a:2.0.0'
-                compile 'test.nebula:b:1.0.0'
-                compile 'test.nebula:c:0.15.0'
+                implementation 'test.nebula:a:2.0.0'
+                implementation 'test.nebula:b:1.0.0'
+                implementation 'test.nebula:c:0.15.0'
             }
-            configurations.compile.resolutionStrategy {
+            configurations.compileClasspath.resolutionStrategy {
                 force 'test.nebula:a:latest.release'
             }
         """.stripIndent()
@@ -226,7 +226,7 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
         logLevel = LogLevel.DEBUG
 
         when:
-        def output = runTasks('dependencies', '--configuration', 'compile').output
+        def output = runTasks('dependencies', '--configuration', 'compileClasspath').output
 
         then:
         output.contains 'Found force(s) [test.nebula:a:latest.release] that supersede resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-with-latest-release-force, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z, belongsToName=alignment-with-latest-release-force-0-for-test.nebula). Will use highest dynamic version 2.0.0 that matches most specific selector latest.release'
@@ -269,11 +269,11 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
                 maven { url '${mavenrepo.absolutePath}' }
             }
             dependencies {
-                compile 'test.nebula:a:2.0.0'
-                compile 'test.nebula:b:1.0.0'
-                compile 'test.nebula:c:0.15.0'
+                implementation 'test.nebula:a:2.0.0'
+                implementation 'test.nebula:b:1.0.0'
+                implementation 'test.nebula:c:0.15.0'
             }
-            configurations.compile.resolutionStrategy {
+            configurations.compileClasspath.resolutionStrategy {
                 force 'test.nebula:a:1.+'
             }
         """.stripIndent()
@@ -281,7 +281,7 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
         logLevel = LogLevel.DEBUG
 
         when:
-        def output = runTasks('dependencies', '--configuration', 'compile').output
+        def output = runTasks('dependencies', '--configuration', 'compileClasspath').output
 
         then:
         output.contains 'Found force(s) [test.nebula:a:1.+] that supersede resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-with-sub-version-force, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z, belongsToName=alignment-with-sub-version-force-0-for-test.nebula). Will use highest dynamic version 1.0.0 that matches most specific selector 1.+'
@@ -325,11 +325,11 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
                 maven { url '${mavenrepo.absolutePath}' }
             }
             dependencies {
-                compile 'test.nebula:a:2.0.0'
-                compile 'test.nebula:b:1.0.0'
-                compile 'test.nebula:c:0.15.0'
+                implementation 'test.nebula:a:2.0.0'
+                implementation 'test.nebula:b:1.0.0'
+                implementation 'test.nebula:c:0.15.0'
             }
-            configurations.compile.resolutionStrategy {
+            configurations.compileClasspath.resolutionStrategy {
                 force 'test.nebula:a:latest.release'
                 force 'test.nebula:b:1.+'
                 force 'test.nebula:c:[1.0, 2.0)'
@@ -339,7 +339,7 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
         logLevel = LogLevel.DEBUG
 
         when:
-        def output = runTasks('dependencies', '--configuration', 'compile').output
+        def output = runTasks('dependencies', '--configuration', 'compileClasspath').output
 
         then:
         output.contains 'Found force(s) [test.nebula:a:latest.release, test.nebula:b:1.+, test.nebula:c:[1.0, 2.0)] that supersede resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-uses-most-specific-dynamic-version, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z, belongsToName=alignment-uses-most-specific-dynamic-version-0-for-test.nebula). Will use highest dynamic version 1.0.0 that matches most specific selector [1.0, 2.0)'

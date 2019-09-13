@@ -161,7 +161,7 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
                          resolutionRules files("$rulesJarFile")
                          resolutionRules files("$rulesZipFile")
 
-                         compile 'asm:asm:3.3.1'
+                         implementation 'asm:asm:3.3.1'
                      }
                      """.stripIndent()
 
@@ -181,13 +181,13 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
         given:
         buildFile << """
                      dependencies {
-                        compile 'asm:asm:3.3.1'
-                        compile 'org.ow2.asm:asm:5.0.4'
+                        implementation 'asm:asm:3.3.1'
+                        implementation 'org.ow2.asm:asm:5.0.4'
                      }
                      """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+        def result = runTasksSuccessfully('dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.standardOutput.contains('asm:asm:3.3.1 -> org.ow2.asm:asm:5.0.4')
@@ -197,13 +197,13 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
         given:
         buildFile << """
                      dependencies {
-                        compile 'asm:asm:3.3.1'
-                        compile 'org.ow2.asm:asm:5.0.4'
+                        implementation 'asm:asm:3.3.1'
+                        implementation 'org.ow2.asm:asm:5.0.4'
                      }
                      """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencyInsight', '--configuration', 'compile', '--dependency', 'asm')
+        def result = runTasksSuccessfully('dependencyInsight', '--dependency', 'asm')
 
         then:
         // reasons
@@ -219,12 +219,12 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
         given:
         buildFile << """
                      dependencies {
-                        compile 'asm:asm:3.3.1'
+                        implementation 'asm:asm:3.3.1'
                      }
                      """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+        def result = runTasksSuccessfully('dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.standardOutput.contains('asm:asm:3.3.1')
@@ -236,12 +236,12 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
         given:
         buildFile << """
                      dependencies {
-                        compile 'io.netty:netty-all:5.0.0.Alpha2'
+                        implementation 'io.netty:netty-all:5.0.0.Alpha2'
                      }
                      """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+        def result = runTasksSuccessfully('dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.standardOutput.contains('No dependencies')
@@ -262,13 +262,13 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
         given:
         buildFile << """
                      dependencies {
-                         compile 'log4j:log4j:1.2.17'
+                         implementation 'log4j:log4j:1.2.17'
                      }
                      """.stripIndent()
 
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+        def result = runTasksSuccessfully('dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.standardOutput.contains('\\--- log4j:log4j:1.2.17\n')
@@ -284,14 +284,14 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
                      dependencies {
                          resolutionRules files("$optionalRulesJsonFile")
 
-                         compile 'log4j:log4j:1.2.17'
-                         compile 'org.slf4j:jcl-over-slf4j:1.7.0'
+                         implementation 'log4j:log4j:1.2.17'
+                         implementation 'org.slf4j:jcl-over-slf4j:1.7.0'
                      }
                      """.stripIndent()
 
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+        def result = runTasksSuccessfully('dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.standardOutput.contains '+--- log4j:log4j:1.2.17 -> org.slf4j:log4j-over-slf4j:1.7.21\n'
@@ -324,15 +324,15 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
                      dependencies {
                          resolutionRules files("$optionalRulesJsonFile", "$otherRulesFile")
 
-                         compile 'log4j:log4j:1.2.17'
-                         compile 'asm:asm:3.3.1'
-                         compile 'org.ow2.asm:asm:5.0.4'
+                         implementation 'log4j:log4j:1.2.17'
+                         implementation 'asm:asm:3.3.1'
+                         implementation 'org.ow2.asm:asm:5.0.4'
                      }
                      """.stripIndent()
 
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+        def result = runTasksSuccessfully('dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.standardOutput.contains('log4j:log4j:1.2.17 -> org.slf4j:log4j-over-slf4j:1.7.21')
@@ -340,63 +340,53 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
     }
 
     @Unroll
-    def "deny dependency (from super: #inherited)"() {
+    def "deny dependency"() {
         given:
         buildFile << """
                      dependencies {
-                        compile 'com.google.guava:guava:19.0-rc2'
+                        implementation 'com.google.guava:guava:19.0-rc2'
                      }
                      """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', configuration)
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
 
         then:
         def rootCause = StackTraceUtils.extractRootCause(result.failure)
         rootCause.class.simpleName == 'DependencyDeniedException'
         rootCause.message.contains("Dependency com.google.guava:guava:19.0-rc2 denied by dependency rule: Guava 19.0-rc2 is not permitted")
         rootCause.message.findAll("with reasons: nebula.resolution-rules uses: .*.json, nebula.resolution-rules uses: .*.json").size() > 0
-
-        where:
-        configuration      | inherited
-        'compile'          | false
-        'compileClasspath' | true
     }
 
     @Unroll
-    def "deny dependency without version (from super: #inherited)"() {
+    def "deny dependency without version"() {
         given:
         buildFile << """
                      dependencies {
-                        compile 'com.sun.jersey:jersey-bundle:1.19'
+                        implementation 'com.sun.jersey:jersey-bundle:1.19'
                      }
                      """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', configuration)
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
 
         then:
         def rootCause = StackTraceUtils.extractRootCause(result.failure)
         rootCause.class.simpleName == 'DependencyDeniedException'
         rootCause.message.contains("Dependency com.sun.jersey:jersey-bundle denied by dependency rule: jersey-bundle is a fat jar that includes non-relocated (shaded) third party classes, which can cause duplicated classes on the classpath. Please specify the jersey- libraries you need directly")
         rootCause.message.findAll("with reasons: nebula.resolution-rules uses: .*.json, nebula.resolution-rules uses: .*.json").size() > 0
-
-        where:
-        configuration      | inherited
-        'compile'          | false
-        'compileClasspath' | true
     }
 
     def 'reject dependency'() {
         given:
         buildFile << """
                      dependencies {
-                        compile 'com.google.guava:guava:12.0'
+                        implementation 'com.google.guava:guava:12.0'
                      }
                      """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+        def result = runTasksSuccessfully('dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.standardOutput.contains("Selection of com.google.guava:guava:12.0 rejected by component selection rule: Rejected by resolution rule reject-dependency - Guava 12.0 significantly regressed LocalCache performance")
@@ -420,12 +410,12 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
 
         buildFile << """
                      dependencies {
-                        compile 'com.google.guava:guava:16.0.1'
+                        implementation 'com.google.guava:guava:16.0.1'
                      }
                      """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+        def result = runTasksSuccessfully('dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.standardOutput.contains("Selection of com.google.guava:guava:16.0.1 rejected by component selection rule: Rejected by resolution rule reject-dependency-with-selector - Just a Guava release that happens to have a patch release")
@@ -461,17 +451,17 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
              dependencies {
                  resolutionRules files("$rulesJsonFile", "$optionalRulesJsonFile")
                  
-                 compile 'com.google.guava:guava:19.0'
+                 implementation 'com.google.guava:guava:19.0'
              }
              
-             configurations.compile.resolve()
+             configurations.compileClasspath.resolve()
              """.stripIndent()
 
         when:
         def result = runTasksSuccessfully()
 
         then:
-        result.standardOutput.contains("Dependency resolution rules will not be applied to configuration ':compile', it was resolved before the project was executed")
+        result.standardOutput.contains("Dependency resolution rules will not be applied to configuration ':compileClasspath', it was resolved before the project was executed")
     }
 
     def 'warning should not be logged when using nebulaRecommenderBom'() {
@@ -531,7 +521,7 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
              dependencies {
                  resolutionRules files("$nebulaBomResolutionRulesFile")
                  nebulaRecommenderBom 'test.nebula.bom:testbom:1.0.0@pom'
-                 compile group: 'com.google.guava', name: 'guava', version: '19.0'
+                 implementation group: 'com.google.guava', name: 'guava', version: '19.0'
              }
              
              configurations.nebulaRecommenderBom.resolve()
