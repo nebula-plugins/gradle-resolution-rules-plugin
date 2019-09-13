@@ -3,9 +3,9 @@
 # This file is expected to be part of source control.
 cglib:cglib-nodep:3.2.2
 com.fasterxml.jackson.core:jackson-annotations:2.9.0
-com.fasterxml.jackson.core:jackson-core:2.9.2
-com.fasterxml.jackson.core:jackson-databind:2.9.2
-com.fasterxml.jackson.module:jackson-module-kotlin:2.9.2
+com.fasterxml.jackson.core:jackson-core:2.9.9
+com.fasterxml.jackson.core:jackson-databind:2.9.9.3
+com.fasterxml.jackson.module:jackson-module-kotlin:2.9.3
 com.google.guava:guava:20.0
 com.netflix.nebula:nebula-dependency-recommender:7.5.6
 com.netflix.nebula:nebula-gradle-interop:1.0.11
