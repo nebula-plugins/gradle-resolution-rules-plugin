@@ -33,12 +33,12 @@ class AlignRulesVersionMatchSpec extends AbstractAlignRulesSpec {
                 maven { url '${mavenrepo.absolutePath}' }
             }
             dependencies {
-                compile 'test.nebula:b:1.0.0-1'
+                implementation 'test.nebula:b:1.0.0-1'
             }
         """.stripIndent()
 
         when:
-        def output = runTasks('dependencies', '--configuration', 'compile').output
+        def output = runTasks('dependencies', '--configuration', 'compileClasspath').output
 
         then:
         output.contains '\\--- test.nebula:b:1.0.0-1\n'
@@ -73,12 +73,12 @@ class AlignRulesVersionMatchSpec extends AbstractAlignRulesSpec {
                 maven { url '${mavenrepo.absolutePath}' }
             }
             dependencies {
-                compile 'test.nebula:b:1.0.0-1'
+                implementation 'test.nebula:b:1.0.0-1'
             }
         """.stripIndent()
 
         when:
-        def output = runTasks('dependencies', '--configuration', 'compile').output
+        def output = runTasks('dependencies', '--configuration', 'compileClasspath').output
 
         then:
         output.contains '\\--- test.nebula:b:1.0.0-1\n'

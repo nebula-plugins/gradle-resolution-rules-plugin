@@ -76,12 +76,12 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
 
             dependencies {
                 resolutionRules files('$rulesJsonFile')
-                compile 'test.a:a'
+                implementation 'test.a:a'
             }
         """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+        def result = runTasksSuccessfully('dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.standardOutput.contains '\\--- test.a:a -> 1.42.2\n'
@@ -135,12 +135,12 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
 
             dependencies {
                 resolutionRules files('$rulesJsonFile')
-                compile 'test.a:a'
+                implementation 'test.a:a'
             }
         """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+        def result = runTasksSuccessfully('dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.standardOutput.contains '\\--- test.a:a -> 1.42.2\n'
@@ -194,28 +194,30 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
             }
 
             subprojects {
-                apply plugin: 'java'
-    
                 dependencyRecommendations {
                    map recommendations: ['test.a:a': '1.42.2']
                 }
             }
             
             project(':a') {
+                apply plugin: 'java'
+            
                 dependencies {
-                    compile project(':b')
+                    implementation project(':b')
                 }
             }
             
             project(':b') {
+                apply plugin: 'java-library'
+            
                 dependencies {
-                    compile 'test.a:a'
+                    api 'test.a:a'
                 }
             }
         """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully(':a:dependencies', '--configuration', 'compile')
+        def result = runTasksSuccessfully(':a:dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.standardOutput.contains '\\--- test.a:a -> 1.42.2\n'
@@ -253,12 +255,12 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
 
             dependencies {
                 resolutionRules files('$rulesJsonFile')
-                compile('org.springframework.boot:spring-boot-starter-web')
+                implementation('org.springframework.boot:spring-boot-starter-web')
             }
         """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+        def result = runTasksSuccessfully('dependencies', '--configuration', 'compileClasspath')
 
         then:
         noExceptionThrown()
@@ -312,8 +314,8 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
             }
 
             dependencies {
-                resolutionRules 'test.rules:resolution-rules:1.+'
-                compile 'org.springframework.boot:spring-boot-starter-web'
+                resolutionRules 'test.rules:resolution-rules:1.0.0'
+                implementation 'org.springframework.boot:spring-boot-starter-web'
             }
         """.stripIndent()
 
@@ -378,13 +380,13 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
             dependencies {
                 resolutionRules files('$rulesJsonFile')
 
-                compile 'com.amazonaws:aws-java-sdk-s3'
-                compile 'com.netflix.servo:servo-aws:0.12.12'
+                implementation 'com.amazonaws:aws-java-sdk-s3'
+                implementation 'com.netflix.servo:servo-aws:0.12.12'
             }
         """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+        def result = runTasksSuccessfully('dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.standardOutput.contains('+--- com.amazonaws:aws-java-sdk-s3 -> 1.11.18')
@@ -438,7 +440,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
         """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+        def result = runTasksSuccessfully('dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.standardOutput.contains '\\--- test.a:a:1.+ -> 1.42.2\n'
@@ -497,13 +499,13 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
 
             dependencies {
                 resolutionRules files('$rulesJsonFile')
-                compile 'test.a:a'
+                implementation 'test.a:a'
                 provided 'test.a:b'
             }
         """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+        def result = runTasksSuccessfully('dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.standardOutput.contains '+--- test.a:a -> 1.42.2\n'
@@ -560,14 +562,14 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
 
         def aDir = addSubproject('a', '''\
             dependencies {
-                compile 'test.nebula:c:1.+'
-                testCompile project(':b')
+                implementation 'test.nebula:c:1.+'
+                testImplementation project(':b')
             }
         '''.stripIndent())
         def bDir = addSubproject('b', '''\
             dependencies {
-                compile 'test.nebula:d:[1.0.0, 2.0.0)'
-                compile project(':a')
+                implementation 'test.nebula:d:[1.0.0, 2.0.0)'
+                implementation project(':a')
             }
         '''.stripIndent())
 
@@ -653,13 +655,13 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
 
             dependencies {
                 resolutionRules 'test.rules:resolution-rules:1.+'
-                compile 'test.nebula:a:1.41.5'
-                compile 'test.nebula:b:1.42.2'
+                implementation 'test.nebula:a:1.41.5'
+                implementation 'test.nebula:b:1.42.2'
             }
         """.stripIndent()
 
         when:
-        def results = runTasksSuccessfully('dependencyInsight', '--dependency', 'a', '--configuration', 'compile')
+        def results = runTasksSuccessfully('dependencyInsight', '--dependency', 'a', '--configuration', 'compileClasspath')
 
         then:
         results.standardOutput.contains 'test.nebula:a:1.41.5 -> 1.42.2\n'
@@ -687,13 +689,13 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
 
             dependencies {
                 resolutionRules files('$rulesJsonFile')
-                compile 'test.nebula:a:1.41.5'
-                compile 'test.nebula:b:1.42.2'
+                implementation 'test.nebula:a:1.41.5'
+                implementation 'test.nebula:b:1.42.2'
             }
         """.stripIndent()
 
         when:
-        def results = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+        def results = runTasksSuccessfully('dependencies', '--configuration', 'compileClasspath')
 
         then:
         results.standardOutput.contains '+--- test.nebula:a:1.41.5\n'
@@ -707,7 +709,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
         dependencyLock.delete()
         dependencyLock << '''\
         {
-            "compile": {
+            "compileClasspath": {
                 "test.nebula:a": { "locked": "1.41.5" },
                 "test.nebula:b": { "locked": "1.41.5" }
             }
@@ -732,13 +734,13 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
 
             dependencies {
                 resolutionRules files('$rulesJsonFile')
-                compile 'test.nebula:a:1.41.5'
-                compile 'test.nebula:b:1.42.2'
+                implementation 'test.nebula:a:1.41.5'
+                implementation 'test.nebula:b:1.42.2'
             }
         """.stripIndent()
 
         when:
-        def results = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+        def results = runTasksSuccessfully('dependencies', '--configuration', 'compileClasspath')
 
         then:
         !results.standardOutput.contains('aligning test.nebula:a to [1.41.5,1.42.2]')
@@ -777,7 +779,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
 
         dependencyLock << '''\
         {
-            "compile": {
+            "compileClasspath": {
                 "test.nebula:a": { "locked": "1.41.5" },
                 "test.nebula:b": { "locked": "1.42.2" }
             }
@@ -814,6 +816,8 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
         '''.stripIndent()
 
         addSubproject('common', '''\
+            apply plugin: 'java-library'
+
             dependencyRecommendations {
                 map recommendations: [
                     'test.nebula:a': '0.15.0',
@@ -823,20 +827,22 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
             }
             
             dependencies {
-                compile 'test.nebula:a'
-                compile 'test.nebula:b'
-                compile 'test.nebula:c'
+                api 'test.nebula:a'
+                api 'test.nebula:b'
+                api 'test.nebula:c'
             }
             '''.stripIndent())
 
         addSubproject('app', '''\
-            configurations.compile.resolutionStrategy {
+            apply plugin: 'java'
+
+            configurations.compileClasspath.resolutionStrategy {
                 force 'test.nebula:c:1.0.0'
             }
             
             dependencies {
-                compile project(':common')
-                compile 'test.nebula:a:1.0.0'
+                implementation project(':common')
+                implementation 'test.nebula:a:1.0.0'
             }
             '''.stripIndent())
 
@@ -856,7 +862,6 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
             }
 
             subprojects {
-                apply plugin: 'java'
                 repositories {
                     maven { url '${mavenrepo.absolutePath}' }
                 }
@@ -864,7 +869,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
         """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully(':app:dependencies', '--configuration', 'compile')
+        def result = runTasksSuccessfully(':app:dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.standardOutput.contains '|    +--- test.nebula:b FAILED'
@@ -899,6 +904,8 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
         '''.stripIndent()
 
         addSubproject('common', '''\
+            apply plugin: 'java-library'
+            
             dependencyRecommendations {
                 map recommendations: [
                     'test.nebula:a': '0.15.0',
@@ -908,20 +915,22 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
             }
             
             dependencies {
-                compile 'test.nebula:a'
-                compile 'test.nebula:b'
-                compile 'test.nebula:c'
+                api 'test.nebula:a'
+                api 'test.nebula:b'
+                api 'test.nebula:c'
             }
             '''.stripIndent())
 
         addSubproject('app', '''\
-            configurations.compile.resolutionStrategy {
+            apply plugin: 'java'
+
+            configurations.compileClasspath.resolutionStrategy {
                 force 'test.nebula:c:1.0.0'
             }
             
             dependencies {
-                compile project(':common')
-                compile 'test.nebula:a:1.0.0'
+                implementation project(':common')
+                implementation 'test.nebula:a:1.0.0'
             }
             '''.stripIndent())
 
@@ -952,7 +961,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
         """.stripIndent()
 
         when:
-        def result = runTasks(':app:dependencies', '--configuration', 'compile')
+        def result = runTasks(':app:dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.standardOutput.contains '|    +--- test.nebula:b FAILED'
@@ -985,13 +994,13 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
 
             dependencies {
                 resolutionRules files('$rulesJsonFile')
-                compile 'test.nebula:a:1.41.5'
-                compile 'test.nebula:b:1.42.2'
+                implementation 'test.nebula:a:1.41.5'
+                implementation 'test.nebula:b:1.42.2'
             }
         """.stripIndent()
 
         when:
-        def results = runTasksSuccessfully('dependencies', '--configuration', 'compile')
+        def results = runTasksSuccessfully('dependencies', '--configuration', 'compileClasspath')
 
         then:
         results.standardOutput.contains '+--- test.nebula:a:1.41.5\n'

@@ -21,9 +21,9 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginWithoutManagedDepsSpec extend
                 "\n\tspringVersion = \"$extSpringVersion\"")
         buildFile << """
             dependencies {
-                compile "org.springframework:spring-core$requestedVersion"
-                compile "org.springframework.boot:spring-boot-starter:$extSpringBootVersion"
-                compile "org.springframework.boot:spring-boot-starter-web:$extSpringBootVersion"
+                implementation "org.springframework:spring-core$requestedVersion"
+                implementation "org.springframework.boot:spring-boot-starter:$extSpringBootVersion"
+                implementation "org.springframework.boot:spring-boot-starter-web:$extSpringBootVersion"
             }
             """.stripIndent()
 
@@ -56,9 +56,9 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginWithoutManagedDepsSpec extend
                 "\n\tspringVersion = \"$extSpringVersion\"")
         buildFile << """
             dependencies {
-                compile "org.springframework:spring-core$requestedVersion"
-                compile "org.springframework.boot:spring-boot-starter:$extSpringBootVersion"
-                compile "org.springframework.boot:spring-boot-starter-web:$extSpringBootVersion"
+                implementation "org.springframework:spring-core$requestedVersion"
+                implementation "org.springframework.boot:spring-boot-starter:$extSpringBootVersion"
+                implementation "org.springframework.boot:spring-boot-starter-web:$extSpringBootVersion"
             }
             """.stripIndent()
 
@@ -91,9 +91,9 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginWithoutManagedDepsSpec extend
                 "\n\tspringVersion = \"$extSpringVersion\"")
         buildFile << """
             dependencies {
-                compile "org.springframework:spring-core$requestedVersion"
-                compile "org.springframework.boot:spring-boot-starter:$extSpringBootVersion"
-                compile "org.springframework.boot:spring-boot-starter-web:$extSpringBootVersion"
+                implementation "org.springframework:spring-core$requestedVersion"
+                implementation "org.springframework.boot:spring-boot-starter:$extSpringBootVersion"
+                implementation "org.springframework.boot:spring-boot-starter-web:$extSpringBootVersion"
             }
             """.stripIndent()
 
@@ -125,7 +125,7 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginWithoutManagedDepsSpec extend
                 "\n\tslf4jVersion = \"$extSlf4jVersion\"")
         buildFile << """
             dependencies {
-                compile "org.slf4j:slf4j-simple$requestedVersion"
+                implementation "org.slf4j:slf4j-simple$requestedVersion"
             }
             """.stripIndent()
 

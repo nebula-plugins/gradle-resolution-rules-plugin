@@ -37,13 +37,13 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
                 maven { url '${mavenrepo.absolutePath}' }
             }
             dependencies {
-                compile 'test.nebula:a:1.0.0'
-                compile 'test.other:c:1.0.0'
+                implementation 'test.nebula:a:1.0.0'
+                implementation 'test.other:c:1.0.0'
             }
         """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compile')
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.output.contains '+--- test.nebula:a:1.0.0 -> 1.1.0\n'
@@ -82,13 +82,13 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
                 maven { url '${mavenrepo.absolutePath}' }
             }
             dependencies {
-                compile 'test.nebula:a:1.0.0'
-                compile 'test.other:d:1.0.0'
+                implementation 'test.nebula:a:1.0.0'
+                implementation 'test.other:d:1.0.0'
             }
         """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compile')
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.output.contains '+--- test.nebula:a:1.0.0 -> 1.1.0\n'
@@ -127,13 +127,13 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
                 maven { url '${mavenrepo.absolutePath}' }
             }
             dependencies {
-                compile 'test.nebula:a:1.1.0'
-                compile 'test.nebula:b:1.0.0'
+                implementation 'test.nebula:a:1.1.0'
+                implementation 'test.nebula:b:1.0.0'
             }
         """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compile')
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.output.contains '+--- test.nebula:a:1.1.0\n'
@@ -170,13 +170,13 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
                 maven { url '${mavenrepo.absolutePath}' }
             }
             dependencies {
-                compile 'test.nebula:a:1.0.0'
-                compile 'test.nebula:b'
+                implementation 'test.nebula:a:1.0.0'
+                implementation 'test.nebula:b'
             }
         """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compile')
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.output.contains '+--- test.nebula:a:1.0.0\n'
@@ -229,22 +229,22 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
             }
 
             // Make at least one of the dependencies a non-expected dependency
-            configurations.compile {
+            configurations.compileClasspath {
                 resolutionStrategy {
                     force 'test.nebula.c:c1:1.0.0'
                 }
             }
 
             dependencies {
-                compile 'test.nebula.a:a1:1.+'
-                compile 'test.nebula.a:a2:latest.release'
-                compile 'test.nebula.b:b2:1.0.0'
-                compile 'test.nebula.c:c1:1.0.0'
+                implementation 'test.nebula.a:a1:1.+'
+                implementation 'test.nebula.a:a2:latest.release'
+                implementation 'test.nebula.b:b2:1.0.0'
+                implementation 'test.nebula.c:c1:1.0.0'
             }
         """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compile')
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.output.contains '+--- test.nebula.a:a1:1.+ -> 2.0.0\n'
@@ -286,14 +286,14 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
                 maven { url '${mavenrepo.absolutePath}' }
             }
             dependencies {
-                compile 'test.nebula:a:1.0.0'
-                compile 'test.nebula:b:1.0.0'
-                compile 'test.nebula:c:1.0.0'
+                implementation 'test.nebula:a:1.0.0'
+                implementation 'test.nebula:b:1.0.0'
+                implementation 'test.nebula:c:1.0.0'
             }
         """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compile')
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.output.contains '\\--- test.nebula:d:3.0.0\n'
@@ -346,13 +346,13 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
                 maven { url '${mavenrepo.absolutePath}' }
             }
             dependencies {
-                compile 'test.nebula:a:1.0.0'
-                compile 'test.nebula:b:1.2.0'
+                implementation 'test.nebula:a:1.0.0'
+                implementation 'test.nebula:b:1.2.0'
             }
         """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compile')
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.output.contains '+--- test.nebula:a:1.0.0 -> 1.1.0'
@@ -410,14 +410,14 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
                 maven { url '${mavenrepo.absolutePath}' }
             }
             dependencies {
-                compile 'test.group1:module1:2.0.0'
-                compile 'test.group1:module2:1.0.0'
-                compile 'test.group1:module3:1.0.0'
+                implementation 'test.group1:module1:2.0.0'
+                implementation 'test.group1:module2:1.0.0'
+                implementation 'test.group1:module3:1.0.0'
             }
         """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compile')
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.output.contains '|    +--- test.group2:module1:1.0.0 -> 3.0.0'
@@ -498,14 +498,14 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
                 maven { url '${mavenrepo.absolutePath}' }
             }
             dependencies {
-                compile 'test.group1:module1:2.0.0'
-                compile 'test.group1:module2:1.0.0'
-                compile 'test.group1:module3:1.0.0'
+                implementation 'test.group1:module1:2.0.0'
+                implementation 'test.group1:module2:1.0.0'
+                implementation 'test.group1:module3:1.0.0'
             }
         """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compile')
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.output.contains '|    +--- test.group2:module1:1.0.0 -> 2.0.0'

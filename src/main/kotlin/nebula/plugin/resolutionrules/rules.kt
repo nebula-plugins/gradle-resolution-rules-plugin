@@ -29,7 +29,6 @@ import org.gradle.api.artifacts.component.ModuleComponentSelector
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import java.io.Serializable
-import org.gradle.api.artifacts.ModuleVersionIdentifier as GradleModuleVersionIdentifier
 
 interface Rule {
     fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension, reasons: MutableSet<String>)

@@ -20,9 +20,9 @@ class AbstractRulesWithSpringBootPluginSpec extends IntegrationTestKitSpec {
     File addSpringDependenciesWhenUsingManagedDependencies(String requestedVersion) {
         buildFile << """
             dependencies {
-                compile "org.springframework:spring-core$requestedVersion"
-                compile "org.springframework.boot:spring-boot-starter"
-                compile "org.springframework.boot:spring-boot-starter-web"
+                implementation "org.springframework:spring-core$requestedVersion"
+                implementation "org.springframework.boot:spring-boot-starter"
+                implementation "org.springframework.boot:spring-boot-starter-web"
             }
             """.stripIndent()
     }
