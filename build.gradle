@@ -22,18 +22,15 @@ plugins {
 }
 
 dependencies {
+    compile platform("com.fasterxml.jackson:jackson-bom:2.9.9.20190807")
+
     compile 'org.jetbrains.kotlin:kotlin-reflect'
     compile 'com.netflix.nebula:nebula-gradle-interop:latest.release'
-    compile 'com.fasterxml.jackson.module:jackson-module-kotlin:2.9.3'
+    compile 'com.fasterxml.jackson.module:jackson-module-kotlin'
     compile 'com.netflix.nebula:nebula-dependency-recommender:7.5.6'
 
     testImplementation gradleTestKit()
     testRuntime 'com.netflix.nebula:gradle-dependency-lock-plugin:7.+'
-}
-configurations.all {
-  resolutionStrategy {
-    force 'com.fasterxml.jackson.core:jackson-databind:2.9.9.3'
-  }
 }
 
 apply from: 'gradle/idea.gradle'
