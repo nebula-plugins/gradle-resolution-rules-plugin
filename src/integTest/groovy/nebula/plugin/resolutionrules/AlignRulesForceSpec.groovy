@@ -115,7 +115,7 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath', '--warning-mode', 'none')
 
         then:
         result.output.contains '+--- test.nebula:a:2.0.0 -> 0.15.0\n'
