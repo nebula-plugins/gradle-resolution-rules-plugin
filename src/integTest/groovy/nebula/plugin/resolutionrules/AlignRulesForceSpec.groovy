@@ -50,7 +50,7 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
         logLevel = LogLevel.DEBUG
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath', '--warning-mode', 'none')
 
         then:
         result.output.contains "Found force(s) [test.nebula:a:0.15.0] that supersede resolution rule"
