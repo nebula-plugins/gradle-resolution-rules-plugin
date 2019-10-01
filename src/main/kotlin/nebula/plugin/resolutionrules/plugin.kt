@@ -47,12 +47,12 @@ class ResolutionRulesPlugin : Plugin<Project> {
     private lateinit var mapper: ObjectMapper
     private var reasons: MutableSet<String> = mutableSetOf()
     private val ignoredConfigurationPrefixes = listOf(RESOLUTION_RULES_CONFIG_NAME, SPRING_VERSION_MANAGEMENT_CONFIG_NAME,
-            NEBULA_RECOMMENDER_BOM_CONFIG_NAME, SCALA_INCREMENTAL_ANALYSIS_CONFIGURATION_PREFIX, KTLINT_CONFIG_NAME)
+            NEBULA_RECOMMENDER_BOM_CONFIG_NAME, SCALA_INCREMENTAL_ANALYSIS_CONFIGURATION_PREFIX, KTLINT_CONFIGURATION_PREFIX)
 
     companion object Constants {
         fun isCoreAlignmentEnabled() = java.lang.Boolean.getBoolean("nebula.features.coreAlignmentSupport")
         const val SPRING_VERSION_MANAGEMENT_CONFIG_NAME = "versionManagement"
-        const val KTLINT_CONFIG_NAME = "ktlint"
+        const val KTLINT_CONFIGURATION_PREFIX = "ktlint"
         const val SCALA_INCREMENTAL_ANALYSIS_CONFIGURATION_PREFIX = "incrementalScalaAnalysis"
         const val JSON_EXT = ".json"
         const val JAR_EXT = ".jar"
