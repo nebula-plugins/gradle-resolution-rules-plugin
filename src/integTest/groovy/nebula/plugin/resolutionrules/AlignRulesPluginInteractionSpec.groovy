@@ -266,7 +266,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
         noExceptionThrown()
 
         where:
-        springVersion << ['1.4.0.RELEASE']
+        springVersion << ['2.1.7.RELEASE']
     }
 
     @Unroll
@@ -328,7 +328,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
         noExceptionThrown()
 
         where:
-        springVersion << ['1.4.0.RELEASE']
+        springVersion << ['2.1.0.RELEASE']
     }
 
     def 'transitive aligns with spring dependency management'() {
