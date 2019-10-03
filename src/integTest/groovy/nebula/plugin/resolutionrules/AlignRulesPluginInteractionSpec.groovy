@@ -260,13 +260,13 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
         """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compileClasspath')
+        def result = runTasksSuccessfully('dependencies', '--configuration', 'compileClasspath', '--warning-mode', 'none')
 
         then:
         noExceptionThrown()
 
         where:
-        springVersion << ['2.1.7.RELEASE']
+        springVersion << ['1.4.0.RELEASE']
     }
 
     @Unroll
@@ -322,13 +322,13 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
         writeHelloWorld('example')
 
         when:
-        def result = runTasksSuccessfully('compileJava', '--info')
+        def result = runTasksSuccessfully('compileJava', '--info', '--warning-mode', 'none')
 
         then:
         noExceptionThrown()
 
         where:
-        springVersion << ['2.1.0.RELEASE']
+        springVersion << ['1.4.0.RELEASE']
     }
 
     def 'transitive aligns with spring dependency management'() {
