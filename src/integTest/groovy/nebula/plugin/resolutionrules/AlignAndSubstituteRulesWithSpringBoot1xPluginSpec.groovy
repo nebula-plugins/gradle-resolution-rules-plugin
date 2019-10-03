@@ -7,6 +7,7 @@ class AlignAndSubstituteRulesWithSpringBoot1xPluginSpec extends AbstractRulesWit
     File rulesJsonFile
 
     def setup() {
+        System.setProperty('ignoreDeprecations', 'true')
         rulesJsonFile = new File(projectDir, "rules.json")
 
         debug = true

@@ -260,7 +260,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
         """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compileClasspath')
+        def result = runTasksSuccessfully('dependencies', '--configuration', 'compileClasspath', '--warning-mode', 'none')
 
         then:
         noExceptionThrown()
@@ -322,7 +322,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
         writeHelloWorld('example')
 
         when:
-        def result = runTasksSuccessfully('compileJava', '--info')
+        def result = runTasksSuccessfully('compileJava', '--info', '--warning-mode', 'none')
 
         then:
         noExceptionThrown()
