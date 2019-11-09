@@ -233,7 +233,7 @@ class AlignAndSubstituteRulesWithSpringBoot1xPluginSpec extends AbstractRulesWit
                 '')
         buildFile << """
             dependencies {
-                compile "org.slf4j:slf4j-simple$requestedVersion"
+                implementation  "org.slf4j:slf4j-simple$requestedVersion"
             }
             """.stripIndent()
 
@@ -265,7 +265,7 @@ class AlignAndSubstituteRulesWithSpringBoot1xPluginSpec extends AbstractRulesWit
                 "\n\tslf4jVersion = \"$extSlf4jVersion\"")
         buildFile << """
             dependencies {
-                compile "org.slf4j:slf4j-simple$requestedVersion"
+                implementation  "org.slf4j:slf4j-simple$requestedVersion"
             }
             """.stripIndent()
 
@@ -297,7 +297,7 @@ class AlignAndSubstituteRulesWithSpringBoot1xPluginSpec extends AbstractRulesWit
                 "\n\tslf4jVersion = \"$extSlf4jVersion\"")
         buildFile << """
             dependencies {
-                compile "org.slf4j:slf4j-simple$requestedVersion"
+                implementation  "org.slf4j:slf4j-simple$requestedVersion"
             }
             """.stripIndent()
 
@@ -334,7 +334,7 @@ class AlignAndSubstituteRulesWithSpringBoot1xPluginSpec extends AbstractRulesWit
                 "\n\tslf4jVersion = \"$extSlf4jVersion\"")
         buildFile << """
             dependencies {
-                compile "org.slf4j:slf4j-simple$requestedVersion"
+                implementation  "org.slf4j:slf4j-simple$requestedVersion"
             }
             """.stripIndent()
 
@@ -371,7 +371,7 @@ class AlignAndSubstituteRulesWithSpringBoot1xPluginSpec extends AbstractRulesWit
                 "\n\tslf4jVersion = \"$extSlf4jVersion\"")
         buildFile << """
             dependencies {
-                compile "org.slf4j:slf4j-simple$requestedVersion"
+                implementation  "org.slf4j:slf4j-simple$requestedVersion"
             }
             """.stripIndent()
 
@@ -408,7 +408,7 @@ class AlignAndSubstituteRulesWithSpringBoot1xPluginSpec extends AbstractRulesWit
                 "\n\tslf4jVersion = \"$extSlf4jVersion\"")
         buildFile << """
             dependencies {
-                compile "org.slf4j:slf4j-simple$requestedVersion"
+                implementation  "org.slf4j:slf4j-simple$requestedVersion"
             }
             """.stripIndent()
 

@@ -716,8 +716,8 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
 
         buildFile << """
             dependencies {
-                compile 'test.nebula:a:1.0.0'
-                compile 'test.beverage:d:1.0.0'
+                implementation 'test.nebula:a:1.0.0'
+                implementation 'test.beverage:d:1.0.0'
             }
             """.stripIndent()
 
@@ -752,8 +752,8 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
 
         buildFile << """
             dependencies {
-                compile 'test.other:g:1.0.0'
-                compile 'test.nebula:a:1.1.0'
+                implementation 'test.other:g:1.0.0'
+                implementation 'test.nebula:a:1.1.0'
             }
             """.stripIndent()
 
@@ -787,8 +787,8 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
 
         buildFile << """
             dependencies {
-                compile 'test.nebula:a:latest.release'
-                compile 'test.nebula:b:latest.release'
+                implementation 'test.nebula:a:latest.release'
+                implementation 'test.nebula:b:latest.release'
             }
             configurations.all {
                 resolutionStrategy {
@@ -833,9 +833,9 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
 
         buildFile << """
             dependencies {
-                compile 'test.other:brings-a:latest.release'
-                compile 'test.other:also-brings-a:latest.release'
-                compile 'test.other:brings-b:latest.release'
+                implementation 'test.other:brings-a:latest.release'
+                implementation 'test.other:also-brings-a:latest.release'
+                implementation 'test.other:brings-b:latest.release'
             }
             """.stripIndent()
 
@@ -883,9 +883,9 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
 
         buildFile << """
             dependencies {
-                compile 'test.other:brings-a:latest.release'
-                compile 'test.other:also-brings-a:latest.release'
-                compile 'test.other:brings-b:latest.release'
+                implementation 'test.other:brings-a:latest.release'
+                implementation 'test.other:also-brings-a:latest.release'
+                implementation 'test.other:brings-b:latest.release'
             }
             configurations.all {
                 resolutionStrategy { $forceConfig }
@@ -935,9 +935,9 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
 
         buildFile << """
             dependencies {
-                compile 'test.other:brings-a:latest.release'
-                compile 'test.other:also-brings-a:latest.release'
-                compile 'test.other:brings-b:latest.release'
+                implementation 'test.other:brings-a:latest.release'
+                implementation 'test.other:also-brings-a:latest.release'
+                implementation 'test.other:brings-b:latest.release'
             }
             configurations.all {
                 resolutionStrategy {
@@ -983,9 +983,9 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
 
         buildFile << """
             dependencies {
-                compile 'test.nebula:a:1.0.0'
-                compile 'test.nebula:b:0.5.0'
-                compile 'test.nebula:c:1.0.0'
+                implementation 'test.nebula:a:1.0.0'
+                implementation 'test.nebula:b:0.5.0'
+                implementation 'test.nebula:c:1.0.0'
             }
             configurations.all {
                 resolutionStrategy.eachDependency { details ->
@@ -1038,9 +1038,9 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
 
         buildFile << """
             dependencies {
-                compile 'test.other:brings-a:1.0.0'
-                compile 'test.nebula:b:1.0.0'
-                compile 'test.nebula:c:1.0.3'
+                implementation 'test.other:brings-a:1.0.0'
+                implementation 'test.nebula:b:1.0.0'
+                implementation 'test.nebula:c:1.0.3'
             }
             configurations.all {
                 resolutionStrategy.eachDependency { details ->
@@ -1091,9 +1091,9 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
 
         buildFile << """
             dependencies {
-                compile 'test.other:brings-a:1.0.0'
-                compile 'test.nebula:b:0.5.0'
-                compile 'test.nebula:c:1.0.0'
+                implementation 'test.other:brings-a:1.0.0'
+                implementation 'test.nebula:b:0.5.0'
+                implementation 'test.nebula:c:1.0.0'
             }
             configurations.all {
                 resolutionStrategy.eachDependency { details ->
@@ -1144,9 +1144,9 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
 
         buildFile << """
             dependencies {
-                compile 'test.other:brings-a:1.0.0'
-                compile 'test.nebula:b:0.5.0'
-                compile 'test.nebula:c:1.0.0'
+                implementation 'test.other:brings-a:1.0.0'
+                implementation 'test.nebula:b:0.5.0'
+                implementation 'test.nebula:c:1.0.0'
             }
             configurations.all {
                 resolutionStrategy.eachDependency { details ->
@@ -1252,7 +1252,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
 
         buildFile << """
             dependencies {
-                compile 'test.nebula:f:1.0.3'
+                implementation 'test.nebula:f:1.0.3'
             }
             """.stripIndent()
 
@@ -1304,10 +1304,10 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
 
         buildFile << """
             dependencies {
-                compile 'test.nebula:a:1.0.0'
-                compile 'test.nebula:b:1.0.1'
-                compile 'test.nebula:c:1.0.2'
-                compile 'test.nebula:g:1.0.1'
+                implementation 'test.nebula:a:1.0.0'
+                implementation 'test.nebula:b:1.0.1'
+                implementation 'test.nebula:c:1.0.2'
+                implementation 'test.nebula:g:1.0.1'
             }
             """.stripIndent()
 
@@ -1362,10 +1362,10 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
 
         buildFile << """
             dependencies {
-                compile 'test.nebula:a:1.0.0'
-                compile 'test.nebula:b:1.0.1'
-                compile 'test.nebula:c:1.0.2'
-                compile 'test.nebula:g:1.0.1'
+                implementation 'test.nebula:a:1.0.0'
+                implementation 'test.nebula:b:1.0.1'
+                implementation 'test.nebula:c:1.0.2'
+                implementation 'test.nebula:g:1.0.1'
             }
             """.stripIndent()
 
@@ -1907,8 +1907,8 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
 
         buildFile << """
             dependencies {
-                compile 'test.nebula:a:1.0.1'
-                compile 'test.nebula:b:1.0.3'
+                implementation 'test.nebula:a:1.0.1'
+                implementation 'test.nebula:b:1.0.3'
             }
             """.stripIndent()
 
@@ -1946,8 +1946,8 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
 
         buildFile << """
             dependencies {
-                compile 'test.other:brings-a:latest.release'
-                compile 'test.other:brings-b:latest.release'
+                implementation 'test.other:brings-a:latest.release'
+                implementation 'test.other:brings-b:latest.release'
             }
             """.stripIndent()
 
