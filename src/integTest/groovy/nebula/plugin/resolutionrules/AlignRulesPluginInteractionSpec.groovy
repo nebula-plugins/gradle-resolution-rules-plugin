@@ -58,7 +58,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
                 repositories { jcenter() }
 
                 dependencies {
-                    classpath 'com.netflix.nebula:nebula-dependency-recommender:3.1.0'
+                    classpath 'com.netflix.nebula:nebula-dependency-recommender:9.0.1'
                 }
             }
 
@@ -116,7 +116,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
                 repositories { jcenter() }
 
                 dependencies {
-                    classpath 'com.netflix.nebula:nebula-dependency-recommender:3.1.0'
+                    classpath 'com.netflix.nebula:nebula-dependency-recommender:9.0.1'
                 }
             }
 
@@ -177,7 +177,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
             buildscript {
                 repositories { jcenter() }
                 dependencies {
-                    classpath 'com.netflix.nebula:nebula-dependency-recommender:3.1.0'
+                    classpath 'com.netflix.nebula:nebula-dependency-recommender:9.0.1'
                 }
             }
             allprojects {
@@ -476,7 +476,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
                 repositories { jcenter() }
 
                 dependencies {
-                    classpath 'com.netflix.nebula:nebula-dependency-recommender:3.1.0'
+                    classpath 'com.netflix.nebula:nebula-dependency-recommender:9.0.1'
                     classpath 'com.netflix.nebula:nebula-publishing-plugin:4.4.4'
                     classpath 'com.netflix.nebula:gradle-extra-configurations-plugin:3.0.3'
                 }
@@ -849,7 +849,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
         buildFile << """\
             buildscript {
                 repositories { jcenter() }
-                dependencies { classpath 'com.netflix.nebula:nebula-dependency-recommender:4.2.0' }
+                dependencies { classpath 'com.netflix.nebula:nebula-dependency-recommender:9.0.1' }
             }
             
             allprojects {
@@ -937,7 +937,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationSpec {
         buildFile << """\
             buildscript {
                 repositories { jcenter() }
-                dependencies { classpath 'com.netflix.nebula:nebula-dependency-recommender:4.2.0' }
+                dependencies { classpath 'com.netflix.nebula:nebula-dependency-recommender:9.0.1' }
             }
             
             allprojects {

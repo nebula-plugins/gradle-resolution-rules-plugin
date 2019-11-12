@@ -2223,7 +2223,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
                 repositories { jcenter() }
             }
             """.stripIndent()
-        buildFile << baseBuildGradleFile("'nebula.dependency-recommender' version '7.5.5\'")
+        buildFile << baseBuildGradleFile("'nebula.dependency-recommender' version '9.0.1\'")
 
 
         if (!usingEnforcedPlatform) {

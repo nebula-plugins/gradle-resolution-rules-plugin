@@ -27,7 +27,7 @@ dependencies {
     compile 'org.jetbrains.kotlin:kotlin-reflect'
     compile 'com.netflix.nebula:nebula-gradle-interop:latest.release'
     compile 'com.fasterxml.jackson.module:jackson-module-kotlin'
-    compile 'com.netflix.nebula:nebula-dependency-recommender:7.5.6'
+    compile 'com.netflix.nebula:nebula-dependency-recommender:9.0.1'
 
     testImplementation gradleTestKit()
     testRuntime 'com.netflix.nebula:gradle-dependency-lock-plugin:7.+'
