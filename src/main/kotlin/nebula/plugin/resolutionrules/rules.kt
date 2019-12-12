@@ -128,7 +128,11 @@ data class SubstituteRule(val module: String, val with: String, override var rul
                     val requestedSelector = requested as ModuleComponentSelector
                     if (requestedSelector.group == substitutedModule.group && requestedSelector.module == substitutedModule.module) {
                         val versionSelector = VersionWithSelector(substitutedModule.version).asSelector()
-                        if (versionSelector.accept(requestedSelector.version)) {
+                        val requestedSelectorVersion = requestedSelector.version
+                        if (versionSelector.accept(requestedSelectorVersion)
+                                && !requestedSelector.toString().contains(".+")
+                                && !requestedSelector.toString().contains("latest")
+                        ) {
                             val message = "substitution from '$substitutedModule' to '$withSelector' because $reason \n" +
                                     "\twith reasons: ${reasons.joinToString()}"
                             // Note on `useTarget`:
