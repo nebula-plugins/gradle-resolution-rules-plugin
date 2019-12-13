@@ -66,7 +66,14 @@ gradlePlugin {
 }
 
 tasks.integrationTest {
+    // alignment is determined via a system property, so we don't want to share state
     forkEvery = 1
+}
+
+tasks.withType(Test) {
+    testLogging {
+        events "PASSED", "STARTED", "FAILED", "SKIPPED"
+    }
 }
 
 pluginBundle {

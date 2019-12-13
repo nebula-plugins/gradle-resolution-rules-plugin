@@ -12,7 +12,7 @@ com.netflix.nebula:gradle-dependency-lock-plugin:7.8.0
 com.netflix.nebula:gradle-scm-plugin:5.0.3
 com.netflix.nebula:nebula-dependency-recommender:9.0.1
 com.netflix.nebula:nebula-gradle-interop:1.0.11
-com.netflix.nebula:nebula-test:7.4.0
+com.netflix.nebula:nebula-test:7.6.0
 com.squareup.moshi:moshi:1.8.0
 com.squareup.okio:okio:1.16.0
 commons-beanutils:commons-beanutils:1.8.0
