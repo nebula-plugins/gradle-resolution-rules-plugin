@@ -72,7 +72,7 @@ tasks.integrationTest {
 
 tasks.withType(Test) {
     testLogging {
-        events "PASSED", "STARTED", "FAILED", "SKIPPED"
+        events "PASSED", "FAILED", "SKIPPED"
     }
 }
 
