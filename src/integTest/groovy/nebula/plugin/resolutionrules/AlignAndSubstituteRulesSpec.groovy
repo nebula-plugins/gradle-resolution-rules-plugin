@@ -501,7 +501,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         where:
         substituteFromVersion = "(,1.1.0)"
         substituteToVersion = "0.5.0"
-        resultingVersion = "0.5.0"
+        resultingVersion = "1.0.3" // only declared dependencies are substituted. v1.0.+ is not a declared dependency
         coreAlignment << [false, true]
     }
 
