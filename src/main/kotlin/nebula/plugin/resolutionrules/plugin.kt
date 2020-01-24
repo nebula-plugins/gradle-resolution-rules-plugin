@@ -119,6 +119,7 @@ class ResolutionRulesPlugin : Plugin<Project> {
             if (isIncludedRuleFile(file.name, extension)) {
                 rules.putRules(parseJsonFile(file))
             } else if (file.name.endsWith(JAR_EXT) || file.name.endsWith(ZIP_EXT)) {
+                logger.info("nebula.resolution-rules is using ruleset: ${file.name}")
                 ZipFile(file).use { zip ->
                     val entries = zip.entries()
                     while (entries.hasMoreElements()) {
