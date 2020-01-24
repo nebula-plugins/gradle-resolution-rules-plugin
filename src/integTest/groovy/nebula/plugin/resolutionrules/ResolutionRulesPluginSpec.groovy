@@ -177,6 +177,26 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
         output.contains "Using duplicate-rules-sources ($projectDir/rules.zip) a dependency rules source"
     }
 
+     def 'output ruleset that is being used'() {
+        def ant = new AntBuilder()
+        def rulesJarFile = new File(projectDir, 'rules.jar')
+        ant.jar(destfile: rulesJarFile, basedir: rulesJsonFile.parentFile)
+        buildFile << """
+                     dependencies {
+                         resolutionRules files("$rulesJarFile")
+
+                         implementation 'asm:asm:3.3.1'
+                     }
+                     """.stripIndent()
+
+        when:
+        def result = runTasksSuccessfully('dependencies')
+
+        then:
+        def output = result.standardOutput
+        output.contains 'nebula.resolution-rules is using ruleset: rules.jar'
+    }
+
     def 'replace module'() {
         given:
         buildFile << """
