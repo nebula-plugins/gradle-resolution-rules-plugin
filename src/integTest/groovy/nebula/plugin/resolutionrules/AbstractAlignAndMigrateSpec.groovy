@@ -29,8 +29,6 @@ class AbstractAlignAndMigrateSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         debug = true
-        keepFiles = true
-        forwardOutput = true
     }
 
     private void createTestDependencies() {
