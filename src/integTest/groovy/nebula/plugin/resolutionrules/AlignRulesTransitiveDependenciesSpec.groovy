@@ -3,10 +3,12 @@ package nebula.plugin.resolutionrules
 import nebula.test.dependencies.DependencyGraphBuilder
 import nebula.test.dependencies.GradleDependencyGenerator
 import nebula.test.dependencies.ModuleBuilder
-import spock.lang.Ignore
 import spock.lang.Issue
+import spock.lang.Unroll
 
 class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
+
+    @Unroll
     def 'can align transitive dependencies'() {
         def graph = new DependencyGraphBuilder()
                 .addModule('test.nebula:a:1.0.0')
@@ -43,14 +45,18 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
 
         then:
         result.output.contains '+--- test.nebula:a:1.0.0 -> 1.1.0\n'
         result.output.contains '\\--- test.other:c:1.0.0\n'
         result.output.contains '     \\--- test.nebula:b:1.1.0\n'
+
+        where:
+        coreAlignment << [false, true]
     }
 
+    @Unroll
     def 'can align deeper transitive dependencies'() {
         def graph = new DependencyGraphBuilder()
                 .addModule('test.nebula:a:1.0.0')
@@ -88,15 +94,19 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
 
         then:
         result.output.contains '+--- test.nebula:a:1.0.0 -> 1.1.0\n'
         result.output.contains '\\--- test.other:d:1.0.0\n'
         result.output.contains '     \\--- test.other:c:1.0.0\n'
         result.output.contains '          \\--- test.nebula:b:1.1.0\n'
+
+        where:
+        coreAlignment << [false, true]
     }
 
+    @Unroll
     def 'dependencies with cycles do not lead to infinite loops'() {
         def graph = new DependencyGraphBuilder()
                 .addModule(new ModuleBuilder('test.nebula:a:1.0.0').addDependency('test.other:b:1.0.0').build())
@@ -133,7 +143,7 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
 
         then:
         result.output.contains '+--- test.nebula:a:1.1.0\n'
@@ -141,8 +151,12 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
         result.output.contains '|         \\--- test.nebula:b:1.0.0 -> 1.1.0\n'
         result.output.contains '|              \\--- test.other:b:1.0.0 (*)\n'
         result.output.contains '\\--- test.nebula:b:1.0.0 -> 1.1.0 (*)\n'
+
+        where:
+        coreAlignment << [false, true]
     }
 
+    @Unroll
     def 'able to omit dependency versions to take what is given transitively'() {
         def graph = new DependencyGraphBuilder()
                 .addModule(new ModuleBuilder('test.nebula:a:1.0.0').addDependency('test.nebula:b:1.0.0').build())
@@ -176,14 +190,18 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
 
         then:
         result.output.contains '+--- test.nebula:a:1.0.0\n'
         result.output.contains '|    \\--- test.nebula:b:1.0.0\n'
         result.output.contains '\\--- test.nebula:b -> 1.0.0\n'
+
+        where:
+        coreAlignment << [false, true]
     }
 
+    @Unroll
     @Issue('#48')
     def 'transitive dependencies with alignment are aligned, when parent dependency is also aligned'() {
         def graph = new DependencyGraphBuilder()
@@ -244,7 +262,7 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
 
         then:
         result.output.contains '+--- test.nebula.a:a1:1.+ -> 2.0.0\n'
@@ -253,8 +271,12 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
         result.output.contains '+--- test.nebula.b:b2:1.0.0 -> 2.0.0\n'
         result.output.contains '\\--- test.nebula.a:a3:1.0.0 -> 2.0.0\n'
         result.output.contains '\\--- test.nebula.c:c1:1.0.0'
+
+        where:
+        coreAlignment << [false, true]
     }
 
+    @Unroll
     def 'can align a transitive dependency with multiple versions contributed transitively'() {
         def graph = new DependencyGraphBuilder()
                 .addModule(new ModuleBuilder('test.nebula:a:1.0.0').addDependency('test.nebula:d:2.0.0').build())
@@ -293,12 +315,16 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
 
         then:
         result.output.contains '\\--- test.nebula:d:3.0.0\n'
+
+        where:
+        coreAlignment << [false, true]
     }
 
+    @Unroll
     def 'can align a transitive dependency with direct and use substitution to downgrade'() {
         given:
         def graph = new DependencyGraphBuilder()
@@ -352,13 +378,17 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
 
         then:
         result.output.contains '+--- test.nebula:a:1.0.0 -> 1.1.0'
         result.output.contains '\\--- test.nebula:b:1.2.0 -> 1.1.0'
+
+        where:
+        coreAlignment << [false, true]
     }
 
+    @Unroll
     def 'alignment of group 1 upgrades and introduces a new dependencies contributing to alignment of group 2'() {
         given:
         debug = true
@@ -417,19 +447,22 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
 
         then:
         result.output.contains '|    +--- test.group2:module1:1.0.0 -> 3.0.0'
         result.output.contains '|         \\--- test.group2:module2:2.0.0 -> 3.0.0'
         result.output.contains '          \\--- test.group2:module1:3.0.0'
+
+        where:
+        coreAlignment << [false, true]
     }
 
-    /* This test is currently failing due unfixed bug in alignment rule implementation. We decided not to invest into
+    /* This test is currently failing for Nebula alignment due unfixed bug in alignment rule implementation. We decided not to invest into
      * fix because the problem is a relative edge case and we will rather focus on migration to Gradle core alignment
      * implementation. The test is kept here so we can try this case on top of the new implementation.
      * */
-    @Ignore
+    @Unroll
     def 'alignment of group 1 upgrades and introduces a new dependencies contributing to alignment of group 2 and substitution still takes effect'() {
         given:
         debug = true
@@ -505,11 +538,15 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
 
         then:
         result.output.contains '|    +--- test.group2:module1:1.0.0 -> 2.0.0'
         result.output.contains '|         \\--- test.group2:module2:2.0.0'
         result.output.contains '          \\--- test.group2:module1:3.0.0 -> 2.0.0'
+
+        where:
+//        coreAlignment << [false, true] // This test is currently failing for Nebula alignment due unfixed bug in alignment rule implementation.
+        coreAlignment << [true]
     }
 }
