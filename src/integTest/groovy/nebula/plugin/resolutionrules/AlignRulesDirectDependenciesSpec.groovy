@@ -5,6 +5,8 @@ import nebula.test.dependencies.GradleDependencyGenerator
 import spock.lang.Unroll
 
 class AlignRulesDirectDependenciesSpec extends AbstractAlignRulesSpec {
+
+    @Unroll
     def 'can align direct dependencies if necessary'() {
         def graph = new DependencyGraphBuilder()
                 .addModule('test.nebula:a:1.0.0')
@@ -40,13 +42,17 @@ class AlignRulesDirectDependenciesSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
 
         then:
         result.output.contains '+--- test.nebula:a:1.0.0\n'
         result.output.contains '\\--- test.nebula:b:0.15.0 -> 1.0.0\n'
+
+        where:
+        coreAlignment << [false, true]
     }
 
+    @Unroll
     def 'can align direct dependencies from ivy repositories'() {
         def graph = new DependencyGraphBuilder()
                 .addModule('test.nebula:a:1.0.0')
@@ -83,13 +89,17 @@ class AlignRulesDirectDependenciesSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
 
         then:
         result.output.contains '+--- test.nebula:a:1.0.0\n'
         result.output.contains '\\--- test.nebula:b:0.15.0 -> 1.0.0\n'
+
+        where:
+        coreAlignment << [false, true]
     }
 
+    @Unroll
     def 'can align dynamic dependencies'() {
         def graph = new DependencyGraphBuilder()
                 .addModule('test.nebula:a:1.0.0')
@@ -122,12 +132,16 @@ class AlignRulesDirectDependenciesSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
 
         then:
         result.output.contains '\\--- test.nebula:a:1.+ -> 1.0.1\n'
+
+        where:
+        coreAlignment << [false, true]
     }
 
+    @Unroll
     def 'can align dynamic range dependencies'() {
         def graph = new DependencyGraphBuilder()
                 .addModule('test.nebula:a:1.0.0')
@@ -160,12 +174,16 @@ class AlignRulesDirectDependenciesSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
 
         then:
         result.output.contains '\\--- test.nebula:a:[1.0.0, 2.0.0) -> 1.0.1\n'
+
+        where:
+        coreAlignment << [false, true]
     }
 
+    @Unroll
     def 'unresolvable dependencies cause assemble to fail'() {
         rulesJsonFile << '''\
             {
@@ -193,11 +211,14 @@ class AlignRulesDirectDependenciesSpec extends AbstractAlignRulesSpec {
         writeHelloWorld('com.netflix.nebula')
 
         when:
-        org.gradle.testkit.runner.BuildResult result = runTasksAndFail('assemble')
+        org.gradle.testkit.runner.BuildResult result = runTasksAndFail('assemble', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
 
         then:
         result.output.contains("Could not resolve all files for configuration ':compileClasspath'.")
         result.output.contains("Could not find com.google.guava:guava:oops.")
+
+        where:
+        coreAlignment << [false, true]
     }
 
     @Unroll('unresolvable dependencies do not cause #tasks to fail')
