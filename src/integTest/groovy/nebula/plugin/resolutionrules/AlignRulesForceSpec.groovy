@@ -2,7 +2,6 @@ package nebula.plugin.resolutionrules
 
 import nebula.test.dependencies.DependencyGraphBuilder
 import nebula.test.dependencies.GradleDependencyGenerator
-import org.gradle.api.logging.LogLevel
 import spock.lang.Unroll
 
 class AlignRulesForceSpec extends AbstractAlignRulesSpec {
@@ -52,18 +51,20 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
             $force
         """.stripIndent()
 
-        if (!coreAlignment) {
-            logLevel = LogLevel.DEBUG
-        }
-
         when:
-        def result = runTasks('dependencies', '--configuration', 'compileClasspath', '--warning-mode', 'none', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def tasks = ['dependencies', '--configuration', 'compileClasspath', '--warning-mode', 'none', "-Dnebula.features.coreAlignmentSupport=$coreAlignment"]
+        def result = runTasks(*tasks)
+
+        def debugResult
+        if (!coreAlignment) {
+            debugResult = runTasks(*tasks, '--debug')
+        }
 
         then:
         if (!coreAlignment) {
             def supersedingForcesInformation = "Found force(s) [test.nebula:a:0.15.0] that supersede resolution rule"
-            assert result.output.contains(supersedingForcesInformation)
-            assert result.output.contains("reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z, belongsToName=$moduleName-0-for-test.nebula). Will use 0.15.0")
+            assert debugResult.output.contains(supersedingForcesInformation)
+            assert debugResult.output.contains("reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z, belongsToName=$moduleName-0-for-test.nebula). Will use 0.15.0")
         }
         result.output.contains '+--- test.nebula:a:1.0.0 -> 0.15.0\n'
         result.output.contains '+--- test.nebula:b:1.0.0 -> 0.15.0\n'
@@ -195,13 +196,14 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
             }
         """.stripIndent()
 
-        if (!coreAlignment) {
-            logLevel = LogLevel.DEBUG
-        }
-
         when:
-        def result = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def tasks = ['dependencies', '--configuration', 'compileClasspath', '--warning-mode', 'none', "-Dnebula.features.coreAlignmentSupport=$coreAlignment"]
+        def result = runTasks(*tasks)
         def dependencyInsightResult = runTasks('dependencyInsight', '--dependency', 'test.nebula', '--warning-mode', 'none', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def debugResult
+        if (!coreAlignment) {
+            debugResult = runTasks(*tasks, '--debug')
+        }
 
         then:
         if (coreAlignment) {
@@ -211,7 +213,7 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
             assert dependencyInsightResult.output.contains('Could not resolve test.nebula:c:1.0.0')
         } else {
             def supersedingForcesInformation = "Found force(s) [test.nebula:a:latest.release, test.nebula:b:1.+, test.nebula:c:0.15.0] that supersede resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=$moduleName, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z, belongsToName=$moduleName-0-for-test.nebula). Will use 0.15.0"
-            assert result.output.contains(supersedingForcesInformation)
+            assert debugResult.output.contains(supersedingForcesInformation)
             assert result.output.contains('+--- test.nebula:a:2.0.0 -> 0.15.0\n')
             assert result.output.contains('+--- test.nebula:b:2.0.0 -> 0.15.0\n')
             assert result.output.contains('\\--- test.nebula:c:1.0.0 -> 0.15.0\n')
@@ -267,21 +269,23 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
             }
         """.stripIndent()
 
-        if (!coreAlignment) {
-            logLevel = LogLevel.DEBUG
-        }
-
         when:
-        def output = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment").output
+        def tasks = ['dependencies', '--configuration', 'compileClasspath', '--warning-mode', 'none', "-Dnebula.features.coreAlignmentSupport=$coreAlignment"]
+        def result = runTasks(*tasks)
+
+        def debugResult
+        if (!coreAlignment) {
+            debugResult = runTasks(*tasks, '--debug')
+        }
 
         then:
         if (!coreAlignment) {
             def supersedingForcesInformation = "Found force(s) [test.nebula:a:latest.release] that supersede resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=$moduleName, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z, belongsToName=$moduleName-0-for-test.nebula). Will use highest dynamic version 2.0.0 that matches most specific selector latest.release"
-            assert output.contains(supersedingForcesInformation)
+            assert debugResult.output.contains(supersedingForcesInformation)
         }
-        output.contains '+--- test.nebula:a:2.0.0\n'
-        output.contains '+--- test.nebula:b:1.0.0 -> 2.0.0\n'
-        output.contains '\\--- test.nebula:c:0.15.0 -> 2.0.0\n'
+        result.output.contains '+--- test.nebula:a:2.0.0\n'
+        result.output.contains '+--- test.nebula:b:1.0.0 -> 2.0.0\n'
+        result.output.contains '\\--- test.nebula:c:0.15.0 -> 2.0.0\n'
 
         where:
         coreAlignment << [false, true]
@@ -331,21 +335,23 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
             }
         """.stripIndent()
 
-        if (!coreAlignment) {
-            logLevel = LogLevel.DEBUG
-        }
-
         when:
-        def output = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment").output
+        def tasks = ['dependencies', '--configuration', 'compileClasspath', '--warning-mode', 'none', "-Dnebula.features.coreAlignmentSupport=$coreAlignment"]
+        def result = runTasks(*tasks)
+
+        def debugResult
+        if (!coreAlignment) {
+            debugResult = runTasks(*tasks, '--debug')
+        }
 
         then:
         if (!coreAlignment) {
             def supersedingForcesInformation = "Found force(s) [test.nebula:a:1.+] that supersede resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=$moduleName, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z, belongsToName=$moduleName-0-for-test.nebula). Will use highest dynamic version 1.0.0 that matches most specific selector 1.+"
-            assert output.contains(supersedingForcesInformation)
+            assert debugResult.output.contains(supersedingForcesInformation)
         }
-        output.contains '+--- test.nebula:a:2.0.0 -> 1.0.0\n'
-        output.contains '+--- test.nebula:b:1.0.0\n'
-        output.contains '\\--- test.nebula:c:0.15.0 -> 1.0.0\n'
+        result.output.contains '+--- test.nebula:a:2.0.0 -> 1.0.0\n'
+        result.output.contains '+--- test.nebula:b:1.0.0\n'
+        result.output.contains '\\--- test.nebula:c:0.15.0 -> 1.0.0\n'
 
         where:
         coreAlignment << [false, true]
@@ -398,13 +404,14 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
             }
         """.stripIndent()
 
-        if (!coreAlignment) {
-            logLevel = LogLevel.DEBUG
-        }
-
         when:
-        def output = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment").output
+        def tasks = ['dependencies', '--configuration', 'compileClasspath', '--warning-mode', 'none', "-Dnebula.features.coreAlignmentSupport=$coreAlignment"]
+        def result = runTasks(*tasks)
         def dependencyInsightResult = runTasks('dependencyInsight', '--dependency', 'test.nebula', '--warning-mode', 'none', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def debugResult
+        if (!coreAlignment) {
+            debugResult = runTasks(*tasks, '--debug')
+        }
 
         then:
         if (coreAlignment) {
@@ -414,10 +421,10 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
             assert dependencyInsightResult.output.contains('Could not resolve test.nebula:c:0.15.0')
         } else {
             def supersedingForcesInformation = "Found force(s) [test.nebula:a:latest.release, test.nebula:b:1.+, test.nebula:c:[1.0, 2.0)] that supersede resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=$moduleName, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z, belongsToName=$moduleName-0-for-test.nebula). Will use highest dynamic version 1.0.0 that matches most specific selector [1.0, 2.0)"
-            assert output.contains(supersedingForcesInformation)
-            assert output.contains('+--- test.nebula:a:2.0.0 -> 1.0.0\n')
-            assert output.contains('+--- test.nebula:b:1.0.0\n')
-            assert output.contains('\\--- test.nebula:c:0.15.0 -> 1.0.0\n')
+            assert debugResult.output.contains(supersedingForcesInformation)
+            assert result.output.contains('+--- test.nebula:a:2.0.0 -> 1.0.0\n')
+            assert result.output.contains('+--- test.nebula:b:1.0.0\n')
+            assert result.output.contains('\\--- test.nebula:c:0.15.0 -> 1.0.0\n')
         }
 
         where:
