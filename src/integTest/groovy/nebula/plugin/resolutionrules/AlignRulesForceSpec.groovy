@@ -6,8 +6,13 @@ import org.gradle.api.logging.LogLevel
 import spock.lang.Unroll
 
 class AlignRulesForceSpec extends AbstractAlignRulesSpec {
-    @Unroll("alignment uses #name forced version")
-    def 'alignment uses forced version'() {
+    def setup() {
+        keepFiles = true
+        debug = true
+    }
+
+    @Unroll
+    def 'alignment uses #name forced version - core alignment #coreAlignment'() {
         def graph = new DependencyGraphBuilder()
                 .addModule('test.nebula:a:1.0.0')
                 .addModule('test.nebula:a:0.15.0')
@@ -47,29 +52,37 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
             $force
         """.stripIndent()
 
-        logLevel = LogLevel.DEBUG
+        if (!coreAlignment) {
+            logLevel = LogLevel.DEBUG
+        }
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compileClasspath', '--warning-mode', 'none')
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath', '--warning-mode', 'none', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
 
         then:
-        result.output.contains "Found force(s) [test.nebula:a:0.15.0] that supersede resolution rule"
-        result.output.contains "reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z, belongsToName=alignment-uses-$name-forced-version-0-for-test.nebula). Will use 0.15.0"
+        if (!coreAlignment) {
+            def supersedingForcesInformation = "Found force(s) [test.nebula:a:0.15.0] that supersede resolution rule"
+            assert result.output.contains(supersedingForcesInformation)
+            assert result.output.contains("reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z, belongsToName=$moduleName-0-for-test.nebula). Will use 0.15.0")
+        }
         result.output.contains '+--- test.nebula:a:1.0.0 -> 0.15.0\n'
         result.output.contains '+--- test.nebula:b:1.0.0 -> 0.15.0\n'
         result.output.contains '+--- test.nebula:c:0.15.0\n'
         result.output.contains '--- test.nebula.other:a:1.0.0\n'
 
         where:
-        name << ["all", "configuration", "dependency"]
-        force << [
-                "configurations.all { resolutionStrategy { force 'test.nebula:a:0.15.0' } }",
-                "configurations.compileClasspath { resolutionStrategy { force 'test.nebula:a:0.15.0' } }",
-                "dependencies { implementation ('test.nebula:a:0.15.0') { force = true } }"
-        ]
+        coreAlignment | name            | force
+        false         | "all"           | "configurations.all { resolutionStrategy { force 'test.nebula:a:0.15.0' } }"
+        false         | "configuration" | "configurations.compileClasspath { resolutionStrategy { force 'test.nebula:a:0.15.0' } }"
+        false         | "dependency"    | "dependencies { implementation ('test.nebula:a:0.15.0') { force = true } }"
+
+        true          | "all"           | "configurations.all { resolutionStrategy { force 'test.nebula:a:0.15.0' } }"
+        true          | "configuration" | "configurations.compileClasspath { resolutionStrategy { force 'test.nebula:a:0.15.0' } }"
+        true          | "dependency"    | "dependencies { implementation ('test.nebula:a:0.15.0') { force = true } }"
     }
 
-    def 'alignment uses lowest forced version, when multiple forces are present'() {
+    @Unroll
+    def 'when multiple forces are present then #outcome'() {
         def graph = new DependencyGraphBuilder()
                 .addModule('test.nebula:a:2.0.0')
                 .addModule('test.nebula:a:1.0.0')
@@ -115,15 +128,29 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compileClasspath', '--warning-mode', 'none')
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath', '--warning-mode', 'none', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def dependencyInsightResult = runTasks('dependencyInsight', '--dependency', 'test.nebula', '--warning-mode', 'none', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
 
         then:
-        result.output.contains '+--- test.nebula:a:2.0.0 -> 0.15.0\n'
-        result.output.contains '+--- test.nebula:b:2.0.0 -> 0.15.0\n'
-        result.output.contains '\\--- test.nebula:c:1.0.0 -> 0.15.0\n'
+        if (coreAlignment) {
+            assert dependencyInsightResult.output.contains('Multiple forces on different versions for virtual platform ')
+            assert dependencyInsightResult.output.contains('Could not resolve test.nebula:a:2.0.0')
+            assert dependencyInsightResult.output.contains('Could not resolve test.nebula:b:2.0.0')
+            assert dependencyInsightResult.output.contains('Could not resolve test.nebula:c:1.0.0')
+        } else {
+            assert result.output.contains('+--- test.nebula:a:2.0.0 -> 0.15.0\n')
+            assert result.output.contains('+--- test.nebula:b:2.0.0 -> 0.15.0\n')
+            assert result.output.contains('\\--- test.nebula:c:1.0.0 -> 0.15.0\n')
+        }
+
+        where:
+        coreAlignment | outcome
+        false         | 'Nebula alignment uses lowest forced version'
+        true          | 'Core alignment fails due to multiple forces'
     }
 
-    def 'alignment outputs warnings and honors static force when dynamic forces are present'() {
+    @Unroll
+    def 'when dynamic forces are present then #outcome'() {
         def graph = new DependencyGraphBuilder()
                 .addModule('test.nebula:a:2.0.0')
                 .addModule('test.nebula:a:1.0.0')
@@ -168,18 +195,35 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
             }
         """.stripIndent()
 
-        logLevel = LogLevel.DEBUG
+        if (!coreAlignment) {
+            logLevel = LogLevel.DEBUG
+        }
 
         when:
-        def output = runTasks('dependencies', '--configuration', 'compileClasspath').output
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def dependencyInsightResult = runTasks('dependencyInsight', '--dependency', 'test.nebula', '--warning-mode', 'none', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
 
         then:
-        output.contains('Found force(s) [test.nebula:a:latest.release, test.nebula:b:1.+, test.nebula:c:0.15.0] that supersede resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-outputs-warnings-and-honors-static-force-when-dynamic-forces-are-present, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z, belongsToName=alignment-outputs-warnings-and-honors-static-force-when-dynamic-forces-are-present-0-for-test.nebula). Will use 0.15.0')
-        output.contains '+--- test.nebula:a:2.0.0 -> 0.15.0\n'
-        output.contains '+--- test.nebula:b:2.0.0 -> 0.15.0\n'
-        output.contains '\\--- test.nebula:c:1.0.0 -> 0.15.0\n'
+        if (coreAlignment) {
+            assert dependencyInsightResult.output.contains('Multiple forces on different versions for virtual platform ')
+            assert dependencyInsightResult.output.contains('Could not resolve test.nebula:a:2.0.0')
+            assert dependencyInsightResult.output.contains('Could not resolve test.nebula:b:2.0.0')
+            assert dependencyInsightResult.output.contains('Could not resolve test.nebula:c:1.0.0')
+        } else {
+            def supersedingForcesInformation = "Found force(s) [test.nebula:a:latest.release, test.nebula:b:1.+, test.nebula:c:0.15.0] that supersede resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=$moduleName, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z, belongsToName=$moduleName-0-for-test.nebula). Will use 0.15.0"
+            assert result.output.contains(supersedingForcesInformation)
+            assert result.output.contains('+--- test.nebula:a:2.0.0 -> 0.15.0\n')
+            assert result.output.contains('+--- test.nebula:b:2.0.0 -> 0.15.0\n')
+            assert result.output.contains('\\--- test.nebula:c:1.0.0 -> 0.15.0\n')
+        }
+
+        where:
+        coreAlignment | outcome
+        false         | 'Nebula alignment outputs warnings and honors static force'
+        true          | 'Core alignment fails due to multiple forces'
     }
 
+    @Unroll
     def 'alignment with latest.release force'() {
         def graph = new DependencyGraphBuilder()
                 .addModule('test.nebula:a:2.0.0')
@@ -223,18 +267,27 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
             }
         """.stripIndent()
 
-        logLevel = LogLevel.DEBUG
+        if (!coreAlignment) {
+            logLevel = LogLevel.DEBUG
+        }
 
         when:
-        def output = runTasks('dependencies', '--configuration', 'compileClasspath').output
+        def output = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment").output
 
         then:
-        output.contains 'Found force(s) [test.nebula:a:latest.release] that supersede resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-with-latest-release-force, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z, belongsToName=alignment-with-latest-release-force-0-for-test.nebula). Will use highest dynamic version 2.0.0 that matches most specific selector latest.release'
+        if (!coreAlignment) {
+            def supersedingForcesInformation = "Found force(s) [test.nebula:a:latest.release] that supersede resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=$moduleName, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z, belongsToName=$moduleName-0-for-test.nebula). Will use highest dynamic version 2.0.0 that matches most specific selector latest.release"
+            assert output.contains(supersedingForcesInformation)
+        }
         output.contains '+--- test.nebula:a:2.0.0\n'
         output.contains '+--- test.nebula:b:1.0.0 -> 2.0.0\n'
         output.contains '\\--- test.nebula:c:0.15.0 -> 2.0.0\n'
+
+        where:
+        coreAlignment << [false, true]
     }
 
+    @Unroll
     def 'alignment with sub-version force'() {
         def graph = new DependencyGraphBuilder()
                 .addModule('test.nebula:a:2.0.0')
@@ -278,19 +331,28 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
             }
         """.stripIndent()
 
-        logLevel = LogLevel.DEBUG
+        if (!coreAlignment) {
+            logLevel = LogLevel.DEBUG
+        }
 
         when:
-        def output = runTasks('dependencies', '--configuration', 'compileClasspath').output
+        def output = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment").output
 
         then:
-        output.contains 'Found force(s) [test.nebula:a:1.+] that supersede resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-with-sub-version-force, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z, belongsToName=alignment-with-sub-version-force-0-for-test.nebula). Will use highest dynamic version 1.0.0 that matches most specific selector 1.+'
+        if (!coreAlignment) {
+            def supersedingForcesInformation = "Found force(s) [test.nebula:a:1.+] that supersede resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=$moduleName, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z, belongsToName=$moduleName-0-for-test.nebula). Will use highest dynamic version 1.0.0 that matches most specific selector 1.+"
+            assert output.contains(supersedingForcesInformation)
+        }
         output.contains '+--- test.nebula:a:2.0.0 -> 1.0.0\n'
         output.contains '+--- test.nebula:b:1.0.0\n'
         output.contains '\\--- test.nebula:c:0.15.0 -> 1.0.0\n'
+
+        where:
+        coreAlignment << [false, true]
     }
 
-    def 'alignment uses most specific dynamic version'() {
+    @Unroll
+    def 'with multiple specific dynamic versions then #outcome'() {
         def graph = new DependencyGraphBuilder()
                 .addModule('test.nebula:a:3.0.0')
                 .addModule('test.nebula:a:2.0.0')
@@ -336,15 +398,31 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
             }
         """.stripIndent()
 
-        logLevel = LogLevel.DEBUG
+        if (!coreAlignment) {
+            logLevel = LogLevel.DEBUG
+        }
 
         when:
-        def output = runTasks('dependencies', '--configuration', 'compileClasspath').output
+        def output = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment").output
+        def dependencyInsightResult = runTasks('dependencyInsight', '--dependency', 'test.nebula', '--warning-mode', 'none', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
 
         then:
-        output.contains 'Found force(s) [test.nebula:a:latest.release, test.nebula:b:1.+, test.nebula:c:[1.0, 2.0)] that supersede resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=alignment-uses-most-specific-dynamic-version, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z, belongsToName=alignment-uses-most-specific-dynamic-version-0-for-test.nebula). Will use highest dynamic version 1.0.0 that matches most specific selector [1.0, 2.0)'
-        output.contains '+--- test.nebula:a:2.0.0 -> 1.0.0\n'
-        output.contains '+--- test.nebula:b:1.0.0\n'
-        output.contains '\\--- test.nebula:c:0.15.0 -> 1.0.0\n'
+        if (coreAlignment) {
+            assert dependencyInsightResult.output.contains('Multiple forces on different versions for virtual platform ')
+            assert dependencyInsightResult.output.contains('Could not resolve test.nebula:a:2.0.0')
+            assert dependencyInsightResult.output.contains('Could not resolve test.nebula:b:1.0.0')
+            assert dependencyInsightResult.output.contains('Could not resolve test.nebula:c:0.15.0')
+        } else {
+            def supersedingForcesInformation = "Found force(s) [test.nebula:a:latest.release, test.nebula:b:1.+, test.nebula:c:[1.0, 2.0)] that supersede resolution rule AlignRule(name=testNebula, group=test.nebula, includes=[], excludes=[], match=null, ruleSet=$moduleName, reason=Align test.nebula dependencies, author=Example Person <person@example.org>, date=2016-03-17T20:21:20.368Z, belongsToName=$moduleName-0-for-test.nebula). Will use highest dynamic version 1.0.0 that matches most specific selector [1.0, 2.0)"
+            assert output.contains(supersedingForcesInformation)
+            assert output.contains('+--- test.nebula:a:2.0.0 -> 1.0.0\n')
+            assert output.contains('+--- test.nebula:b:1.0.0\n')
+            assert output.contains('\\--- test.nebula:c:0.15.0 -> 1.0.0\n')
+        }
+
+        where:
+        coreAlignment | outcome
+        false         | 'Nebula alignment uses the most specific dynamic version'
+        true          | 'Core alignment fails due to multiple forces'
     }
 }
