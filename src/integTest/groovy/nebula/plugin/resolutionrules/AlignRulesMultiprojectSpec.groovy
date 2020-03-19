@@ -19,6 +19,7 @@ package nebula.plugin.resolutionrules
 import nebula.test.IntegrationSpec
 import nebula.test.dependencies.DependencyGraphBuilder
 import nebula.test.dependencies.GradleDependencyGenerator
+import spock.lang.Unroll
 
 class AlignRulesMultiprojectSpec extends IntegrationSpec {
     def rulesJsonFile
@@ -57,6 +58,7 @@ class AlignRulesMultiprojectSpec extends IntegrationSpec {
         bDir = addSubproject('b')
     }
 
+    @Unroll
     def 'align rules do not interfere with a multiproject that produces the jars being aligned'() {
         rulesJsonFile << '''\
             {
@@ -102,12 +104,16 @@ class AlignRulesMultiprojectSpec extends IntegrationSpec {
         '''.stripIndent()
 
         when:
-        def results = runTasksSuccessfully(':b:dependencies', '--configuration', 'compileClasspath')
+        def results = runTasksSuccessfully(':b:dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
 
         then:
         results.standardOutput.contains('\\--- project :a\n')
+
+        where:
+        coreAlignment << [false, true]
     }
 
+    @Unroll
     def 'cycle like behavior'() {
         rulesJsonFile << '''\
             {
@@ -137,12 +143,16 @@ class AlignRulesMultiprojectSpec extends IntegrationSpec {
         '''.stripIndent()
 
         when:
-        def results = runTasksSuccessfully(':a:dependencies', ':b:dependencies', 'assemble')
+        def results = runTasksSuccessfully(':a:dependencies', ':b:dependencies', 'assemble', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
 
         then:
         noExceptionThrown()
+
+        where:
+        coreAlignment << [false, true]
     }
 
+    @Unroll
     def 'can align project dependencies'() {
         def graph = new DependencyGraphBuilder()
                 .addModule('other.nebula:a:0.42.0')
@@ -195,14 +205,18 @@ class AlignRulesMultiprojectSpec extends IntegrationSpec {
         """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully(':a:dependencies', '--configuration', 'compileClasspath')
+        def result = runTasksSuccessfully(':a:dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
 
         then:
         result.standardOutput.contains '+--- other.nebula:a:1.0.0 -> 1.1.0'
         result.standardOutput.contains '+--- other.nebula:b:1.1.0'
         result.standardOutput.contains '\\--- other.nebula:c:0.42.0'
+
+        where:
+        coreAlignment << [false, true]
     }
 
+    @Unroll
     def 'root project can depend on subprojects'() {
         def graph = new DependencyGraphBuilder()
                 .addModule('other.nebula:a:0.42.0')
@@ -262,11 +276,14 @@ class AlignRulesMultiprojectSpec extends IntegrationSpec {
         """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully(':a:dependencies', '--configuration', 'compileClasspath')
+        def result = runTasksSuccessfully(':a:dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
 
         then:
         result.standardOutput.contains '+--- other.nebula:a:1.0.0 -> 1.1.0'
         result.standardOutput.contains '+--- other.nebula:b:1.1.0'
         result.standardOutput.contains '\\--- other.nebula:c:0.42.0'
+
+        where:
+        coreAlignment << [false, true]
     }
 }
