@@ -3,7 +3,9 @@ package nebula.plugin.resolutionrules
 import nebula.test.dependencies.DependencyGraphBuilder
 import nebula.test.dependencies.GradleDependencyGenerator
 import nebula.test.dependencies.ModuleBuilder
+import org.junit.Ignore
 
+@Ignore("we do not currently use VersionMatchers")
 class AlignRulesVersionMatchSpec extends AbstractAlignRulesSpec {
     def 'match excluding differences in version results in no alignment'() {
         def graph = new DependencyGraphBuilder()
