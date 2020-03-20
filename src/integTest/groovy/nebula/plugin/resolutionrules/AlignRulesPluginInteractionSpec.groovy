@@ -19,7 +19,6 @@ package nebula.plugin.resolutionrules
 import nebula.test.IntegrationTestKitSpec
 import nebula.test.dependencies.DependencyGraphBuilder
 import nebula.test.dependencies.GradleDependencyGenerator
-import org.junit.Ignore
 import spock.lang.Issue
 import spock.lang.Unroll
 
@@ -713,84 +712,8 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
     }
 
     @Unroll
-    def 'dependency-lock when applied after wins out over new alignment rules'() {
-        def graph = new DependencyGraphBuilder()
-                .addModule('test.nebula:a:1.41.5')
-                .addModule('test.nebula:a:1.42.2')
-                .addModule('test.nebula:b:1.41.5')
-                .addModule('test.nebula:b:1.42.2')
-                .build()
-        def mavenrepo = new GradleDependencyGenerator(graph, "$projectDir/testrepogen")
-        mavenrepo.generateTestMavenRepo()
-
-        def rulesFolder = new File(projectDir, 'rules')
-        rulesFolder.mkdirs()
-        def rulesJsonFile = new File(rulesFolder, 'rules.json')
-
-        rulesJsonFile << '''\
-            {
-                "deny": [], "reject": [], "substitute": [], "replace": [], "align": []
-            }
-        '''.stripIndent()
-
-        def mavenForRules = new File(projectDir, 'repo')
-        mavenForRules.mkdirs()
-        def locked = new File(mavenForRules, 'test/rules/resolution-rules/1.0.0')
-        locked.mkdirs()
-        createRulesJar([rulesFolder], projectDir, new File(locked, 'resolution-rules-1.0.0.jar'))
-        createPom('test.rules', 'resolution-rules', '1.0.0', locked)
-
-        rulesJsonFile.text = '''\
-            {
-                "deny": [], "reject": [], "substitute": [], "replace": [],
-                "align": [
-                    {
-                        "name": "testNebula",
-                        "group": "test.nebula",
-                        "reason": "Align test.nebula dependencies",
-                        "author": "Example Person <person@example.org>",
-                        "date": "2016-03-17T20:21:20.368Z"
-                    }
-                ]
-            }
-        '''.stripIndent()
-        def newer = new File(mavenForRules, 'test/rules/resolution-rules/1.1.0')
-        newer.mkdirs()
-        createRulesJar([rulesFolder], projectDir, new File(newer, 'resolution-rules-1.1.0.jar'))
-        createPom('test.rules', 'resolution-rules', '1.1.0', newer)
-
-        rulesFolder.deleteDir() // it was only needed to create the setup jars
-
-        def mavenMetadataXml = new File(mavenForRules, 'test/rules/resolution-rules/maven-metadata.xml')
-        mavenMetadataXml.createNewFile()
-        mavenMetadataXml << '''<?xml version="1.0" encoding="UTF-8"?>
-<metadata>
-  <groupId>test.rules</groupId>
-  <artifactId>resolution-rules</artifactId>
-  <versioning>
-    <latest>1.1.0</latest>
-    <release>1.1.0</release>
-    <versions>
-      <version>1.0.0</version>
-      <version>1.1.0</version>
-    </versions>
-    <lastUpdated>20200320014943</lastUpdated>
-  </versioning>
-</metadata>
-'''
-
-        def dependencyLock = new File(projectDir, 'dependencies.lock')
-        dependencyLock << '''\
-        {
-            "compileClasspath": {
-                "test.nebula:a": { "locked": "1.41.5" },
-                "test.nebula:b": { "locked": "1.42.2" }
-            },
-            "resolutionRules": {
-                "test.rules:resolution-rules": { "locked": "1.0.0" }
-            }
-        }
-        '''.stripIndent()
+    def 'dependency-lock when applied after wins out over new locked alignment rules'() {
+        def (GradleDependencyGenerator mavenrepo, File mavenForRules, File jsonRuleFile) = dependencyLockAlignInteractionSetup()
 
         buildFile << """\
             buildscript {
@@ -846,7 +769,10 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
 
     @Unroll
     def 'dependency-lock causes alignment to short circuit if dependencies are aligned by the lock file'() {
-        def (GradleDependencyGenerator mavenrepo, File rulesJsonFile) = dependencyLockAlignInteractionSetup()
+        def (GradleDependencyGenerator mavenrepo, File mavenForRules, File jsonRuleFile) = dependencyLockAlignInteractionSetup()
+
+        assert jsonRuleFile.exists()
+        assert jsonRuleFile.text.contains('"group": "test.nebula"')
 
         def dependencyLock = new File(projectDir, 'dependencies.lock')
         dependencyLock.delete()
@@ -876,7 +802,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
             }
 
             dependencies {
-                resolutionRules files('$rulesJsonFile')
+                resolutionRules files('$jsonRuleFile')
                 implementation 'test.nebula:a:1.41.5'
                 implementation 'test.nebula:b:1.42.2'
             }
@@ -904,9 +830,24 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         def mavenrepo = new GradleDependencyGenerator(graph, "$projectDir/testrepogen")
         mavenrepo.generateTestMavenRepo()
 
-        def rulesJsonFile = new File(projectDir, 'rules.json')
+        def rulesFolder = new File(projectDir, 'rules')
+        rulesFolder.mkdirs()
+        def rulesJsonFile = new File(rulesFolder, 'rules.json')
 
         rulesJsonFile << '''\
+            {
+                "deny": [], "reject": [], "substitute": [], "replace": [], "align": []
+            }
+        '''.stripIndent()
+
+        def mavenForRules = new File(projectDir, 'repo')
+        mavenForRules.mkdirs()
+        def locked = new File(mavenForRules, 'test/rules/resolution-rules/1.0.0')
+        locked.mkdirs()
+        createRulesJar([rulesFolder], projectDir, new File(locked, 'resolution-rules-1.0.0.jar'))
+        createPom('test.rules', 'resolution-rules', '1.0.0', locked)
+
+        rulesJsonFile.text = '''\
             {
                 "deny": [], "reject": [], "substitute": [], "replace": [],
                 "align": [
@@ -920,18 +861,42 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
                 ]
             }
         '''.stripIndent()
+        def newer = new File(mavenForRules, 'test/rules/resolution-rules/1.1.0')
+        newer.mkdirs()
+        createRulesJar([rulesFolder], projectDir, new File(newer, 'resolution-rules-1.1.0.jar'))
+        createPom('test.rules', 'resolution-rules', '1.1.0', newer)
+
+        def mavenMetadataXml = new File(mavenForRules, 'test/rules/resolution-rules/maven-metadata.xml')
+        mavenMetadataXml.createNewFile()
+        mavenMetadataXml << '''<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+  <groupId>test.rules</groupId>
+  <artifactId>resolution-rules</artifactId>
+  <versioning>
+    <latest>1.1.0</latest>
+    <release>1.1.0</release>
+    <versions>
+      <version>1.0.0</version>
+      <version>1.1.0</version>
+    </versions>
+    <lastUpdated>20200320014943</lastUpdated>
+  </versioning>
+</metadata>
+'''
 
         def dependencyLock = new File(projectDir, 'dependencies.lock')
-
         dependencyLock << '''\
         {
             "compileClasspath": {
                 "test.nebula:a": { "locked": "1.41.5" },
                 "test.nebula:b": { "locked": "1.42.2" }
+            },
+            "resolutionRules": {
+                "test.rules:resolution-rules": { "locked": "1.0.0" }
             }
         }
         '''.stripIndent()
-        [mavenrepo, rulesJsonFile]
+        [mavenrepo, mavenForRules, rulesJsonFile]
     }
 
     @Unroll
@@ -1124,9 +1089,9 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         coreAlignment << [false, true]
     }
 
-    @Ignore
-    def 'dependency-lock when applied before wins out over new alignment rules'() {
-        def (GradleDependencyGenerator mavenrepo, File rulesJsonFile) = dependencyLockAlignInteractionSetup()
+    @Unroll
+    def 'dependency-lock when applied before wins out over new locked alignment rules'() {
+        def (GradleDependencyGenerator mavenrepo, File mavenForRules, File jsonRuleFile) = dependencyLockAlignInteractionSetup()
 
         buildFile << """\
             buildscript {
@@ -1142,25 +1107,42 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
 
             repositories {
                 ${mavenrepo.mavenRepositoryBlock}
+                maven { url '${mavenForRules.absolutePath}' }
             }
 
             dependencies {
-                resolutionRules files('$rulesJsonFile')
+                resolutionRules 'test.rules:resolution-rules:1.+'
                 implementation 'test.nebula:a:1.41.5'
                 implementation 'test.nebula:b:1.42.2'
             }
         """.stripIndent()
 
         when:
-        def results = runTasks('dependencyInsight', '--dependency', 'test.nebula')
+        def results = runTasks('dependencyInsight', '--dependency', 'test.nebula', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def resultsForRules = runTasks('dependencyInsight', '--dependency', 'test.rules', '--configuration', 'resolutionRules', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
 
         then:
         results.output.contains 'test.nebula:a locked to 1.41.5'
         results.output.contains 'test.nebula:b locked to 1.42.2'
+        resultsForRules.output.contains 'Selected by rule : test.rules:resolution-rules locked to 1.0.0'
 
-        // final results
+        // final results where locks win over new alignment rules
         results.output.contains 'test.nebula:a:1.41.5\n'
         results.output.contains 'test.nebula:b:1.42.2\n'
+        resultsForRules.output.contains 'test.rules:resolution-rules:1.+ -> 1.0.0\n'
+
+        when:
+        def resultsIgnoringLocks = runTasks('-PdependencyLock.ignore=true', 'dependencyInsight', '--dependency', 'test.nebula', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def resultsForRulesIgnoringLocks = runTasks('-PdependencyLock.ignore=true', 'dependencyInsight', '--dependency', 'test.rules', '--configuration', 'resolutionRules', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+
+        then:
+        // final results if we ignore locks
+        resultsIgnoringLocks.output.contains 'test.nebula:a:1.42.2\n'
+        resultsIgnoringLocks.output.contains 'test.nebula:b:1.42.2\n'
+        resultsForRulesIgnoringLocks.output.contains 'test.rules:resolution-rules:1.1.0\n'
+
+        where:
+        coreAlignment << [false, true]
     }
 
     private createRulesJar(Collection<File> files, File unneededRoot, File destination) {
