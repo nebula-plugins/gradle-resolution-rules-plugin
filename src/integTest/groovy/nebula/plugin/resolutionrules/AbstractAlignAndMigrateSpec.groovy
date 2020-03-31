@@ -55,10 +55,6 @@ class AbstractAlignAndMigrateSpec extends AbstractAlignRulesSpec {
     }
 
     Collection<String> dependencyInsightTasks(boolean coreAlignment) {
-        def tasks = ['dependencyInsight', '--dependency', 'test.nebula']
-        if(coreAlignment) {
-            tasks.add('-Dnebula.features.coreAlignmentSupport=true')
-        }
-        return tasks
+        return ['dependencyInsight', '--dependency', 'test.nebula', "-Dnebula.features.coreAlignmentSupport=$coreAlignment"]
     }
 }
