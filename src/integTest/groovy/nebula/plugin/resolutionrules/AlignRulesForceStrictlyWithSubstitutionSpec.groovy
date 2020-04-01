@@ -20,7 +20,7 @@ import nebula.test.dependencies.GradleDependencyGenerator
 import nebula.test.dependencies.ModuleBuilder
 import spock.lang.Unroll
 
-class AlignRulesMultipleForcesSpec extends AbstractAlignRulesSpec {
+class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec {
     def setup() {
         def graph = new DependencyGraphBuilder()
                 .addModule('test.nebula:a:1.0.0')
