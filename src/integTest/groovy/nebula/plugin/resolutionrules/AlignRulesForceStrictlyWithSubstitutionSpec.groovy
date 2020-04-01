@@ -22,70 +22,7 @@ import spock.lang.Unroll
 
 class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec {
     def setup() {
-        def graph = new DependencyGraphBuilder()
-                .addModule('test.nebula:a:1.0.0')
-                .addModule('test.nebula:a:1.1.0')
-                .addModule('test.nebula:a:1.2.0')
-                .addModule('test.nebula:a:1.3.0')
-
-                .addModule('test.nebula:b:1.0.0')
-                .addModule('test.nebula:b:1.1.0')
-                .addModule('test.nebula:b:1.2.0')
-                .addModule('test.nebula:b:1.3.0')
-
-                .addModule('test.nebula:c:1.0.0')
-                .addModule('test.nebula:c:1.1.0')
-                .addModule('test.nebula:c:1.2.0')
-                .addModule('test.nebula:c:1.3.0')
-
-                .addModule(new ModuleBuilder('test.other:z:1.0.0').addDependency('test.nebula:a:1.2.0').build())
-
-                .build()
-        File mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
-
-        String reason = "★ custom substitution reason"
-        rulesJsonFile << """
-            {
-                "substitute": [
-                    {
-                        "module": "test.nebula:a:1.2.0",
-                        "with": "test.nebula:a:1.3.0",
-                        "reason": "$reason",
-                        "author": "Example Person <person@example.org>",
-                        "date": "2016-03-17T20:21:20.368Z"
-                    },
-                    {
-                        "module": "test.nebula:b:1.2.0",
-                        "with": "test.nebula:b:1.3.0",
-                        "reason": "$reason",
-                        "author": "Example Person <person@example.org>",
-                        "date": "2016-03-17T20:21:20.368Z"
-                    },
-                    {
-                        "module": "test.nebula:c:1.2.0",
-                        "with": "test.nebula:c:1.3.0",
-                        "reason": "$reason",
-                        "author": "Example Person <person@example.org>",
-                        "date": "2016-03-17T20:21:20.368Z"
-                    }
-                ],
-                "align": [
-                    {
-                        "group": "test.nebula",
-                        "reason": "Align test.nebula dependencies",
-                        "author": "Example Person <person@example.org>",
-                        "date": "2016-03-17T20:21:20.368Z"
-                    }
-                ]
-            }
-        """.stripIndent()
-
-        buildFile << """
-            repositories {
-                maven { url '${mavenrepo.absolutePath}' }
-            }
-            """.stripIndent()
-
+        setupProjectAndDependencies()
         debug = true
     }
 
@@ -224,4 +161,69 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
         coreAlignment << [false, true]
     }
 
+    private void setupProjectAndDependencies() {
+        def graph = new DependencyGraphBuilder()
+                .addModule('test.nebula:a:1.0.0')
+                .addModule('test.nebula:a:1.1.0')
+                .addModule('test.nebula:a:1.2.0')
+                .addModule('test.nebula:a:1.3.0')
+
+                .addModule('test.nebula:b:1.0.0')
+                .addModule('test.nebula:b:1.1.0')
+                .addModule('test.nebula:b:1.2.0')
+                .addModule('test.nebula:b:1.3.0')
+
+                .addModule('test.nebula:c:1.0.0')
+                .addModule('test.nebula:c:1.1.0')
+                .addModule('test.nebula:c:1.2.0')
+                .addModule('test.nebula:c:1.3.0')
+
+                .addModule(new ModuleBuilder('test.other:z:1.0.0').addDependency('test.nebula:a:1.2.0').build())
+
+                .build()
+        File mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
+
+        String reason = "★ custom substitution reason"
+        rulesJsonFile << """
+            {
+                "substitute": [
+                    {
+                        "module": "test.nebula:a:1.2.0",
+                        "with": "test.nebula:a:1.3.0",
+                        "reason": "$reason",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    },
+                    {
+                        "module": "test.nebula:b:1.2.0",
+                        "with": "test.nebula:b:1.3.0",
+                        "reason": "$reason",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    },
+                    {
+                        "module": "test.nebula:c:1.2.0",
+                        "with": "test.nebula:c:1.3.0",
+                        "reason": "$reason",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    }
+                ],
+                "align": [
+                    {
+                        "group": "test.nebula",
+                        "reason": "Align test.nebula dependencies",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    }
+                ]
+            }
+        """.stripIndent()
+
+        buildFile << """
+            repositories {
+                maven { url '${mavenrepo.absolutePath}' }
+            }
+            """.stripIndent()
+    }
 }
