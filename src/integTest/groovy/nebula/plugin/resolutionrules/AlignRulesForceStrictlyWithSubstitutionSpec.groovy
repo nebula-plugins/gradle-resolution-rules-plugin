@@ -24,7 +24,6 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
     def setup() {
         setupProjectAndDependencies()
         debug = true
-        forwardOutput = true
     }
     
     @Unroll
@@ -236,7 +235,7 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
     }
 
     @Unroll
-    def 'strict constraints to a good version while a substitution is triggered by a transitive dependency | core alignment #coreAlignment'() {
+    def 'dependency with strict version declaration to a good version while a substitution is triggered by a transitive dependency | core alignment #coreAlignment'() {
         buildFile << """\
             dependencies {
                 implementation('test.nebula:a:1.1.0') {
@@ -276,7 +275,7 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
     }
 
     @Unroll
-    def 'strict constraints to a bad version triggers a substitution | core alignment #coreAlignment'() {
+    def 'dependency with strict version declaration to a bad version triggers a substitution | core alignment #coreAlignment'() {
         buildFile << """\
             dependencies {
                 implementation('test.nebula:a') {
@@ -305,7 +304,7 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
     }
 
     @Unroll
-    def 'strict constraints to a good version while substitution is triggered by a direct dependency | core alignment #coreAlignment'() {
+    def 'dependency with strict version declaration to a good version while substitution is triggered by a direct dependency | core alignment #coreAlignment'() {
         buildFile << """\
             dependencies {
                 implementation('test.nebula:a') {
@@ -317,6 +316,142 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
                 implementation'test.nebula:c:1.2.0' // brings in bad version
             }
         """.stripIndent()
+
+        when:
+        def tasks = ['dependencyInsight', '--dependency', 'test.nebula', "-Dnebula.features.coreAlignmentSupport=$coreAlignment"]
+        def results = runTasks(*tasks)
+
+        then:
+        if (coreAlignment) {
+            // rich version strictly declaration to an okay version is the primary contributor; the substitution rule was a secondary contributor
+            assert results.output.contains('test.nebula:a:{strictly 1.1.0} -> 1.1.0')
+            assert results.output.contains('test.nebula:b:{strictly 1.1.0} -> 1.1.0')
+            assert results.output.contains('test.nebula:c:1.2.0 -> 1.1.0')
+            assert results.output.contains('- Forced')
+        } else {
+            // substitution rule to a known-good-version is the primary contributor; rich version strictly declaration to an okay version is the secondary contributor
+            assert results.output.contains('test.nebula:a:{strictly 1.1.0} -> 1.3.0')
+            assert results.output.contains('test.nebula:b:{strictly 1.1.0} -> 1.3.0')
+            assert results.output.contains('test.nebula:c:1.2.0 -> 1.3.0')
+        }
+
+        results.output.contains 'aligned'
+        results.output.contains("- Selected by rule : substitution from 'test.nebula:c:1.2.0' to 'test.nebula:c:1.3.0' because ★ custom substitution reason")
+
+        where:
+        coreAlignment << [false, true]
+    }
+
+    @Unroll
+    def 'dependency constraint with strict version declaration to a good version while a substitution is triggered by a transitive dependency | core alignment #coreAlignment'() {
+        buildFile << """\
+            dependencies {
+                constraints {
+                    implementation('test.nebula:a') {
+                        version { strictly("1.1.0") }
+                        because '☘︎ custom constraint: test.nebula:a should be 1.1.0'
+                    }
+                }
+                implementation 'test.other:z:1.0.0' // brings in bad version
+                implementation 'test.brings-b:b:1.0.0' // added for alignment
+                implementation 'test.brings-c:c:1.0.0' // added for alignment
+            }
+        """.stripIndent()
+
+        def graph = new DependencyGraphBuilder()
+                .addModule(new ModuleBuilder('test.brings-b:b:1.0.0').addDependency('test.nebula:b:1.0.0').build())
+                .addModule(new ModuleBuilder('test.brings-a:a:1.0.0').addDependency('test.nebula:a:1.0.0').build())
+                .addModule(new ModuleBuilder('test.brings-c:c:1.0.0').addDependency('test.nebula:c:1.0.0').build())
+                .build()
+        new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
+
+        when:
+        def tasks = ['dependencyInsight', '--dependency', 'test.nebula', "-Dnebula.features.coreAlignmentSupport=$coreAlignment"]
+        def results = runTasks(*tasks)
+
+        then:
+        // strictly rich version constraint to an okay version is the primary contributor
+        results.output.contains('test.nebula:a:{strictly 1.1.0} -> 1.1.0\n')
+        results.output.contains('test.nebula:a:1.2.0 -> 1.1.0\n')
+        results.output.contains('test.nebula:b:1.0.0 -> 1.1.0\n')
+        results.output.contains('test.nebula:c:1.0.0 -> 1.1.0\n')
+
+        if (coreAlignment) {
+            assert results.output.contains('- Forced')
+        }
+
+        results.output.contains 'aligned'
+        results.output.contains("- Selected by rule : substitution from 'test.nebula:a:1.2.0' to 'test.nebula:a:1.3.0' because ★ custom substitution reason")
+
+        where:
+        coreAlignment << [false, true]
+    }
+
+    @Unroll
+    def 'dependency constraint with strict version declaration to a bad version triggers a substitution | core alignment #coreAlignment'() {
+        buildFile << """\
+            dependencies {
+                constraints {
+                    implementation('test.nebula:a') {
+                        version { strictly("1.2.0") }
+                        because '☘︎ custom constraint: test.nebula:a should be 1.2.0'
+                    }
+                }
+                implementation 'test.brings-a:a:1.0.0' // added for alignment
+                implementation 'test.brings-b:b:1.0.0' // added for alignment
+                implementation 'test.brings-c:c:1.0.0' // added for alignment
+            }
+        """.stripIndent()
+
+        def graph = new DependencyGraphBuilder()
+                .addModule(new ModuleBuilder('test.brings-b:b:1.0.0').addDependency('test.nebula:b:1.0.0').build())
+                .addModule(new ModuleBuilder('test.brings-a:a:1.0.0').addDependency('test.nebula:a:1.0.0').build())
+                .addModule(new ModuleBuilder('test.brings-c:c:1.0.0').addDependency('test.nebula:c:1.0.0').build())
+                .build()
+        new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
+
+        when:
+        def tasks = ['dependencyInsight', '--dependency', 'test.nebula', "-Dnebula.features.coreAlignmentSupport=$coreAlignment"]
+        def results = runTasks(*tasks)
+
+        then:
+        // substitution rule to a known-good-version is the primary contributor; rich version strictly constraint to a bad version is the secondary contributor
+        results.output.contains 'test.nebula:a:{strictly 1.2.0} -> 1.3.0'
+        results.output.contains 'test.nebula:b:1.0.0 -> 1.3.0'
+        results.output.contains 'test.nebula:c:1.0.0 -> 1.3.0'
+
+        results.output.contains 'aligned'
+        results.output.contains "- Selected by rule : substitution from 'test.nebula:a:1.2.0' to 'test.nebula:a:1.3.0' because ★ custom substitution reason"
+
+        where:
+        coreAlignment << [false, true]
+    }
+
+    @Unroll
+    def 'dependency constraint with strict version declaration to a good version while substitution is triggered by a direct dependency | core alignment #coreAlignment'() {
+        buildFile << """\
+            dependencies {
+                constraints {
+                    implementation('test.nebula:a') {
+                        version { strictly("1.1.0") }
+                        because '☘︎ custom constraint: test.nebula:a should be 1.1.0'
+                    }
+                    implementation('test.nebula:b') {
+                        version { strictly("1.1.0") }
+                        because '☘︎ custom constraint: test.nebula:b should be 1.1.0'
+                    }
+                }
+                implementation 'test.brings-b:b:1.0.0' // added for alignment
+                implementation 'test.brings-a:a:1.0.0' // added for alignment
+                implementation'test.nebula:c:1.2.0' // brings in bad version
+            }
+        """.stripIndent()
+
+        def graph = new DependencyGraphBuilder()
+                .addModule(new ModuleBuilder('test.brings-b:b:1.0.0').addDependency('test.nebula:b:1.0.0').build())
+                .addModule(new ModuleBuilder('test.brings-a:a:1.0.0').addDependency('test.nebula:a:1.0.0').build())
+                .build()
+        new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
 
         when:
         def tasks = ['dependencyInsight', '--dependency', 'test.nebula', "-Dnebula.features.coreAlignmentSupport=$coreAlignment"]
