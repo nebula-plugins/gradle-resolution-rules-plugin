@@ -24,6 +24,7 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
     def setup() {
         setupProjectAndDependencies()
         debug = true
+        forwardOutput = true
     }
     
     @Unroll
@@ -107,6 +108,117 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
 
         when:
         def tasks = ['dependencyInsight', '--dependency', 'test.nebula', '--warning-mode', 'none', "-Dnebula.features.coreAlignmentSupport=$coreAlignment"]
+        def results = runTasks(*tasks)
+
+        then:
+        // force to an okay version is the primary contributor; the substitution rule was a secondary contributor
+        results.output.contains 'test.nebula:a:1.1.0\n'
+        results.output.contains 'test.nebula:b:1.0.0 -> 1.1.0\n'
+        results.output.contains 'test.nebula:c:1.2.0 -> 1.1.0\n'
+
+        results.output.contains 'aligned'
+        results.output.toLowerCase().contains 'forced'
+        results.output.contains "- Selected by rule : substitution from 'test.nebula:c:1.2.0' to 'test.nebula:c:1.3.0' because ★ custom substitution reason"
+
+        where:
+        coreAlignment << [false, true]
+    }
+
+    @Unroll
+    def 'resolution strategy force to good version while substitution is triggered by a transitive dependency | core alignment #coreAlignment'() {
+        buildFile << """\
+            configurations.all {
+                resolutionStrategy {
+                    force 'test.nebula:a:1.1.0'
+                }
+            }
+            dependencies {
+                implementation 'test.nebula:a:1.1.0'
+                implementation 'test.nebula:b:1.0.0' // added for alignment
+                implementation 'test.nebula:c:1.0.0' // added for alignment
+                implementation 'test.other:z:1.0.0' // brings in bad version
+            }
+        """.stripIndent()
+
+        when:
+        def tasks = ['dependencyInsight', '--dependency', 'test.nebula', "-Dnebula.features.coreAlignmentSupport=$coreAlignment"]
+        def results = runTasks(*tasks)
+
+        then:
+        if (coreAlignment) {
+            assert results.output.contains('Multiple forces on different versions for virtual platform')
+            assert results.output.contains('test.nebula:a:1.1.0 FAILED')
+        } else {
+            // force to an okay version is the primary contributor; the substitution rule was a secondary contributor
+            assert results.output.contains('test.nebula:a:1.2.0 -> 1.1.0\n')
+            assert results.output.contains('test.nebula:b:1.0.0 -> 1.1.0\n')
+            assert results.output.contains('test.nebula:c:1.0.0 -> 1.1.0\n')
+        }
+
+        results.output.contains 'aligned'
+        results.output.contains '- Forced'
+        results.output.contains "- Selected by rule : substitution from 'test.nebula:a:1.2.0' to 'test.nebula:a:1.3.0' because ★ custom substitution reason"
+
+        where:
+        coreAlignment << [false, true]
+    }
+
+    @Unroll
+    def 'resolution strategy force to bad version triggers a substitution | core alignment #coreAlignment'() {
+        buildFile << """\
+            configurations.all {
+                resolutionStrategy {
+                    force 'test.nebula:a:1.2.0' // force to bad version triggers a substitution
+                }
+            }
+            dependencies {
+                implementation 'test.nebula:a:1.2.0' // bad version
+                implementation 'test.nebula:b:1.0.0' // added for alignment
+                implementation 'test.nebula:c:1.0.0' // added for alignment
+            }
+        """.stripIndent()
+
+        when:
+        def tasks = ['dependencyInsight', '--dependency', 'test.nebula', "-Dnebula.features.coreAlignmentSupport=$coreAlignment"]
+        def results = runTasks(*tasks)
+
+        then:
+        if (coreAlignment) {
+            // substitution rule to a known-good-version was the primary contributor; force to a bad version was a secondary contributor
+            assert results.output.contains('test.nebula:a:1.2.0 -> 1.3.0\n')
+            assert results.output.contains('test.nebula:b:1.0.0 -> 1.3.0\n')
+            assert results.output.contains('test.nebula:c:1.0.0 -> 1.3.0\n')
+        } else {
+            // force to a bad version is the primary contributor; the substitution rule was a secondary contributor
+            assert results.output.contains('test.nebula:a:1.2.0\n') // force syntax is the primary contributor
+            assert results.output.contains('test.nebula:b:1.0.0 -> 1.2.0\n')
+            assert results.output.contains('test.nebula:c:1.0.0 -> 1.2.0\n')
+        }
+        results.output.contains 'aligned'
+        results.output.contains('- Forced')
+        results.output.contains "- Selected by rule : substitution from 'test.nebula:a:1.2.0' to 'test.nebula:a:1.3.0' because ★ custom substitution reason"
+
+        where:
+        coreAlignment << [false, true]
+    }
+
+    @Unroll
+    def 'resolution strategy force to a good version while substitution is triggered by a direct dependency | core alignment #coreAlignment'() {
+        buildFile << """\
+            configurations.all {
+                resolutionStrategy {
+                    force 'test.nebula:a:1.1.0'
+                }
+            }
+            dependencies {
+                implementation 'test.nebula:a:1.1.0'
+                implementation 'test.nebula:b:1.0.0' // added for alignment
+                implementation 'test.nebula:c:1.2.0' // bad version
+            }
+        """.stripIndent()
+
+        when:
+        def tasks = ['dependencyInsight', '--dependency', 'test.nebula', "-Dnebula.features.coreAlignmentSupport=$coreAlignment"]
         def results = runTasks(*tasks)
 
         then:
