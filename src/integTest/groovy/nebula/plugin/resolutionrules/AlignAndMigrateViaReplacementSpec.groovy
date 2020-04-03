@@ -10,10 +10,7 @@ class AlignAndMigrateViaReplacementSpec extends AbstractAlignAndMigrateSpec {
         createAlignAndReplaceRules(['other:e': 'test.nebula:c'])
 
         when:
-        def tasks = ['dependencyInsight', '--dependency', 'test.nebula']
-        if(coreAlignment) {
-            tasks.add('-Dnebula.features.coreAlignmentSupport=true')
-        }
+        def tasks = ['dependencyInsight', '--dependency', 'test.nebula', "-Dnebula.features.coreAlignmentSupport=$coreAlignment"]
         def results = runTasks(*tasks)
         then:
         results.output.contains("test.nebula:a:1.0.0 -> $alignedVersion")
@@ -28,10 +25,7 @@ class AlignAndMigrateViaReplacementSpec extends AbstractAlignAndMigrateSpec {
         }
 
         when:
-        def dependenciesTasks = ['dependencies', '--configuration', 'compileClasspath']
-        if(coreAlignment) {
-            dependenciesTasks.add('-Dnebula.features.coreAlignmentSupport=true')
-        }
+        def dependenciesTasks = ['dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment"]
         def resultsForDependencies = runTasks(*dependenciesTasks)
 
         then:
@@ -57,10 +51,7 @@ class AlignAndMigrateViaReplacementSpec extends AbstractAlignAndMigrateSpec {
         """
 
         when:
-        def tasks = ['dependencyInsight', '--dependency', 'test.nebula']
-        if(coreAlignment) {
-            tasks.add('-Dnebula.features.coreAlignmentSupport=true')
-        }
+        def tasks = ['dependencyInsight', '--dependency', 'test.nebula', "-Dnebula.features.coreAlignmentSupport=$coreAlignment"]
         def results = runTasks(*tasks)
         then:
         results.output.contains("test.nebula:a:1.0.0 -> $alignedVersion")
@@ -74,10 +65,7 @@ class AlignAndMigrateViaReplacementSpec extends AbstractAlignAndMigrateSpec {
         }
 
         when:
-        def dependenciesTasks = ['dependencies', '--configuration', 'compileClasspath']
-        if(coreAlignment) {
-            dependenciesTasks.add('-Dnebula.features.coreAlignmentSupport=true')
-        }
+        def dependenciesTasks = ['dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment"]
         def resultsForDependencies = runTasks(*dependenciesTasks)
 
         then:

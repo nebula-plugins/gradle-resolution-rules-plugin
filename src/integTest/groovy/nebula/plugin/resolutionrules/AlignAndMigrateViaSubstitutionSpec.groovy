@@ -25,10 +25,7 @@ class AlignAndMigrateViaSubstitutionSpec extends AbstractAlignAndMigrateSpec {
         }
 
         when:
-        def dependenciesTasks = ['dependencies', '--configuration', 'compileClasspath']
-        if(coreAlignment) {
-            dependenciesTasks.add('-Dnebula.features.coreAlignmentSupport=true')
-        }
+        def dependenciesTasks = ['dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment"]
         def resultsForDependencies = runTasks(*dependenciesTasks)
 
         then:
