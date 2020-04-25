@@ -58,6 +58,7 @@ class ResolutionRulesPlugin : Plugin<Project> {
         const val JAR_EXT = ".jar"
         const val ZIP_EXT = ".zip"
         const val OPTIONAL_PREFIX = "optional-"
+        const val IGNORED_CONFIGURATIONS_PROPERTY_NAME = "resolutionRulesIgnoredConfigurations"
     }
 
     override fun apply(project: Project) {
@@ -76,8 +77,14 @@ class ResolutionRulesPlugin : Plugin<Project> {
             rootProject.extensions.create("nebulaResolutionRules", NebulaResolutionRulesExtension::class.java)
         }
 
+        val extraIgnoredConfigurations = mutableListOf<String>()
+        if(project.hasProperty(IGNORED_CONFIGURATIONS_PROPERTY_NAME)) {
+            val configurationsToIgnore = project.property(IGNORED_CONFIGURATIONS_PROPERTY_NAME).toString().split(',')
+            extraIgnoredConfigurations.addAll(configurationsToIgnore)
+        }
+
         project.configurations.all { config ->
-            if (ignoredConfigurationPrefixes.any { config.name.startsWith(it) }) {
+            if (ignoredConfigurationPrefixes.any { config.name.startsWith(it) } || extraIgnoredConfigurations.contains(config.name)) {
                 return@all
             }
 
