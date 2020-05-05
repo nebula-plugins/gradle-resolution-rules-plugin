@@ -83,34 +83,36 @@ class ResolutionRulesPlugin : Plugin<Project> {
             extraIgnoredConfigurations.addAll(configurationsToIgnore)
         }
 
-        project.configurations.all { config ->
-            if (ignoredConfigurationPrefixes.any { config.name.startsWith(it) } || extraIgnoredConfigurations.contains(config.name)) {
-                return@all
-            }
+        project.afterEvaluate {
+            project.configurations.all { config ->
+                if (ignoredConfigurationPrefixes.any { config.name.startsWith(it) } || extraIgnoredConfigurations.contains(config.name)) {
+                    return@all
+                }
 
-            var dependencyRulesApplied = false
-            project.onExecute {
-                when {
-                    config.state != Configuration.State.UNRESOLVED || config.getObservedState() != Configuration.State.UNRESOLVED -> logger.warn("Dependency resolution rules will not be applied to $config, it was resolved before the project was executed")
-                    else -> {
-                        ruleSet.dependencyRulesPartOne().forEach { rule ->
-                            rule.apply(project, config, config.resolutionStrategy, extension, reasons)
-                        }
+                var dependencyRulesApplied = false
+                project.onExecute {
+                    when {
+                        config.state != Configuration.State.UNRESOLVED || config.getObservedState() != Configuration.State.UNRESOLVED -> logger.warn("Dependency resolution rules will not be applied to $config, it was resolved before the project was executed")
+                        else -> {
+                            ruleSet.dependencyRulesPartOne().forEach { rule ->
+                                rule.apply(project, config, config.resolutionStrategy, extension, reasons)
+                            }
 
-                        ruleSet.dependencyRulesPartTwo().forEach { rule ->
-                            rule.apply(project, config, config.resolutionStrategy, extension, reasons)
+                            ruleSet.dependencyRulesPartTwo().forEach { rule ->
+                                rule.apply(project, config, config.resolutionStrategy, extension, reasons)
+                            }
+                            dependencyRulesApplied = true
                         }
-                        dependencyRulesApplied = true
                     }
                 }
-            }
 
-            config.onResolve {
-                if (!dependencyRulesApplied) {
-                    logger.debug("Skipping resolve rules for $config - dependency rules have not been applied")
-                } else {
-                    ruleSet.resolveRules().forEach { rule ->
-                        rule.apply(project, config, config.resolutionStrategy, extension, reasons)
+                config.onResolve {
+                    if (!dependencyRulesApplied) {
+                        logger.debug("Skipping resolve rules for $config - dependency rules have not been applied")
+                    } else {
+                        ruleSet.resolveRules().forEach { rule ->
+                            rule.apply(project, config, config.resolutionStrategy, extension, reasons)
+                        }
                     }
                 }
             }

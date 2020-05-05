@@ -45,7 +45,6 @@ class IgnoredConfigurationsWithRulesSpec extends IntegrationSpec {
     }
 
 
-
     def 'does not substitute dependency if the configuration is ignored'() {
         given:
         buildFile << """
