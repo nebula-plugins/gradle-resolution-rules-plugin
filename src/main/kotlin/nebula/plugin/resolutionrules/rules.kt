@@ -112,10 +112,6 @@ data class ReplaceRule(override val module: String, val with: String, override v
     }
 }
 
-val getVersionSelector = { version: String ->
-    VersionWithSelector(version).asSelector()
-}.memoize()
-
 data class SubstituteRule(val module: String, val with: String, override var ruleSet: String?,
                           override val reason: String, override val author: String, override val date: String) : BasicRule, Serializable {
     override fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension, reasons: MutableSet<String>) {
@@ -132,7 +128,7 @@ data class SubstituteRule(val module: String, val with: String, override var rul
                 if (requested is ModuleComponentSelector) {
                     val requestedSelector = requested as ModuleComponentSelector
                     if (requestedSelector.group == substitutedModule.group && requestedSelector.module == substitutedModule.module) {
-                        val versionSelector = getVersionSelector(substitutedModule.version)
+                        val versionSelector = VersionWithSelector(substitutedModule.version).asSelector()
                         val requestedSelectorVersion = requestedSelector.version
                         if (versionSelector.accept(requestedSelectorVersion)
                                 && !requestedSelector.toString().contains(".+")
@@ -230,13 +226,3 @@ class SubstituteRuleMissingVersionException(moduleId: ModuleVersionIdentifier, r
 fun Configuration.exclude(group: String, module: String) {
     exclude(mapOf("group" to group, "module" to module))
 }
-
-class Memoize<in T, out R>(val f: (T) -> R) : (T) -> R {
-    private val values = ConcurrentHashMap<T, R>()
-    override fun invoke(x: T): R {
-        return values.computeIfAbsent(x, { f(x) })
-    }
-}
-
-fun <T, R> ((T) -> R).memoize(): (T) -> R = Memoize(this)
-
