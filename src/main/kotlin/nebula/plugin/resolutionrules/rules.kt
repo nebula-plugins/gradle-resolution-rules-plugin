@@ -116,12 +116,16 @@ val getVersionSelector = { version: String ->
     VersionWithSelector(version).asSelector()
 }.memoize()
 
+val getModuleVersionIdentifier = { notation: String ->
+    ModuleVersionIdentifier.valueOf(notation)
+}.memoize()
+
 data class SubstituteRule(val module: String, val with: String, override var ruleSet: String?,
                           override val reason: String, override val author: String, override val date: String) : BasicRule, Serializable {
     override fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension, reasons: MutableSet<String>) {
         val substitution = resolutionStrategy.dependencySubstitution
         val substitutedModule = substitution.module(module)
-        val withModuleId = ModuleVersionIdentifier.valueOf(with)
+        val withModuleId = getModuleVersionIdentifier(with)
         if (!withModuleId.hasVersion()) {
             throw SubstituteRuleMissingVersionException(withModuleId, this, reasons)
         }
@@ -171,7 +175,7 @@ data class SubstituteRule(val module: String, val with: String, override var rul
 
 data class RejectRule(override val module: String, override var ruleSet: String?, override val reason: String, override val author: String, override val date: String) : ModuleRule {
     override fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension, reasons: MutableSet<String>) {
-        val moduleId = ModuleVersionIdentifier.valueOf(module)
+        val moduleId = getModuleVersionIdentifier(module)
         resolutionStrategy.componentSelection.all(Action<ComponentSelection> { selection ->
             val candidate = selection.candidate
             if (candidate.group == moduleId.organization && candidate.module == moduleId.name) {
@@ -188,7 +192,7 @@ data class RejectRule(override val module: String, override var ruleSet: String?
 
 data class DenyRule(override val module: String, override var ruleSet: String?, override val reason: String, override val author: String, override val date: String) : ModuleRule {
     override fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension, reasons: MutableSet<String>) {
-        val moduleId = ModuleVersionIdentifier.valueOf(module)
+        val moduleId = getModuleVersionIdentifier(module)
         val match = configuration.allDependencies.find {
             it is ExternalModuleDependency && it.group == moduleId.organization && it.name == moduleId.name
         }
@@ -208,7 +212,7 @@ data class ExcludeRule(override val module: String, override var ruleSet: String
 
     @Override
     override fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension, reasons: MutableSet<String>) {
-        val moduleId = ModuleIdentifier.valueOf(module)
+        val moduleId = getModuleVersionIdentifier(module)
         val message = "Resolution rule $this excluding ${moduleId.organization}:${moduleId.name} and transitive dependencies for all dependencies of this configuration\n" +
                 "\twith reasons: ${reasons.joinToString()}"
         logger.debug(message)
