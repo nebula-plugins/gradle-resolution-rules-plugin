@@ -234,7 +234,7 @@ fun Configuration.exclude(group: String, module: String) {
 class Memoize<in T, out R>(val f: (T) -> R) : (T) -> R {
     private val values = ConcurrentHashMap<T, R>()
     override fun invoke(x: T): R {
-        return values.getOrPut(x, { f(x) })
+        return values.computeIfAbsent(x, { f(x) })
     }
 }
 
