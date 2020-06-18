@@ -17,37 +17,35 @@
 
 package nebula.plugin.resolutionrules
 
-open class ModuleIdentifier(val organization: String, val name: String) {
+open class ModuleIdentifier(val organization: String, val name: String, private val notation: String) {
     override fun toString(): String {
-        return "$organization:$name"
+        return notation
     }
 
     companion object Factory {
         fun valueOf(notation: String): ModuleIdentifier {
             val parts = notation.split(':')
-            assert (parts.size == 2)
-            return ModuleIdentifier(parts[0], parts[1])
+            assert(parts.size == 2)
+            return ModuleIdentifier(parts[0], parts[1], "${parts[0]}:${parts[1]}")
         }
     }
 }
 
-class ModuleVersionIdentifier(organization: String, name: String, val version: String) : ModuleIdentifier(organization, name) {
+class ModuleVersionIdentifier(organization: String, name: String, val version: String, private val notation: String) : ModuleIdentifier(organization, name, "$organization:$name") {
     override fun toString(): String {
-        return if (version.isEmpty()) "$organization:$name" else "$organization:$name:$version"
+        return notation
     }
 
-    fun hasVersion() = !version.isEmpty()
+    fun hasVersion() = version.isNotEmpty()
 
     companion object Factory {
         @JvmStatic
         fun valueOf(notation: String): ModuleVersionIdentifier {
             val parts = notation.split(':')
-            if (parts.size == 3) {
-                return ModuleVersionIdentifier(parts[0], parts[1], parts[2])
-            } else if (parts.size == 2) {
-                return ModuleVersionIdentifier(parts[0], parts[1], "")
-            } else {
-                throw IllegalArgumentException("Unknown module syntax: $notation")
+            return when (parts.size) {
+                3 -> ModuleVersionIdentifier(parts[0], parts[1], parts[2], "${parts[0]}:${parts[1]}:${parts[2]}")
+                2 -> ModuleVersionIdentifier(parts[0], parts[1], "", "${parts[0]}:${parts[1]}")
+                else -> throw IllegalArgumentException("Unknown module syntax: $notation")
             }
         }
     }
