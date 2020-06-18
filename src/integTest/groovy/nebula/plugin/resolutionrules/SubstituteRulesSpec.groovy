@@ -157,7 +157,6 @@ class SubstituteRulesSpec extends IntegrationSpec {
         then:
         def rootCause = StackTraceUtils.extractRootCause(result.failure)
         rootCause.class.simpleName == 'SubstituteRuleMissingVersionException'
-        rootCause.message.contains("The dependency to be substituted (org.ow2.asm:asm) must have a version. Invalid rule: SubstituteRule(module=asm:asm, with=org.ow2.asm:asm, ruleSet=missing-version-in-substitution-rule, reason=The asm group id changed for 4.0 and later, author=Danny Thomas <dmthomas@gmail.com>, date=2015-10-07T20:21:20.368Z)")
-        rootCause.message.findAll("with reasons: nebula.resolution-rules uses: .*.json").size() > 0
+        rootCause.message.contains("The dependency to be substituted (org.ow2.asm:asm) must have a version. Rule missing-version-in-substitution-rule is invalid")
     }
 }
