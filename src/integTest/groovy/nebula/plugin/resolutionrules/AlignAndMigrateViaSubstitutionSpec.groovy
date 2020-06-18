@@ -16,7 +16,7 @@ class AlignAndMigrateViaSubstitutionSpec extends AbstractAlignAndMigrateSpec {
         results.output.contains("test.nebula:a:1.0.0 -> $alignedVersion")
         results.output.contains("test.nebula:b:$alignedVersion")
         results.output.contains("other:e:4.0.0 -> test.nebula:c:$alignedVersion")
-        results.output.contains("substitution from 'other:e:4.0.0' to 'test.nebula:c:1.0.1' because ★ custom substitution reason")
+        results.output.contains("substituted other:e:4.0.0 with test.nebula:c:1.0.1 because '★ custom substitution reason'")
 
         if(coreAlignment) {
             results.output.contains("belongs to platform aligned-platform")
