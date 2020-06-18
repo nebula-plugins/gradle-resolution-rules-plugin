@@ -51,7 +51,7 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
 
         results.output.contains 'aligned'
         results.output.contains '- Forced'
-        results.output.contains "- Selected by rule : substitution from 'test.nebula:a:1.2.0' to 'test.nebula:a:1.3.0' because ★ custom substitution reason"
+        results.output.contains "- Selected by rule : substituted test.nebula:a:1.2.0 with test.nebula:a:1.3.0 because '★ custom substitution reason'"
 
         where:
         coreAlignment << [false, true]
@@ -87,7 +87,7 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
         }
         results.output.contains 'aligned'
         results.output.contains('- Forced')
-        results.output.contains "- Selected by rule : substitution from 'test.nebula:a:1.2.0' to 'test.nebula:a:1.3.0' because ★ custom substitution reason"
+        results.output.contains "- Selected by rule : substituted test.nebula:a:1.2.0 with test.nebula:a:1.3.0 because '★ custom substitution reason'"
 
         where:
         coreAlignment << [false, true]
@@ -117,7 +117,7 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
 
         results.output.contains 'aligned'
         results.output.toLowerCase().contains 'forced'
-        results.output.contains "- Selected by rule : substitution from 'test.nebula:c:1.2.0' to 'test.nebula:c:1.3.0' because ★ custom substitution reason"
+        results.output.contains "- Selected by rule : substituted test.nebula:c:1.2.0 with test.nebula:c:1.3.0 because '★ custom substitution reason'"
 
         where:
         coreAlignment << [false, true]
@@ -156,7 +156,7 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
 
         results.output.contains 'aligned'
         results.output.contains '- Forced'
-        results.output.contains "- Selected by rule : substitution from 'test.nebula:a:1.2.0' to 'test.nebula:a:1.3.0' because ★ custom substitution reason"
+        results.output.contains "- Selected by rule : substituted test.nebula:a:1.2.0 with test.nebula:a:1.3.0 because '★ custom substitution reason'"
 
         where:
         coreAlignment << [false, true]
@@ -195,7 +195,7 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
         }
         results.output.contains 'aligned'
         results.output.contains('- Forced')
-        results.output.contains "- Selected by rule : substitution from 'test.nebula:a:1.2.0' to 'test.nebula:a:1.3.0' because ★ custom substitution reason"
+        results.output.contains "- Selected by rule : substituted test.nebula:a:1.2.0 with test.nebula:a:1.3.0 because '★ custom substitution reason'"
 
         where:
         coreAlignment << [false, true]
@@ -228,7 +228,7 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
 
         results.output.contains 'aligned'
         results.output.toLowerCase().contains 'forced'
-        results.output.contains "- Selected by rule : substitution from 'test.nebula:c:1.2.0' to 'test.nebula:c:1.3.0' because ★ custom substitution reason"
+        results.output.contains "- Selected by rule : substituted test.nebula:c:1.2.0 with test.nebula:c:1.3.0 because '★ custom substitution reason'"
 
         where:
         coreAlignment << [false, true]
@@ -268,7 +268,7 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
         }
 
         results.output.contains 'aligned'
-        results.output.contains("- Selected by rule : substitution from 'test.nebula:a:1.2.0' to 'test.nebula:a:1.3.0' because ★ custom substitution reason")
+        results.output.contains("- Selected by rule : substituted test.nebula:a:1.2.0 with test.nebula:a:1.3.0 because '★ custom substitution reason'")
 
         where:
         coreAlignment << [false, true]
@@ -297,7 +297,7 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
         results.output.contains 'test.nebula:c:1.0.0 -> 1.3.0'
 
         results.output.contains 'aligned'
-        results.output.contains "- Selected by rule : substitution from 'test.nebula:a:1.2.0' to 'test.nebula:a:1.3.0' because ★ custom substitution reason"
+        results.output.contains "- Selected by rule : substituted test.nebula:a:1.2.0 with test.nebula:a:1.3.0 because '★ custom substitution reason'"
 
         where:
         coreAlignment << [false, true]
@@ -336,7 +336,7 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
         }
 
         results.output.contains 'aligned'
-        results.output.contains("- Selected by rule : substitution from 'test.nebula:c:1.2.0' to 'test.nebula:c:1.3.0' because ★ custom substitution reason")
+        results.output.contains("- Selected by rule : substituted test.nebula:c:1.2.0 with test.nebula:c:1.3.0 because '★ custom substitution reason'")
 
         where:
         coreAlignment << [false, true]
@@ -381,7 +381,7 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
         }
 
         results.output.contains 'aligned'
-        results.output.contains("- Selected by rule : substitution from 'test.nebula:a:1.2.0' to 'test.nebula:a:1.3.0' because ★ custom substitution reason")
+        results.output.contains("- Selected by rule : substituted test.nebula:a:1.2.0 with test.nebula:a:1.3.0 because '★ custom substitution reason'")
 
         where:
         coreAlignment << [false, true]
@@ -421,7 +421,7 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
         results.output.contains 'test.nebula:c:1.0.0 -> 1.3.0'
 
         results.output.contains 'aligned'
-        results.output.contains "- Selected by rule : substitution from 'test.nebula:a:1.2.0' to 'test.nebula:a:1.3.0' because ★ custom substitution reason"
+        results.output.contains "- Selected by rule : substituted test.nebula:a:1.2.0 with test.nebula:a:1.3.0 because '★ custom substitution reason'"
 
         where:
         coreAlignment << [false, true]
@@ -472,7 +472,7 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
         }
 
         results.output.contains 'aligned'
-        results.output.contains("- Selected by rule : substitution from 'test.nebula:c:1.2.0' to 'test.nebula:c:1.3.0' because ★ custom substitution reason")
+        results.output.contains("- Selected by rule : substituted test.nebula:c:1.2.0 with test.nebula:c:1.3.0 because '★ custom substitution reason'")
 
         where:
         coreAlignment << [false, true]

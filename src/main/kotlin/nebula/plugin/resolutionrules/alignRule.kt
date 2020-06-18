@@ -49,8 +49,7 @@ data class AlignRule(val name: String?,
     override fun apply(project: Project,
                        configuration: Configuration,
                        resolutionStrategy: ResolutionStrategy,
-                       extension: NebulaResolutionRulesExtension,
-                       reasons: MutableSet<String>) {
+                       extension: NebulaResolutionRulesExtension) {
         //TODO this rule is applied repeatedly for each configuration. Ideally it should be taken out and
         //applied only once per project
         if (configuration.name == "compileClasspath") { // This is one way to ensure it'll be run for only one configuration
@@ -115,16 +114,13 @@ open class AlignedPlatformMetadataRule : ComponentMetadataRule, Serializable, Re
 }
 
 data class AlignRules(val aligns: List<AlignRule>) : Rule {
-    lateinit var reasons: MutableSet<String>
-
     companion object {
         val logger: Logger = Logging.getLogger(AlignRules::class.java)
 
         const val MAX_PASSES = 5
     }
 
-    override fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension, reasons: MutableSet<String>) {
-        this.reasons = reasons
+    override fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension) {
         if (configuration.isCopy) {
             // Don't attempt to align one of our copied configurations
             return
@@ -298,8 +294,7 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
                     if (finalConfiguration) {
                         logger.debug("Resolution rule $rule aligning ${details.requested.group}:${details.requested.name} to $version")
                     }
-                    details.because("aligned to $version by ${rule.ruleSet} aligning group '${rule.group}'\n" +
-                            "\twith reasons: ${reasons.joinToString()}")
+                    details.because("aligned to $version by rule ${rule.ruleSet} aligning group '${rule.group}'")
                             .useVersion("(,$version]")
                 }
             }

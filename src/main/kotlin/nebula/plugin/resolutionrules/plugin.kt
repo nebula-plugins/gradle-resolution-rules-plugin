@@ -30,20 +30,16 @@ import java.io.File
 import java.util.*
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
+import javax.inject.Inject
 
 const val RESOLUTION_RULES_CONFIG_NAME = "resolutionRules"
 
 class ResolutionRulesPlugin : Plugin<Project> {
     private val logger: Logger = Logging.getLogger(ResolutionRulesPlugin::class.java)
-    private val ruleSet: RuleSet by lazy {
-        rulesFromConfiguration(project, extension)
-    }
     private val NEBULA_RECOMMENDER_BOM_CONFIG_NAME: String = "nebulaRecommenderBom"
     private lateinit var project: Project
     private lateinit var configurations: ConfigurationContainer
     private lateinit var extension: NebulaResolutionRulesExtension
-    private lateinit var mapper: ObjectMapper
-    private var reasons: MutableSet<String> = mutableSetOf()
     private val ignoredConfigurationPrefixes = listOf(RESOLUTION_RULES_CONFIG_NAME, SPRING_VERSION_MANAGEMENT_CONFIG_NAME,
             NEBULA_RECOMMENDER_BOM_CONFIG_NAME, SCALA_INCREMENTAL_ANALYSIS_CONFIGURATION_PREFIX, KTLINT_CONFIGURATION_PREFIX, REPOSITORY_CONTENT_DESCRIPTOR_CONFIGURATION_PREFIX)
 
@@ -63,8 +59,7 @@ class ResolutionRulesPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         this.project = project
         configurations = project.configurations
-        extension = project.extensions.create("nebulaResolutionRules", NebulaResolutionRulesExtension::class.java)
-        mapper = objectMapper()
+        extension = project.extensions.create("nebulaResolutionRules", NebulaResolutionRulesExtension::class.java, project)
 
         if (isCoreAlignmentEnabled()) {
             logger.warn("${project.name}: coreAlignmentSupport feature enabled")
@@ -73,16 +68,18 @@ class ResolutionRulesPlugin : Plugin<Project> {
         val rootProject = project.rootProject
         rootProject.configurations.maybeCreate(RESOLUTION_RULES_CONFIG_NAME)
         if (rootProject.extensions.findByType(NebulaResolutionRulesExtension::class.java) == null) {
-            rootProject.extensions.create("nebulaResolutionRules", NebulaResolutionRulesExtension::class.java)
+            rootProject.extensions.create("nebulaResolutionRules", NebulaResolutionRulesExtension::class.java, rootProject)
         }
 
         val extraIgnoredConfigurations = mutableListOf<String>()
-        if(project.hasProperty(IGNORED_CONFIGURATIONS_PROPERTY_NAME)) {
+        if (project.hasProperty(IGNORED_CONFIGURATIONS_PROPERTY_NAME)) {
             val configurationsToIgnore = project.property(IGNORED_CONFIGURATIONS_PROPERTY_NAME).toString().split(',')
             extraIgnoredConfigurations.addAll(configurationsToIgnore)
         }
 
         project.afterEvaluate {
+            val ruleSet = extension.ruleSet()
+
             project.configurations.all { config ->
                 if (ignoredConfigurationPrefixes.any { config.name.startsWith(it) } || extraIgnoredConfigurations.contains(config.name)) {
                     return@all
@@ -94,11 +91,11 @@ class ResolutionRulesPlugin : Plugin<Project> {
                         config.state != Configuration.State.UNRESOLVED || config.getObservedState() != Configuration.State.UNRESOLVED -> logger.warn("Dependency resolution rules will not be applied to $config, it was resolved before the project was executed")
                         else -> {
                             ruleSet.dependencyRulesPartOne().forEach { rule ->
-                                rule.apply(project, config, config.resolutionStrategy, extension, reasons)
+                                rule.apply(project, config, config.resolutionStrategy, extension)
                             }
 
                             ruleSet.dependencyRulesPartTwo().forEach { rule ->
-                                rule.apply(project, config, config.resolutionStrategy, extension, reasons)
+                                rule.apply(project, config, config.resolutionStrategy, extension)
                             }
                             dependencyRulesApplied = true
                         }
@@ -110,30 +107,42 @@ class ResolutionRulesPlugin : Plugin<Project> {
                         logger.debug("Skipping resolve rules for $config - dependency rules have not been applied")
                     } else {
                         ruleSet.resolveRules().forEach { rule ->
-                            rule.apply(project, config, config.resolutionStrategy, extension, reasons)
+                            rule.apply(project, config, config.resolutionStrategy, extension)
                         }
                     }
                 }
             }
         }
     }
+}
 
-    private fun rulesFromConfiguration(project: Project, extension: NebulaResolutionRulesExtension): RuleSet {
+open class NebulaResolutionRulesExtension @Inject constructor(private val project: Project) {
+    private val logger: Logger = Logging.getLogger(ResolutionRulesPlugin::class.java)
+
+    var include = ArrayList<String>()
+    var optional = ArrayList<String>()
+    var exclude = ArrayList<String>()
+
+    private val rulesByFile by lazy {
+        val rootProject = project.rootProject
+        check(project == rootProject) { "This should only be called on the root project extension" }
+        val configuration = rootProject.configurations.getByName(RESOLUTION_RULES_CONFIG_NAME)
+        val files = rootProject.copyConfiguration(configuration).resolve()
+        val mapper = objectMapper()
         val rules = LinkedHashMap<String, RuleSet>()
-        val files = extension.ruleFiles(project)
         for (file in files) {
-            val message = "nebula.resolution-rules uses: ${file.name}" // TODO: reformat
-            reasons.add(message)
-            if (isIncludedRuleFile(file.name, extension)) {
-                rules.putRules(parseJsonFile(file))
-            } else if (file.name.endsWith(JAR_EXT) || file.name.endsWith(ZIP_EXT)) {
-                logger.info("nebula.resolution-rules is using ruleset: ${file.name}")
+            val filename = file.name
+            logger.debug("nebula.resolution-rules uses: $filename")
+            if (filename.endsWith(ResolutionRulesPlugin.JSON_EXT)) {
+                rules.putRules(mapper.parseJsonFile(file))
+            } else if (filename.endsWith(ResolutionRulesPlugin.JAR_EXT) || filename.endsWith(ResolutionRulesPlugin.ZIP_EXT)) {
+                logger.info("nebula.resolution-rules is using ruleset: $filename")
                 ZipFile(file).use { zip ->
                     val entries = zip.entries()
                     while (entries.hasMoreElements()) {
                         val entry = entries.nextElement()
-                        if (isIncludedRuleFile(entry.name, extension)) {
-                            rules.putRules(parseJsonStream(zip, entry))
+                        if (entry.name.endsWith(ResolutionRulesPlugin.JSON_EXT)) {
+                            rules.putRules(mapper.parseJsonStream(zip, entry))
                         }
                     }
                 }
@@ -141,7 +150,21 @@ class ResolutionRulesPlugin : Plugin<Project> {
                 logger.debug("Unsupported rules file extension for $file")
             }
         }
-        return rules.values.flatten()
+        rules
+    }
+
+    fun ruleSet(): RuleSet {
+        val rulesByFile = project.rootProject.extensions.getByType(NebulaResolutionRulesExtension::class.java).rulesByFile
+        return rulesByFile.filterKeys { ruleSet ->
+            when {
+                ruleSet.startsWith(ResolutionRulesPlugin.OPTIONAL_PREFIX) -> {
+                    val ruleSetWithoutPrefix = ruleSet.substring(ResolutionRulesPlugin.OPTIONAL_PREFIX.length)
+                    optional.contains(ruleSetWithoutPrefix)
+                }
+                include.isNotEmpty() -> include.contains(ruleSet)
+                else -> !exclude.contains(ruleSet)
+            }
+        }.values.flatten()
     }
 
     private fun MutableMap<String, RuleSet>.putRules(ruleSet: RuleSet) {
@@ -150,53 +173,17 @@ class ResolutionRulesPlugin : Plugin<Project> {
         }
     }
 
-    private fun isIncludedRuleFile(filename: String, extension: NebulaResolutionRulesExtension): Boolean {
-        if (filename.endsWith(JSON_EXT)) {
-            val ruleSet = ruleSetName(filename)
-            return if (ruleSet.startsWith(OPTIONAL_PREFIX)) {
-                val ruleSetWithoutPrefix = ruleSet.substring(OPTIONAL_PREFIX.length)
-                extension.optional.contains(ruleSetWithoutPrefix)
-            } else if (!extension.include.isEmpty()) {
-                extension.include.contains(ruleSet)
-            } else {
-                !extension.exclude.contains(ruleSet)
-            }
-        }
-        return false
-    }
+    private fun ruleSetName(filename: String) = filename.substring(0, filename.lastIndexOf(ResolutionRulesPlugin.JSON_EXT))
 
-    private fun ruleSetName(filename: String) = filename.substring(0, filename.lastIndexOf(JSON_EXT))
-
-    private fun parseJsonFile(file: File): RuleSet {
+    private fun ObjectMapper.parseJsonFile(file: File): RuleSet {
         val ruleSetName = ruleSetName(file.name)
         logger.debug("Using $ruleSetName (${file.name}) a dependency rules source")
-        return mapper.readValue<RuleSet>(file).withName(ruleSetName)
+        return readValue<RuleSet>(file).withName(ruleSetName)
     }
 
-    private fun parseJsonStream(zip: ZipFile, entry: ZipEntry): RuleSet {
+    private fun ObjectMapper.parseJsonStream(zip: ZipFile, entry: ZipEntry): RuleSet {
         val ruleSetName = ruleSetName(File(entry.name).name)
         logger.debug("Using $ruleSetName (${zip.name}) a dependency rules source")
-        return mapper.readValue<RuleSet>(zip.getInputStream(entry)).withName(ruleSetName)
-    }
-}
-
-open class NebulaResolutionRulesExtension {
-    var include = ArrayList<String>()
-    var optional = ArrayList<String>()
-    var exclude = ArrayList<String>()
-
-    private lateinit var rootProject: Project
-    private val ruleFiles by lazy {
-        val configuration = rootProject.configurations.getByName(RESOLUTION_RULES_CONFIG_NAME)
-        rootProject.copyConfiguration(configuration).resolve()
-    }
-
-    fun ruleFiles(project: Project): Set<File> {
-        return if (project == project.rootProject) {
-            rootProject = project
-            ruleFiles
-        } else {
-            project.rootProject.extensions.getByType(NebulaResolutionRulesExtension::class.java).ruleFiles(project.rootProject)
-        }
+        return readValue<RuleSet>(zip.getInputStream(entry)).withName(ruleSetName)
     }
 }

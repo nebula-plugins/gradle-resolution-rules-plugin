@@ -177,8 +177,7 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
         then:
         // 'a' is aligned
         aResult.output.contains 'test.nebula:a:1.1'
-        aResult.output.contains 'aligned to 1.1.0 by dependencyInsight-has-extra-info-for-alignment'
-        aResult.output.contains 'with reasons: nebula.resolution-rules uses: dependencyInsight-has-extra-info-for-alignment.json'
+        aResult.output.contains 'aligned to 1.1.0 by rule dependencyInsight-has-extra-info-for-alignment'
         aResult.output.findAll("test.nebula:a:.* -> 1.1.0").size() > 0
 
         when:
@@ -194,8 +193,7 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
         then:
         // 'c' is aligned
         cResult.output.contains 'test.nebula:c:1.1.0'
-        cResult.output.contains 'aligned to 1.1.0 by dependencyInsight-has-extra-info-for-alignment'
-        cResult.output.contains 'with reasons: nebula.resolution-rules uses: dependencyInsight-has-extra-info-for-alignment.json'
+        cResult.output.contains "aligned to 1.1.0 by rule dependencyInsight-has-extra-info-for-alignment aligning group 'test.nebula'"
         cResult.output.findAll("test.nebula:c:.* -> 1.1.0").size() > 0
     }
 

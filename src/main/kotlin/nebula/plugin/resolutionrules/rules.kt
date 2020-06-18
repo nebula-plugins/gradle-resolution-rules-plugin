@@ -20,20 +20,15 @@ import com.netflix.nebula.interop.VersionWithSelector
 import com.netflix.nebula.interop.action
 import org.gradle.api.Action
 import org.gradle.api.Project
-import org.gradle.api.artifacts.ComponentModuleMetadataDetails
-import org.gradle.api.artifacts.ComponentSelection
-import org.gradle.api.artifacts.Configuration
-import org.gradle.api.artifacts.ExternalModuleDependency
-import org.gradle.api.artifacts.ResolutionStrategy
+import org.gradle.api.artifacts.*
 import org.gradle.api.artifacts.component.ComponentSelector
 import org.gradle.api.artifacts.component.ModuleComponentSelector
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import java.io.Serializable
-import java.util.concurrent.ConcurrentHashMap
 
 interface Rule {
-    fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension, reasons: MutableSet<String>)
+    fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension)
 }
 
 interface BasicRule : Rule {
@@ -104,11 +99,10 @@ data class ReplaceRule(override val module: String, val with: String, override v
     private val moduleId = ModuleIdentifier.valueOf(module)
     private val withModuleId = ModuleIdentifier.valueOf(with)
 
-    override fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension, reasons: MutableSet<String>) {
+    override fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension) {
         project.dependencies.modules.module(moduleId.toString()) {
             val details = it as ComponentModuleMetadataDetails
-            val message = "replacement ${moduleId.organization}:${moduleId.name} -> ${withModuleId.organization}:${withModuleId.name}\n" +
-                    "\twith reasons: ${reasons.joinToString()}"
+            val message = "replaced ${moduleId.organization}:${moduleId.name} -> ${withModuleId.organization}:${withModuleId.name} because '$reason' by rule $ruleSet"
             details.replacedBy(withModuleId.toString(), message)
         }
     }
@@ -123,15 +117,15 @@ data class SubstituteRule(val module: String, val with: String, override var rul
         VersionWithSelector(version).asSelector()
     }
 
-    override fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension, reasons: MutableSet<String>) {
+    override fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension) {
         val substitution = resolutionStrategy.dependencySubstitution
         if (!this::substitutedModule.isInitialized) {
             substitutedModule = substitution.module(module)
             val withModule = substitution.module(with)
             if (withModule !is ModuleComponentSelector) {
-                throw SubstituteRuleMissingVersionException(with, this, reasons)
+                throw SubstituteRuleMissingVersionException(with, this)
             }
-            withSelector = withModule
+            withSelector = substitution.module(with) as ModuleComponentSelector
         }
 
         if (substitutedModule is ModuleComponentSelector) {
@@ -145,8 +139,7 @@ data class SubstituteRule(val module: String, val with: String, override var rul
                                 && !requestedSelector.toString().contains(".+")
                                 && !requestedSelector.toString().contains("latest")
                         ) {
-                            val message = "substitution from '$substitutedModule' to '$withSelector' because $reason \n" +
-                                    "\twith reasons: ${reasons.joinToString()}"
+                            val message = "substituted $substitutedModule with $withSelector because '$reason' by rule $ruleSet"
                             // Note on `useTarget`:
                             // Forcing modules via ResolutionStrategy.force(Object...) uses this capability.
                             // from https://docs.gradle.org/current/javadoc/org/gradle/api/artifacts/DependencyResolveDetails.html
@@ -156,14 +149,12 @@ data class SubstituteRule(val module: String, val with: String, override var rul
                 }
             })
         } else {
-            var message = "substitution to '$withSelector' because $reason \n" +
-                    "\twith reasons: ${reasons.joinToString()}"
+            var message = "substituted $withSelector because '$reason' by rule $ruleSet"
 
             val selectorNameSections = substitutedModule.displayName.split(":")
             if (selectorNameSections.size > 2) {
                 val selectorGroupAndArtifact = "${selectorNameSections[0]}:${selectorNameSections[1]}"
-                message = "substitution from '$selectorGroupAndArtifact' to '$withSelector' because $reason \n" +
-                        "\twith reasons: ${reasons.joinToString()}"
+                message = "substituted $selectorGroupAndArtifact with $withSelector because '$reason' by rule $ruleSet"
             }
 
             resolutionStrategy.dependencySubstitution {
@@ -180,13 +171,12 @@ data class RejectRule(override val module: String, override var ruleSet: String?
     private val moduleId = ModuleVersionIdentifier.valueOf(module)
     private val versionSelector = VersionWithSelector(moduleId.version).asSelector()
 
-    override fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension, reasons: MutableSet<String>) {
+    override fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension) {
         resolutionStrategy.componentSelection.all { selection ->
             val candidate = selection.candidate
             if (candidate.group == moduleId.organization && candidate.module == moduleId.name) {
                 if (!moduleId.hasVersion() || versionSelector.accept(candidate.version)) {
-                    val message = "Rejected by resolution rule $ruleSet - $reason\n" +
-                            "\twith reasons: ${reasons.joinToString()}"
+                    val message = "rejected by rule $ruleSet because '$reason'"
                     selection.reject(message)
                 }
             }
@@ -197,17 +187,16 @@ data class RejectRule(override val module: String, override var ruleSet: String?
 data class DenyRule(override val module: String, override var ruleSet: String?, override val reason: String, override val author: String, override val date: String) : ModuleRule {
     private val moduleId = ModuleVersionIdentifier.valueOf(module)
 
-    override fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension, reasons: MutableSet<String>) {
+    override fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension) {
         val match = configuration.allDependencies.find {
             it is ExternalModuleDependency && it.group == moduleId.organization && it.name == moduleId.name
         }
         if (match != null && (!moduleId.hasVersion() || match.version == moduleId.version)) {
             resolutionStrategy.componentSelection.withModule("${moduleId.organization}:${moduleId.name}", Action<ComponentSelection> { selection ->
-                val message = "Dependency $moduleId denied by dependency rule: $reason\n" +
-                        "\twith reasons: ${reasons.joinToString()}"
+                val message = "denied by rule $ruleSet because '$reason'"
                 selection.reject(message)
             })
-            throw DependencyDeniedException(moduleId, this, reasons)
+            throw DependencyDeniedException(moduleId, this)
         }
     }
 }
@@ -217,24 +206,21 @@ data class ExcludeRule(override val module: String, override var ruleSet: String
     private val moduleId = ModuleIdentifier.valueOf(module)
 
     @Override
-    override fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension, reasons: MutableSet<String>) {
-        val message = "Resolution rule $this excluding ${moduleId.organization}:${moduleId.name} and transitive dependencies for all dependencies of this configuration\n" +
-                "\twith reasons: ${reasons.joinToString()}"
+    override fun apply(project: Project, configuration: Configuration, resolutionStrategy: ResolutionStrategy, extension: NebulaResolutionRulesExtension) {
+        val message = "excluded ${moduleId.organization}:${moduleId.name} and transitive dependencies for all dependencies of this configuration by rule $ruleSet"
         logger.debug(message)
         // TODO: would like a core Gradle feature that accepts a reason
         configuration.exclude(moduleId.organization, moduleId.name)
 
-        resolutionStrategy.componentSelection.withModule("${moduleId.organization}:${moduleId.name}", Action<ComponentSelection> { selection ->
+        resolutionStrategy.componentSelection.withModule("${moduleId.organization}:${moduleId.name}") { selection ->
             selection.reject(message)
-        })
+        }
     }
 }
 
-class DependencyDeniedException(moduleId: ModuleVersionIdentifier, rule: DenyRule, reasons: MutableSet<String>) : Exception("Dependency $moduleId denied by dependency rule: ${rule.reason}\n" +
-        "\twith reasons: ${reasons.joinToString()}")
+class DependencyDeniedException(moduleId: ModuleVersionIdentifier, rule: DenyRule) : Exception("Dependency $moduleId denied by rule ${rule.ruleSet}")
 
-class SubstituteRuleMissingVersionException(moduleId: String, rule: SubstituteRule, reasons: MutableSet<String>) : Exception("The dependency to be substituted ($moduleId) must have a version. Invalid rule: $rule\n" +
-        "\twith reasons: ${reasons.joinToString()}")
+class SubstituteRuleMissingVersionException(moduleId: String, rule: SubstituteRule) : Exception("The dependency to be substituted ($moduleId) must have a version. Rule ${rule.ruleSet} is invalid")
 
 fun Configuration.exclude(group: String, module: String) {
     exclude(mapOf("group" to group, "module" to module))

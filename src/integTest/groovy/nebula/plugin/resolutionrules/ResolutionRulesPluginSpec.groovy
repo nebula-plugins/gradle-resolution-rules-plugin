@@ -190,7 +190,7 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
                      """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencies')
+        def result = runTasksSuccessfully('dependencies', '--debug')
 
         then:
         def output = result.standardOutput
@@ -227,9 +227,8 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
 
         then:
         // reasons
-        result.standardOutput.contains('replacement asm:asm -> org.ow2.asm:asm')
+        result.standardOutput.contains("replaced asm:asm -> org.ow2.asm:asm because 'The asm group id changed for 4.0 and later' by rule replaced-module-is-shown-by-dependencyInsight")
         result.standardOutput.contains('asm:asm:3.3.1 -> org.ow2.asm:asm:5.0.4')
-        result.standardOutput.contains('with reasons: nebula.resolution-rules uses:')
 
         // final result
         result.standardOutput.findAll('Task.*\n.*org.ow2.asm:asm:5.0.4').size() > 0
@@ -374,8 +373,7 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
         then:
         def rootCause = StackTraceUtils.extractRootCause(result.failure)
         rootCause.class.simpleName == 'DependencyDeniedException'
-        rootCause.message.contains("Dependency com.google.guava:guava:19.0-rc2 denied by dependency rule: Guava 19.0-rc2 is not permitted")
-        rootCause.message.findAll("with reasons: nebula.resolution-rules uses: .*.json, nebula.resolution-rules uses: .*.json").size() > 0
+        rootCause.message.contains("Dependency com.google.guava:guava:19.0-rc2 denied by rule deny-dependency")
     }
 
     @Unroll
@@ -393,8 +391,7 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
         then:
         def rootCause = StackTraceUtils.extractRootCause(result.failure)
         rootCause.class.simpleName == 'DependencyDeniedException'
-        rootCause.message.contains("Dependency com.sun.jersey:jersey-bundle denied by dependency rule: jersey-bundle is a fat jar that includes non-relocated (shaded) third party classes, which can cause duplicated classes on the classpath. Please specify the jersey- libraries you need directly")
-        rootCause.message.findAll("with reasons: nebula.resolution-rules uses: .*.json, nebula.resolution-rules uses: .*.json").size() > 0
+        rootCause.message.contains("Dependency com.sun.jersey:jersey-bundle denied by rule deny-dependency-without-version")
     }
 
     def 'reject dependency'() {
@@ -409,7 +406,7 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
         def result = runTasksSuccessfully('dependencies', '--configuration', 'compileClasspath')
 
         then:
-        result.standardOutput.contains("Selection of com.google.guava:guava:12.0 rejected by component selection rule: Rejected by resolution rule reject-dependency - Guava 12.0 significantly regressed LocalCache performance")
+        result.standardOutput.contains("rejected by component selection rule: rejected by rule reject-dependency because 'Guava 12.0 significantly regressed LocalCache performance'")
     }
 
     def 'reject dependency with selector'() {
@@ -438,7 +435,7 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
         def result = runTasksSuccessfully('dependencies', '--configuration', 'compileClasspath')
 
         then:
-        result.standardOutput.contains("Selection of com.google.guava:guava:16.0.1 rejected by component selection rule: Rejected by resolution rule reject-dependency-with-selector - Just a Guava release that happens to have a patch release")
+        result.standardOutput.contains("rejected by rule reject-dependency-with-selector because 'Just a Guava release that happens to have a patch release'")
     }
 
     def 'rules apply to detached configurations that have been added to the configurations container'() {
