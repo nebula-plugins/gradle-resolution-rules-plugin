@@ -1921,8 +1921,8 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
         if (coreAlignment) {
-            assert result.output.contains("substitution from 'test.nebula:a:1.0.1' to 'test.nebula:a:1.0.2'")
-            assert result.output.contains("substitution from 'test.nebula:b:1.0.3' to 'test.nebula:b:1.0.2'")
+            assert result.output.contains("substituted test.nebula:a:1.0.1 with test.nebula:a:1.0.2")
+            assert result.output.contains("substituted test.nebula:b:1.0.3 with test.nebula:b:1.0.2")
 
             assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
         }
@@ -1960,8 +1960,8 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
         if (coreAlignment) {
-            assert result.output.contains("substitution from 'test.nebula:a:1.0.1' to 'test.nebula:a:1.0.2'")
-            assert result.output.contains("substitution from 'test.nebula:b:1.0.3' to 'test.nebula:b:1.0.2'")
+            assert result.output.contains("substituted test.nebula:a:1.0.1 with test.nebula:a:1.0.2")
+            assert result.output.contains("substituted test.nebula:b:1.0.3 with test.nebula:b:1.0.2")
 
             assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
         }
@@ -1993,8 +1993,8 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
             assert result.output.contains("Recommending version 1.0.1 for dependency test.nebula:a via conflict resolution recommendation")
             assert result.output.contains("Recommending version 1.0.1 for dependency test.nebula:b via conflict resolution recommendation")
 
-            assert result.output.contains("substitution from 'test.nebula:a:1.0.1' to 'test.nebula:a:1.0.2'")
-            assert result.output.contains("substitution from 'test.nebula:b:1.0.1' to 'test.nebula:b:1.0.2'")
+            assert result.output.contains("substituted test.nebula:a:1.0.1 with test.nebula:a:1.0.2")
+            assert result.output.contains("substituted test.nebula:b:1.0.1 with test.nebula:b:1.0.2")
 
             assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
         }
@@ -2024,8 +2024,8 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
         if (coreAlignment) {
-            assert result.output.contains("substitution from 'test.nebula:a:1.0.1' to 'test.nebula:a:1.0.2'")
-            assert result.output.contains("substitution from 'test.nebula:b:1.0.1' to 'test.nebula:b:1.0.2'")
+            assert result.output.contains("substituted test.nebula:a:1.0.1 with test.nebula:a:1.0.2")
+            assert result.output.contains("substituted test.nebula:b:1.0.1 with test.nebula:b:1.0.2")
 
             assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
         }
@@ -2056,8 +2056,8 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
         if (coreAlignment) {
-            assert result.output.contains("substitution from 'test.nebula:a:1.0.1' to 'test.nebula:a:1.0.2'")
-            assert result.output.contains("substitution from 'test.nebula:b:1.0.1' to 'test.nebula:b:1.0.2'")
+            assert result.output.contains("substituted test.nebula:a:1.0.1 with test.nebula:a:1.0.2")
+            assert result.output.contains("substituted test.nebula:b:1.0.1 with test.nebula:b:1.0.2")
 
             assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
         }
@@ -2088,8 +2088,8 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
         if (coreAlignment) {
-            assert result.output.contains("substitution from 'test.nebula:a:1.0.1' to 'test.nebula:a:1.0.2'")
-            assert result.output.contains("substitution from 'test.nebula:b:1.0.1' to 'test.nebula:b:1.0.2'")
+            assert result.output.contains("substituted test.nebula:a:1.0.1 with test.nebula:a:1.0.2")
+            assert result.output.contains("substituted test.nebula:b:1.0.1 with test.nebula:b:1.0.2")
 
             assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
         }
