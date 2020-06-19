@@ -215,6 +215,7 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
         val dependency = resolvedDependencies
                 .filter { it.from.moduleVersion?.module == newRoundDependency.from.moduleVersion?.module }
                 .map { it.selected }
+                .distinct()
                 .singleOrNull { it.moduleVersion?.module == newRoundDependency.selectedModuleVersion.module }
                 ?: return true
         val selectionReason = dependency.selectionReason
