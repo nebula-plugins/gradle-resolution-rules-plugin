@@ -16,7 +16,7 @@
  */
 
 plugins {
-    id 'nebula.plugin-plugin' version '14.4.0'
+    id 'nebula.plugin-plugin' version '14.5.0'
     id 'nebula.kotlin' version '1.3.61'
     id 'java-gradle-plugin'
 }
@@ -68,12 +68,6 @@ gradlePlugin {
 tasks.integrationTest {
     // alignment is determined via a system property, so we don't want to share state
     forkEvery = 1
-}
-
-tasks.withType(Test) {
-    testLogging {
-        events "PASSED", "FAILED", "SKIPPED"
-    }
 }
 
 pluginBundle {
