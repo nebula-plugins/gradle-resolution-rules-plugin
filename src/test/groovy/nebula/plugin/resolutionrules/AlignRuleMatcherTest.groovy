@@ -122,45 +122,6 @@ class AlignRuleMatcherTest extends Specification {
         assert matches
     }
 
-    @Test
-    void handlesErrorInIncludes() {
-        given:
-        def includes = new ArrayList()
-        includes.add(null)
-
-        def excludes = new ArrayList()
-
-        def alignRule = createAlignRule(includes, excludes)
-
-        when:
-        alignRule.ruleMatches(inputGroup, "something-else")
-
-        then:
-        IllegalArgumentException e = thrown()
-        e.getMessage().contains('Failed to use ')
-        e.getMessage().contains("$alignRule")
-    }
-
-    @Test
-    void handlesErrorInExcludes() {
-        given:
-        def includes = new ArrayList()
-
-        def excludes = new ArrayList()
-        excludes.add(null)
-
-        def alignRule = createAlignRule(includes, excludes)
-
-        when:
-        alignRule.ruleMatches(inputGroup, "something-else")
-
-        then:
-        IllegalArgumentException e = thrown()
-        e.getMessage().contains('Failed to use ')
-        e.getMessage().contains("$alignRule")
-    }
-
-
     private static AlignRule createAlignRule(ArrayList includes = new ArrayList(), ArrayList excludes = new ArrayList()) {
         new AlignRule(
                 ruleName,

@@ -26,6 +26,7 @@ import org.gradle.api.logging.Logging
 import java.io.Serializable
 import java.util.*
 import java.util.regex.Matcher
+import java.util.regex.Pattern
 import javax.inject.Inject
 
 data class AlignRule(val name: String?,
@@ -39,12 +40,12 @@ data class AlignRule(val name: String?,
                      override val date: String,
                      var belongsToName: String?) : BasicRule, Serializable {
 
-    @Transient
-    private var groupMatcher: Matcher? = null
-    @Transient
-    private lateinit var includesMatchers: List<Matcher>
-    @Transient
-    private lateinit var excludesMatchers: List<Matcher>
+    private val groupPattern = group.toPattern()
+    private val includesPatterns = includes.map { it.toPattern() }
+    private val excludesPatterns = excludes.map { it.toPattern() }
+    private val alignMatcher = ThreadLocal.withInitial {
+        AlignMatcher(this, groupPattern, includesPatterns, excludesPatterns)
+    }
 
     override fun apply(project: Project,
                        configuration: Configuration,
@@ -61,45 +62,34 @@ data class AlignRule(val name: String?,
 
     fun ruleMatches(dep: ModuleVersionIdentifier) = ruleMatches(dep.group, dep.name)
 
-    fun ruleMatches(inputGroup: String, inputName: String): Boolean {
-        groupMatcher = safelyCreatesMatcher(group, inputGroup, "group")
-        includesMatchers = includes.map { safelyCreatesMatcher(it, inputName, "includes") }
-        excludesMatchers = excludes.map { safelyCreatesMatcher(it, inputName, "excludes") }
+    fun ruleMatches(group: String, name: String) = alignMatcher.get().matches(group, name)
+}
 
+class AlignMatcher(val rule: AlignRule, groupPattern: Pattern, includesPatterns: List<Pattern>, excludesPatterns: List<Pattern>) {
+    private val groupMatcher = groupPattern.matcher("")
+    private val includeMatchers = includesPatterns.map { it.matcher("") }
+    private val excludeMatchers = excludesPatterns.map { it.matcher("") }
 
-        return safelyMatches(groupMatcher!!, inputGroup, "group") &&
-                (includes.isEmpty() || includesMatchers.any { safelyMatches(it, inputName, "includes") }) &&
-                (excludes.isEmpty() || excludesMatchers.none { safelyMatches(it, inputName, "excludes") })
-    }
-
-    private fun safelyCreatesMatcher(it: Regex, input: String, type: String): Matcher {
+    private fun Matcher.matches(input: String, type: String): Boolean {
+        reset(input)
         return try {
-            it.toPattern().matcher(input)
+            matches()
         } catch (e: Exception) {
-            throw java.lang.IllegalArgumentException("Failed to use regex '$it' from type '$type' to create matcher for '$input'\n" +
-                    "Rule: ${this}", e)
+            throw java.lang.IllegalArgumentException("Failed to use matcher '$this' from type '$type' to match '$input'\n" +
+                    "Rule: $rule", e)
         }
     }
 
-    private fun safelyMatches(it: Matcher, input: String, type: String): Boolean {
-        return try {
-            it.matches()
-        } catch (e: Exception) {
-            throw java.lang.IllegalArgumentException("Failed to use matcher '$it' from type '$type' to match '$input'\n" +
-                    "Rule: ${this}", e)
-        }
+    fun matches(group: String, name: String): Boolean {
+        return groupMatcher.matches(group, "group") &&
+                (includeMatchers.isEmpty() || includeMatchers.any { it.matches(name, "includes") }) &&
+                (excludeMatchers.isEmpty() || excludeMatchers.none { it.matches(name, "excludes") })
     }
 }
 
 @CacheableRule
-open class AlignedPlatformMetadataRule : ComponentMetadataRule, Serializable, ReusableAction {
-    val rule: AlignRule
-    val logger: Logger = Logging.getLogger(AlignedPlatformMetadataRule::class.java)
-
-    @Inject
-    constructor(rule: AlignRule) {
-        this.rule = rule
-    }
+open class AlignedPlatformMetadataRule @Inject constructor(val rule: AlignRule) : ComponentMetadataRule, Serializable, ReusableAction {
+    private val logger: Logger = Logging.getLogger(AlignedPlatformMetadataRule::class.java)
 
     override fun execute(componentMetadataContext: ComponentMetadataContext?) {
         modifyDetails(componentMetadataContext!!.details)
@@ -278,12 +268,12 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
 
     private fun Configuration.applyAligns(alignedVersionsWithDependencies: List<AlignedVersionWithDependencies>, finalConfiguration: Boolean = false): Configuration {
         alignedVersionsWithDependencies.map { it.alignedVersion }.let {
-            resolutionStrategy.eachDependency(ApplyAlignsAction(this, it, finalConfiguration))
+            resolutionStrategy.eachDependency(ApplyAlignsAction(it, finalConfiguration))
         }
         return this
     }
 
-    private inner class ApplyAlignsAction(val configuration: Configuration, val alignedVersions: List<AlignedVersion>, val finalConfiguration: Boolean) : Action<DependencyResolveDetails> {
+    private inner class ApplyAlignsAction(val alignedVersions: List<AlignedVersion>, val finalConfiguration: Boolean) : Action<DependencyResolveDetails> {
         override fun execute(details: DependencyResolveDetails) {
             val target = details.target
             val alignedVersion = alignedVersions.firstOrNull {
@@ -320,6 +310,7 @@ data class AlignRules(val aligns: List<AlignRule>) : Rule {
                 }
             }.map {
                 val moduleIdentifier = DefaultModuleIdentifier.newId(it.group, it.name)
+                @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
                 DefaultModuleVersionSelector.newSelector(moduleIdentifier, it.version)
             }
 
