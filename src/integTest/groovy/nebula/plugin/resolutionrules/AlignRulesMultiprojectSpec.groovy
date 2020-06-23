@@ -27,6 +27,10 @@ class AlignRulesMultiprojectSpec extends IntegrationSpec {
     def bDir
 
     def setup() {
+        // Avoid deprecation warnings during parallel resolution while we look for a solution
+        System.setProperty('ignoreDeprecations', 'true')
+        System.setProperty('ignoreMutableProjectStateWarnings', 'true')
+
         fork = false
         rulesJsonFile = new File(projectDir, "${moduleName}.json")
         buildFile << """\
