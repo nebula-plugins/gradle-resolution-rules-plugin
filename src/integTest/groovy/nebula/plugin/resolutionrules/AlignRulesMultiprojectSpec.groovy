@@ -59,7 +59,7 @@ class AlignRulesMultiprojectSpec extends IntegrationSpec {
     }
 
     @Unroll
-    def 'align rules do not interfere with a multiproject that produces the jars being aligned'() {
+    def 'align rules do not interfere with a multiproject that produces the jars being aligned (coreAlignment #coreAlignment, parallel #parallel)'() {
         rulesJsonFile << '''\
             {
                 "deny": [], "reject": [], "substitute": [], "replace": [],
@@ -104,17 +104,25 @@ class AlignRulesMultiprojectSpec extends IntegrationSpec {
         '''.stripIndent()
 
         when:
-        def results = runTasksSuccessfully(':b:dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def tasks = [':b:dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment"]
+        if (parallel) {
+            tasks += "--parallel"
+        }
+        def results = runTasksSuccessfully(*tasks)
 
         then:
         results.standardOutput.contains('\\--- project :a\n')
 
         where:
-        coreAlignment << [false, true]
+        coreAlignment | parallel
+        false         | false
+        false         | true
+        true          | false
+        true          | true
     }
 
     @Unroll
-    def 'cycle like behavior'() {
+    def 'cycle like behavior (coreAlignment #coreAlignment, parallel #parallel)'() {
         rulesJsonFile << '''\
             {
                 "deny": [], "reject": [], "substitute": [], "replace": [],
@@ -143,17 +151,25 @@ class AlignRulesMultiprojectSpec extends IntegrationSpec {
         '''.stripIndent()
 
         when:
-        def results = runTasksSuccessfully(':a:dependencies', ':b:dependencies', 'assemble', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def tasks = [':a:dependencies', ':b:dependencies', 'assemble', "-Dnebula.features.coreAlignmentSupport=$coreAlignment"]
+        if (parallel) {
+            tasks += "--parallel"
+        }
+        runTasksSuccessfully(*tasks)
 
         then:
         noExceptionThrown()
 
         where:
-        coreAlignment << [false, true]
+        coreAlignment | parallel
+        false         | false
+        false         | true
+        true          | false
+        true          | true
     }
 
     @Unroll
-    def 'can align project dependencies'() {
+    def 'can align project dependencies (coreAlignment #coreAlignment, parallel #parallel)'() {
         def graph = new DependencyGraphBuilder()
                 .addModule('other.nebula:a:0.42.0')
                 .addModule('other.nebula:a:1.0.0')
@@ -205,7 +221,11 @@ class AlignRulesMultiprojectSpec extends IntegrationSpec {
         """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully(':a:dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def tasks = [':a:dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment"]
+        if (parallel) {
+            tasks += "--parallel"
+        }
+        def result = runTasksSuccessfully(*tasks)
 
         then:
         result.standardOutput.contains '+--- other.nebula:a:1.0.0 -> 1.1.0'
@@ -213,11 +233,15 @@ class AlignRulesMultiprojectSpec extends IntegrationSpec {
         result.standardOutput.contains '\\--- other.nebula:c:0.42.0'
 
         where:
-        coreAlignment << [false, true]
+        coreAlignment | parallel
+        false         | false
+        false         | true
+        true          | false
+        true          | true
     }
 
     @Unroll
-    def 'root project can depend on subprojects'() {
+    def 'root project can depend on subprojects (coreAlignment #coreAlignment, parallel #parallel)'() {
         def graph = new DependencyGraphBuilder()
                 .addModule('other.nebula:a:0.42.0')
                 .addModule('other.nebula:a:1.0.0')
@@ -276,7 +300,11 @@ class AlignRulesMultiprojectSpec extends IntegrationSpec {
         """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully(':a:dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def tasks = [':a:dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment"]
+        if (parallel) {
+            tasks += "--parallel"
+        }
+        def result = runTasksSuccessfully(*tasks)
 
         then:
         result.standardOutput.contains '+--- other.nebula:a:1.0.0 -> 1.1.0'
@@ -284,6 +312,10 @@ class AlignRulesMultiprojectSpec extends IntegrationSpec {
         result.standardOutput.contains '\\--- other.nebula:c:0.42.0'
 
         where:
-        coreAlignment << [false, true]
+        coreAlignment | parallel
+        false         | false
+        false         | true
+        true          | false
+        true          | true
     }
 }

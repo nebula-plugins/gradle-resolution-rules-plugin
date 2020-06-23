@@ -28,6 +28,7 @@ import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import java.io.File
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 import javax.inject.Inject
@@ -114,38 +115,43 @@ open class NebulaResolutionRulesExtension @Inject constructor(private val projec
     var optional = ArrayList<String>()
     var exclude = ArrayList<String>()
 
-    private val rulesByFile by lazy {
-        val rootProject = project.rootProject
-        check(project == rootProject) { "This should only be called on the root project extension" }
-        val configuration = rootProject.configurations.getByName(RESOLUTION_RULES_CONFIG_NAME)
-        val files = rootProject.copyConfiguration(configuration).resolve()
-        val mapper = objectMapper()
-        val rules = LinkedHashMap<String, RuleSet>()
-        for (file in files) {
-            val filename = file.name
-            logger.debug("nebula.resolution-rules uses: $filename")
-            if (filename.endsWith(ResolutionRulesPlugin.JSON_EXT)) {
-                rules.putRules(mapper.parseJsonFile(file))
-            } else if (filename.endsWith(ResolutionRulesPlugin.JAR_EXT) || filename.endsWith(ResolutionRulesPlugin.ZIP_EXT)) {
-                logger.info("nebula.resolution-rules is using ruleset: $filename")
-                ZipFile(file).use { zip ->
-                    val entries = zip.entries()
-                    while (entries.hasMoreElements()) {
-                        val entry = entries.nextElement()
-                        if (entry.name.endsWith(ResolutionRulesPlugin.JSON_EXT)) {
-                            rules.putRules(mapper.parseJsonStream(zip, entry))
+    private val rulesByFile = ConcurrentHashMap<Boolean, Map<String,RuleSet>>(1)
+
+    private fun rulesByFile(resolvingProject: Project): Map<String, RuleSet> {
+        check(project == project.rootProject) { "This should only be called on the root project extension" }
+        return rulesByFile.computeIfAbsent(true) {
+            val configuration = project.configurations.getByName(RESOLUTION_RULES_CONFIG_NAME)
+            val detachedConfiguration = resolvingProject.configurations.detachedConfiguration(*configuration.dependencies.toTypedArray())
+            val files = detachedConfiguration.resolve()
+            val mapper = objectMapper()
+            val rules = LinkedHashMap<String, RuleSet>()
+            for (file in files) {
+                val filename = file.name
+                logger.debug("nebula.resolution-rules uses: $filename")
+                if (filename.endsWith(ResolutionRulesPlugin.JSON_EXT)) {
+                    rules.putRules(mapper.parseJsonFile(file))
+                } else if (filename.endsWith(ResolutionRulesPlugin.JAR_EXT) || filename.endsWith(ResolutionRulesPlugin.ZIP_EXT)) {
+                    logger.info("nebula.resolution-rules is using ruleset: $filename")
+                    ZipFile(file).use { zip ->
+                        val entries = zip.entries()
+                        while (entries.hasMoreElements()) {
+                            val entry = entries.nextElement()
+                            if (entry.name.endsWith(ResolutionRulesPlugin.JSON_EXT)) {
+                                rules.putRules(mapper.parseJsonStream(zip, entry))
+                            }
                         }
                     }
+                } else {
+                    logger.debug("Unsupported rules file extension for $file")
                 }
-            } else {
-                logger.debug("Unsupported rules file extension for $file")
             }
+            rules
         }
-        rules
     }
 
     fun ruleSet(): RuleSet {
-        val rulesByFile = project.rootProject.extensions.getByType(NebulaResolutionRulesExtension::class.java).rulesByFile
+        val extension = project.rootProject.extensions.getByType(NebulaResolutionRulesExtension::class.java)
+        val rulesByFile = extension.rulesByFile(project)
         return rulesByFile.filterKeys { ruleSet ->
             when {
                 ruleSet.startsWith(ResolutionRulesPlugin.OPTIONAL_PREFIX) -> {
