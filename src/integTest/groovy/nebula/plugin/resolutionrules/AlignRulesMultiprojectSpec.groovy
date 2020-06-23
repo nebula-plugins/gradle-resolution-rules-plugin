@@ -16,25 +16,24 @@
  */
 package nebula.plugin.resolutionrules
 
-
-import nebula.test.IntegrationTestKitSpec
+import nebula.test.IntegrationSpec
 import nebula.test.dependencies.DependencyGraphBuilder
 import nebula.test.dependencies.GradleDependencyGenerator
 import spock.lang.Unroll
 
-class AlignRulesMultiprojectSpec extends IntegrationTestKitSpec {
+class AlignRulesMultiprojectSpec extends IntegrationSpec {
     def rulesJsonFile
     def aDir
     def bDir
 
     def setup() {
-        definePluginOutsideOfPluginBlock = true
-        debug = true
-        keepFiles = true
+        fork = false
         rulesJsonFile = new File(projectDir, "${moduleName}.json")
         buildFile << """\
             subprojects {
-                apply plugin: 'nebula.resolution-rules'
+                ${applyPlugin(ResolutionRulesPlugin)}
+                
+
                 group = 'test.nebula'
             }
 
@@ -105,10 +104,10 @@ class AlignRulesMultiprojectSpec extends IntegrationTestKitSpec {
         '''.stripIndent()
 
         when:
-        def results = runTasks(':b:dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def results = runTasksSuccessfully(':b:dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
 
         then:
-        results.output.contains('\\--- project :a\n')
+        results.standardOutput.contains('\\--- project :a\n')
 
         where:
         coreAlignment << [false, true]
@@ -144,7 +143,7 @@ class AlignRulesMultiprojectSpec extends IntegrationTestKitSpec {
         '''.stripIndent()
 
         when:
-        def results = runTasks(':a:dependencies', ':b:dependencies', 'assemble', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def results = runTasksSuccessfully(':a:dependencies', ':b:dependencies', 'assemble', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
 
         then:
         noExceptionThrown()
@@ -206,12 +205,12 @@ class AlignRulesMultiprojectSpec extends IntegrationTestKitSpec {
         """.stripIndent()
 
         when:
-        def result = runTasks(':a:dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def result = runTasksSuccessfully(':a:dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
 
         then:
-        result.output.contains '+--- other.nebula:a:1.0.0 -> 1.1.0'
-        result.output.contains '+--- other.nebula:b:1.1.0'
-        result.output.contains '\\--- other.nebula:c:0.42.0'
+        result.standardOutput.contains '+--- other.nebula:a:1.0.0 -> 1.1.0'
+        result.standardOutput.contains '+--- other.nebula:b:1.1.0'
+        result.standardOutput.contains '\\--- other.nebula:c:0.42.0'
 
         where:
         coreAlignment << [false, true]
@@ -277,146 +276,14 @@ class AlignRulesMultiprojectSpec extends IntegrationTestKitSpec {
         """.stripIndent()
 
         when:
-        def result = runTasks(':a:dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def result = runTasksSuccessfully(':a:dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
 
         then:
-        result.output.contains '+--- other.nebula:a:1.0.0 -> 1.1.0'
-        result.output.contains '+--- other.nebula:b:1.1.0'
-        result.output.contains '\\--- other.nebula:c:0.42.0'
+        result.standardOutput.contains '+--- other.nebula:a:1.0.0 -> 1.1.0'
+        result.standardOutput.contains '+--- other.nebula:b:1.1.0'
+        result.standardOutput.contains '\\--- other.nebula:c:0.42.0'
 
         where:
         coreAlignment << [false, true]
-    }
-
-    @Unroll
-    def 'alignment for multiprojects works - parallel #parallelMode - core alignment #coreAlignment'() {
-        def graph = new DependencyGraphBuilder()
-                .addModule('other.nebula:a:0.42.0')
-                .addModule('other.nebula:a:1.0.0')
-                .addModule('other.nebula:a:1.1.0')
-                .addModule('other.nebula:a:2.0.0')
-                .addModule('other.nebula:b:0.42.0')
-                .addModule('other.nebula:b:1.0.0')
-                .addModule('other.nebula:b:1.1.0')
-                .addModule('other.nebula:b:2.0.0')
-                .addModule('other.nebula:c:0.42.0')
-                .addModule('other.nebula:c:1.0.0')
-                .addModule('other.nebula:c:1.1.0')
-                .addModule('other.nebula:c:2.0.0')
-                .addModule('other.nebula:d:0.42.0')
-                .addModule('other.nebula:d:1.0.0')
-                .addModule('other.nebula:d:1.1.0')
-                .addModule('other.nebula:e:0.42.0')
-                .addModule('other.nebula:e:1.0.0')
-                .addModule('other.nebula:e:1.1.0')
-                .addModule('other.nebula:f:0.42.0')
-                .addModule('other.nebula:f:1.0.0')
-                .addModule('other.nebula:f:1.1.0')
-                .build()
-        File mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
-
-        rulesJsonFile << '''\
-            {
-                "deny": [], "reject": [], "substitute": [], "replace": [],
-                "align": [
-                        {
-                            "name": "otherNebula",
-                            "group": "other.nebula",
-                            "reason": "Align other.nebula dependencies",
-                            "author": "Example Person <person@example.org>",
-                            "date": "2016-03-17T20:21:20.368Z"
-                        }
-                ]
-            }
-        '''.stripIndent()
-
-        buildFile << """ \
-            subprojects {
-                task dependenciesForAll(type: DependencyReportTask) {}
-                task dependencyInsightForAll(type: DependencyInsightReportTask) {}
-                repositories {
-                    maven { url '${mavenrepo.absolutePath}' }
-                }
-            }
-            project(':c') {
-                apply plugin: 'java'
-            }
-            """.stripIndent()
-
-        def aBuildFile = new File(aDir, 'build.gradle')
-        aBuildFile << """
-            dependencies {
-                    implementation 'other.nebula:a:1.0.0'
-                    implementation 'other.nebula:b:1.1.0'
-                    implementation 'other.nebula:c:0.42.0'
-            }
-            """.stripIndent()
-
-        def bBuildFile = new File(bDir, 'build.gradle')
-        bBuildFile << """
-            dependencies {
-                    implementation 'other.nebula:d:1.0.0'
-                    implementation 'other.nebula:e:1.0.0'
-                    implementation 'other.nebula:f:0.42.0'
-            }
-            """.stripIndent()
-
-        addSubproject('c', """
-            dependencies {
-                    implementation 'other.nebula:a:2.0.0' // same module, different version as in :a
-                    implementation 'other.nebula:b:1.1.0' // same module, same version as in :a
-                    implementation 'other.nebula:c:0.42.0'
-            }
-            """.stripIndent())
-
-        when:
-        def tasks = ['dependenciesForAll', '--configuration', 'compileClasspath',
-                     "-Dnebula.features.coreAlignmentSupport=$coreAlignment", '--warning-mode', 'none']
-        if (parallelMode) {
-            tasks.add('--parallel')
-        }
-        def result = runTasks(*tasks)
-        // we see warnings about `The configuration :resolutionRules was resolved without accessing the project in a safe manner.` when used in parallel mode
-
-        then:
-        // subproject a
-        result.output.contains 'other.nebula:a:1.0.0 -> 1.1.0\n'
-        result.output.contains 'other.nebula:b:1.1.0\n'
-        result.output.contains 'other.nebula:c:0.42.0 -> 1.1.0\n'
-
-        // subproject b
-        result.output.contains 'other.nebula:d:1.0.0\n'
-        result.output.contains 'other.nebula:e:1.0.0\n'
-        result.output.contains 'other.nebula:f:0.42.0 -> 1.0.0\n'
-
-        // subproject c
-        result.output.contains 'other.nebula:a:2.0.0\n'
-        result.output.contains 'other.nebula:b:1.1.0 -> 2.0.0\n'
-        result.output.contains 'other.nebula:c:0.42.0 -> 2.0.0\n'
-
-        when:
-        def dependencyInsightTasks = ['dependencyInsightForAll', '--configuration', 'compileClasspath',
-                                      '--dependency', 'other.nebula',
-                                      "-Dnebula.features.coreAlignmentSupport=$coreAlignment", '--warning-mode', 'none']
-        if (parallelMode) {
-            dependencyInsightTasks.add('--parallel')
-        }
-        def dependencyInsightResult = runTasks(*dependencyInsightTasks)
-
-        then:
-        !dependencyInsightResult.output.contains('unspecified')
-        if (coreAlignment) {
-            dependencyInsightResult.output.contains('- By conflict resolution : between versions 1.1.0 and 0.42.0\n')
-            dependencyInsightResult.output.contains('- By conflict resolution : between versions 1.1.0 and 1.0.0\n')
-            dependencyInsightResult.output.contains('- By conflict resolution : between versions 2.0.0 and 0.42.0\n')
-            dependencyInsightResult.output.contains('- By conflict resolution : between versions 2.0.0 and 1.1.0\n')
-        }
-
-        where:
-        coreAlignment | parallelMode
-        false         | false
-        false         | true
-        true          | false
-        true          | true
     }
 }
