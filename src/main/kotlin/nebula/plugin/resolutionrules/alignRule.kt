@@ -25,6 +25,7 @@ import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import java.io.Serializable
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 import javax.inject.Inject
@@ -43,9 +44,7 @@ data class AlignRule(val name: String?,
     private val groupPattern = group.toPattern()
     private val includesPatterns = includes.map { it.toPattern() }
     private val excludesPatterns = excludes.map { it.toPattern() }
-    private val alignMatcher = ThreadLocal.withInitial {
-        AlignMatcher(this, groupPattern, includesPatterns, excludesPatterns)
-    }
+    private val alignMatchers = ConcurrentHashMap<Thread, AlignMatcher>()
 
     override fun apply(project: Project,
                        configuration: Configuration,
@@ -62,7 +61,9 @@ data class AlignRule(val name: String?,
 
     fun ruleMatches(dep: ModuleVersionIdentifier) = ruleMatches(dep.group, dep.name)
 
-    fun ruleMatches(group: String, name: String) = alignMatcher.get().matches(group, name)
+    fun ruleMatches(group: String, name: String) = alignMatchers.computeIfAbsent(Thread.currentThread()) {
+        AlignMatcher(this, groupPattern, includesPatterns, excludesPatterns)
+    }.matches(group, name)
 }
 
 class AlignMatcher(val rule: AlignRule, groupPattern: Pattern, includesPatterns: List<Pattern>, excludesPatterns: List<Pattern>) {
