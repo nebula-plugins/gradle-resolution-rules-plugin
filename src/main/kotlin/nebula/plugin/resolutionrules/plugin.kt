@@ -108,7 +108,10 @@ class ResolutionRulesPlugin : Plugin<Project> {
 }
 
 open class NebulaResolutionRulesExtension @Inject constructor(private val project: Project) {
-    private val logger: Logger = Logging.getLogger(ResolutionRulesPlugin::class.java)
+    companion object {
+        private val logger: Logger = Logging.getLogger(ResolutionRulesPlugin::class.java)
+        private val mapper = objectMapper()
+    }
 
     var include = ArrayList<String>()
     var optional = ArrayList<String>()
@@ -118,7 +121,6 @@ open class NebulaResolutionRulesExtension @Inject constructor(private val projec
         check(project == project.rootProject) { "This should only be called on the root project extension" }
         val configuration = project.configurations.getByName(RESOLUTION_RULES_CONFIG_NAME)
         val files = project.copyConfiguration(configuration).resolve()
-        val mapper = objectMapper()
         val rules = LinkedHashMap<String, RuleSet>()
         for (file in files) {
             val filename = file.name
