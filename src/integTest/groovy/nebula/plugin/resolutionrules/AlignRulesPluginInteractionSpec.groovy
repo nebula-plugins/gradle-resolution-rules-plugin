@@ -712,7 +712,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
     }
 
     @Unroll
-    def 'dependency-lock when applied after wins out over new locked alignment rules'() {
+    def 'dependency-lock when applied after wins out over new locked alignment rules - coreAlignment #coreAlignment'() {
         def (GradleDependencyGenerator mavenrepo, File mavenForRules, File jsonRuleFile) = dependencyLockAlignInteractionSetup()
 
         buildFile << """\
