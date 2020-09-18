@@ -20,7 +20,11 @@ import com.netflix.nebula.interop.VersionWithSelector
 import com.netflix.nebula.interop.action
 import org.gradle.api.Action
 import org.gradle.api.Project
-import org.gradle.api.artifacts.*
+import org.gradle.api.artifacts.ComponentModuleMetadataDetails
+import org.gradle.api.artifacts.ComponentSelection
+import org.gradle.api.artifacts.Configuration
+import org.gradle.api.artifacts.ExternalModuleDependency
+import org.gradle.api.artifacts.ResolutionStrategy
 import org.gradle.api.artifacts.component.ComponentSelector
 import org.gradle.api.artifacts.component.ModuleComponentSelector
 import org.gradle.api.logging.Logger
@@ -54,14 +58,14 @@ data class RuleSet(
     fun dependencyRulesPartOne() =
             listOf(replace, substitute, reject, deny, exclude).flatten()
 
-    fun dependencyRulesPartTwo() =
-            if (ResolutionRulesPlugin.isCoreAlignmentEnabled())
+    fun dependencyRulesPartTwo(coreAlignmentEnabled: Boolean) =
+            if (coreAlignmentEnabled)
                 listOf(align).flatten()
             else
                 emptyList()
 
-    fun resolveRules() =
-            if (ResolutionRulesPlugin.isCoreAlignmentEnabled())
+    fun resolveRules(coreAlignmentEnabled: Boolean) =
+            if (coreAlignmentEnabled)
                 emptyList()
             else
                 listOf(AlignRules(align))

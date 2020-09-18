@@ -131,6 +131,73 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
         coreAlignment << [false, true]
     }
 
+    @Unroll
+    def 'can align some dependencies in a group - using alignment style specified from an extension | core alignment #coreAlignment'() {
+        def graph = new DependencyGraphBuilder()
+                .addModule('test.nebula:a:0.42.0')
+                .addModule('test.nebula:a:1.0.0')
+                .addModule('test.nebula:a:1.1.0')
+                .addModule('test.nebula:b:0.42.0')
+                .addModule('test.nebula:b:1.0.0')
+                .addModule('test.nebula:b:1.1.0')
+                .addModule('test.nebula:c:0.42.0')
+                .addModule('test.nebula:c:1.0.0')
+                .addModule('test.nebula:c:1.1.0')
+                .build()
+        File mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
+
+        rulesJsonFile << '''\
+            {
+                "deny": [], "reject": [], "substitute": [], "replace": [],
+                "align": [
+                    {
+                        "name": "testNebula",
+                        "group": "test.nebula",
+                        "includes": [ "a", "b" ],
+                        "reason": "Align test.nebula dependencies",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    }
+                ]
+            }
+        '''.stripIndent()
+
+        buildFile << """\
+            repositories {
+                maven { url '${mavenrepo.absolutePath}' }
+            }
+            dependencies {
+                implementation 'test.nebula:a:1.0.0'
+                implementation 'test.nebula:b:1.1.0'
+                implementation 'test.nebula:c:0.42.0'
+            }
+            import nebula.plugin.resolutionrules.NebulaResolutionRulesExtension
+            plugins.withId('nebula.resolution-rules') {
+                def extension = extensions.getByType(NebulaResolutionRulesExtension.class)
+                $extensionSetting
+            }
+        """.stripIndent()
+
+        when:
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
+
+        then:
+        result.output.contains '+--- test.nebula:a:1.0.0 -> 1.1.0'
+        result.output.contains '+--- test.nebula:b:1.1.0'
+        result.output.contains '\\--- test.nebula:c:0.42.0'
+
+        if (coreAlignment) {
+            assert result.output.contains('coreAlignmentSupport feature enabled')
+        } else {
+            assert !result.output.contains('coreAlignmentSupport feature enabled')
+        }
+
+        where:
+        coreAlignment | extensionSetting
+        false         | ''
+        true          | 'extension.useCoreGradleAlignment = true'
+    }
+
     def 'dependencyInsight has extra info for alignment'() {
         def graph = new DependencyGraphBuilder()
                 .addModule('test.nebula:a:0.42.0')
