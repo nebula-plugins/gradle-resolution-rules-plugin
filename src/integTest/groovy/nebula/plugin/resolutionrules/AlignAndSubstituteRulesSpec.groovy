@@ -1006,12 +1006,10 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:c", resultingVersion)
 
-        if (coreAlignment) {
-            dependencyInsightContains(result.output, "test.nebula:a", '0.5.0')
+        dependencyInsightContains(result.output, "test.nebula:a", resultingVersion) // alignment wins over the details.useVersion via `By conflict resolution : between versions 1.0.0 and 0.5.0`
 
+        if (coreAlignment) {
             assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
-        } else {
-            dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         }
 
         where:
@@ -1167,12 +1165,10 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
-        if (coreAlignment) {
-            dependencyInsightContains(result.output, "test.nebula:c", '0.5.0')
+        dependencyInsightContains(result.output, "test.nebula:c", resultingVersion) // alignment wins over the details.useVersion
 
+        if (coreAlignment) {
             assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
-        } else {
-            dependencyInsightContains(result.output, "test.nebula:c", resultingVersion)
         }
 
         where:

@@ -61,12 +61,9 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginAndManagedDepsSpec extends Ab
         dependencyInsightContains(output, 'org.springframework:spring-aop', managedSpringVersion)
         dependencyInsightContains(output, 'org.springframework:spring-beans', managedSpringVersion)
         dependencyInsightContains(output, 'org.springframework:spring-expression', managedSpringVersion)
-
-        if (coreAlignment) {
-            dependencyInsightContains(output, 'org.springframework:spring-core', extSpringVersion)
-        } else {
-            dependencyInsightContains(output, 'org.springframework:spring-core', managedSpringVersion)
-        }
+        dependencyInsightContains(output, 'org.springframework:spring-core', managedSpringVersion)
+        output.findAll("org.springframework.*:${managedSpringVersion}\n").size() >= 1
+        output.findAll("org.springframework.*:${extSpringVersion}\n").size() == 0
 
         where:
         extSpringVersion = '4.2.4.RELEASE'
@@ -93,19 +90,12 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginAndManagedDepsSpec extends Ab
 
         then:
         writeOutputToProjectDir(output)
-        if (coreAlignment) {
-            dependencyInsightContains(output, 'org.springframework:spring-aop', managedSpringVersion)
-            dependencyInsightContains(output, 'org.springframework:spring-beans', managedSpringVersion)
-            dependencyInsightContains(output, 'org.springframework:spring-expression', managedSpringVersion)
-
-            dependencyInsightContains(output, 'org.springframework:spring-core', extSpringVersion)
-            
-        } else {
-            dependencyInsightContains(output, 'org.springframework:spring-aop', extSpringVersion)
-            dependencyInsightContains(output, 'org.springframework:spring-beans', extSpringVersion)
-            dependencyInsightContains(output, 'org.springframework:spring-expression', extSpringVersion)
-            dependencyInsightContains(output, 'org.springframework:spring-core', extSpringVersion)
-        }
+        dependencyInsightContains(output, 'org.springframework:spring-aop', extSpringVersion)
+        dependencyInsightContains(output, 'org.springframework:spring-beans', extSpringVersion)
+        dependencyInsightContains(output, 'org.springframework:spring-expression', extSpringVersion)
+        dependencyInsightContains(output, 'org.springframework:spring-core', extSpringVersion)
+        output.findAll("org.springframework.*:${extSpringVersion}\n").size() >= 1
+        output.findAll("org.springframework.*:${managedSpringVersion}\n").size() == 0
 
         where:
         extSpringVersion = '5.1.8.RELEASE'
@@ -360,8 +350,8 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginAndManagedDepsSpec extends Ab
         then:
         writeOutputToProjectDir(output)
         if (coreAlignment) {
-            dependencyInsightContains(output, 'org.slf4j:slf4j-simple', managedSlf4jVersion)
-            dependencyInsightContains(output, 'org.slf4j:slf4j-api', managedSlf4jVersion)
+            dependencyInsightContains(output, 'org.slf4j:slf4j-simple', 'FAILED')
+            assert output.contains('Multiple forces on different versions for virtual platform aligned-platform')
         } else {
             dependencyInsightContains(output, 'org.slf4j:slf4j-simple', forcedVersion)
             dependencyInsightContains(output, 'org.slf4j:slf4j-api', forcedVersion)
@@ -436,8 +426,8 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginAndManagedDepsSpec extends Ab
         then:
         writeOutputToProjectDir(output)
         if (coreAlignment) {
-            dependencyInsightContains(output, 'org.slf4j:slf4j-simple', managedSlf4jVersion)
-            dependencyInsightContains(output, 'org.slf4j:slf4j-api', managedSlf4jVersion)
+            dependencyInsightContains(output, 'org.slf4j:slf4j-simple', 'FAILED')
+            assert output.contains('Multiple forces on different versions for virtual platform aligned-platform')
         } else {
             dependencyInsightContains(output, 'org.slf4j:slf4j-simple', forcedVersion)
             dependencyInsightContains(output, 'org.slf4j:slf4j-api', forcedVersion)
