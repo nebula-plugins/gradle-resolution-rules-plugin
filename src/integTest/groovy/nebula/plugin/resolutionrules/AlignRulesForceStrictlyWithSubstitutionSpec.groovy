@@ -25,7 +25,7 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
         setupProjectAndDependencies()
         debug = true
     }
-    
+
     @Unroll
     def 'force to good version while substitution is triggered by a transitive dependency | core alignment #coreAlignment'() {
         buildFile << """\
@@ -382,6 +382,7 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
 
         results.output.contains 'aligned'
         results.output.contains("- Selected by rule : substituted test.nebula:a:1.2.0 with test.nebula:a:1.3.0 because '★ custom substitution reason'")
+        results.output.contains 'By ancestor'
 
         where:
         coreAlignment << [false, true]
@@ -464,6 +465,7 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
             assert results.output.contains('test.nebula:b:{strictly 1.1.0} -> 1.1.0')
             assert results.output.contains('test.nebula:c:1.2.0 -> 1.1.0')
             assert results.output.contains('- Forced')
+            assert results.output.contains('By ancestor')
         } else {
             // substitution rule to a known-good-version is the primary contributor; rich version strictly declaration to an okay version is the secondary contributor
             assert results.output.contains('test.nebula:a:{strictly 1.1.0} -> 1.3.0')
