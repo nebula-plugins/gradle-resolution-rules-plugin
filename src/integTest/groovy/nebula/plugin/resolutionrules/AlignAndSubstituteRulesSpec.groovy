@@ -1019,6 +1019,64 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
 
     @Issue("Based on https://github.com/nebula-plugins/gradle-nebula-integration/issues/11")
     @Unroll
+    def 'apply a static version via dependencySubstitution for 1 direct dep and align results | core alignment #coreAlignment'() {
+        // this uses the same mechanism as the dependency lock plugin with resolutionStrategy.dependencySubstitution
+        given:
+        def graph = new DependencyGraphBuilder()
+                .addModule('test.nebula:c:0.5.0')
+                .build()
+        mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
+
+        rulesJsonFile << """
+            {
+                "align": [
+                    $alignRuleForTestNebula
+                ]
+            }
+            """.stripIndent()
+
+        buildFile << """
+            dependencies {
+                implementation 'test.nebula:a:1.0.0'
+                implementation 'test.nebula:b:0.5.0'
+                implementation 'test.nebula:c:1.0.0'
+            }
+            configurations.all { conf ->
+                def resolutionStrategySubstitution = conf.resolutionStrategy.dependencySubstitution
+                def substitutedModule = resolutionStrategySubstitution.module("test.nebula:a")
+                def withModule = resolutionStrategySubstitution.module("test.nebula:a:0.5.0")
+                resolutionStrategySubstitution.substitute(substitutedModule)
+                    .because("$reason")
+                    .with(withModule)
+            }
+            """.stripIndent()
+
+        when:
+        def result = runTasks(*tasks(coreAlignment))
+
+        then:
+        writeOutputToProjectDir(result.output)
+
+        if (coreAlignment) {
+            def substitutedVersion = '0.5.0'
+            dependencyInsightContains(result.output, "test.nebula:a", substitutedVersion)
+            dependencyInsightContains(result.output, "test.nebula:b", substitutedVersion)
+            dependencyInsightContains(result.output, "test.nebula:c", substitutedVersion)
+
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$substitutedVersion")
+        } else {
+            dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
+            dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
+            dependencyInsightContains(result.output, "test.nebula:c", resultingVersion)
+        }
+
+        where:
+        resultingVersion = "1.0.0"
+        coreAlignment << [false, true]
+    }
+
+    @Issue("Based on https://github.com/nebula-plugins/gradle-nebula-integration/issues/11")
+    @Unroll
     def 'apply a static version via details.useVersion for each dependency and align results | core alignment #coreAlignment'() {
         given:
         def graph = new DependencyGraphBuilder()
@@ -1169,6 +1227,66 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
 
         if (coreAlignment) {
             assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
+        }
+
+        where:
+        resultingVersion = "1.0.0"
+        coreAlignment << [false, true]
+    }
+
+    @Issue("Based on https://github.com/nebula-plugins/gradle-nebula-integration/issues/11")
+    @Unroll
+    def 'apply a static version via dependencySubstitution for 1 direct dep and align results without conflict resolution involved | core alignment #coreAlignment'() {
+        // this uses the same mechanism as the dependency lock plugin with resolutionStrategy.dependencySubstitution
+        given:
+        def graph = new DependencyGraphBuilder()
+                .addModule('test.nebula:c:0.5.0')
+                .addModule(new ModuleBuilder('test.other:brings-a:1.0.0').addDependency('test.nebula:a:1.0.0').build())
+                .build()
+        mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
+
+        rulesJsonFile << """
+            {
+                "align": [
+                    $alignRuleForTestNebula
+                ]
+            }
+            """.stripIndent()
+
+        buildFile << """
+            dependencies {
+                implementation 'test.other:brings-a:1.0.0'
+                implementation 'test.nebula:b:0.5.0'
+                implementation 'test.nebula:c:1.0.0'
+            }
+            configurations.all { conf ->
+                def resolutionStrategySubstitution = conf.resolutionStrategy.dependencySubstitution
+                def substitutedModule = resolutionStrategySubstitution.module("test.nebula:c")
+                def withModule = resolutionStrategySubstitution.module("test.nebula:c:0.5.0")
+                resolutionStrategySubstitution.substitute(substitutedModule)
+                    .because("$reason")
+                    .with(withModule)
+            }
+            """.stripIndent()
+
+        when:
+
+        def result = runTasks(*tasks(coreAlignment))
+
+        then:
+        writeOutputToProjectDir(result.output)
+
+        if (coreAlignment) {
+            def substitutedVersion = '0.5.0'
+            dependencyInsightContains(result.output, "test.nebula:a", substitutedVersion)
+            dependencyInsightContains(result.output, "test.nebula:b", substitutedVersion)
+            dependencyInsightContains(result.output, "test.nebula:c", substitutedVersion)
+
+            assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$substitutedVersion")
+        } else {
+            dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
+            dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
+            dependencyInsightContains(result.output, "test.nebula:c", resultingVersion)
         }
 
         where:

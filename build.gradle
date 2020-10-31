@@ -15,6 +15,17 @@
  *
  */
 
+buildscript {
+    repositories {
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+        classpath "com.netflix.nebula:gradle-dependency-lock-plugin:10.2.0-rc.1"
+    }
+}
+
 plugins {
     id 'nebula.plugin-plugin' version '14.5.0'
     id 'nebula.kotlin' version '1.3.61'
@@ -30,7 +41,7 @@ dependencies {
     implementation 'com.netflix.nebula:nebula-dependency-recommender:9.0.1'
 
     testImplementation gradleTestKit()
-    testRuntimeOnly 'com.netflix.nebula:gradle-dependency-lock-plugin:7.+'
+    testRuntimeOnly 'com.netflix.nebula:gradle-dependency-lock-plugin:10.+'
 }
 
 apply from: 'gradle/idea.gradle'
