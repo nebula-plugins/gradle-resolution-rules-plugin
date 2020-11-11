@@ -41,7 +41,7 @@ class AlignRulesWithDependencyLockSpec extends IntegrationTestKitSpec {
             buildscript {
                 repositories { jcenter() }
                 dependencies {
-                    classpath 'com.netflix.nebula:gradle-dependency-lock-plugin:9.0.0'
+                    classpath 'com.netflix.nebula:gradle-dependency-lock-plugin:11.+'
                 }
             }
 

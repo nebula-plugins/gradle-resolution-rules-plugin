@@ -340,7 +340,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         writeHelloWorld('example')
 
         when:
-        def result = runTasks('compileJava', '--info', '--warning-mode', 'none', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def result = runTasks('compileJava', '--warning-mode', 'none', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
 
         then:
         noExceptionThrown()
