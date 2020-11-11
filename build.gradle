@@ -30,7 +30,7 @@ dependencies {
     implementation 'com.netflix.nebula:nebula-dependency-recommender:9.0.1'
 
     testImplementation gradleTestKit()
-    testRuntimeOnly 'com.netflix.nebula:gradle-dependency-lock-plugin:7.+'
+    testRuntimeOnly 'com.netflix.nebula:gradle-dependency-lock-plugin:11.+'
 }
 
 apply from: 'gradle/idea.gradle'
