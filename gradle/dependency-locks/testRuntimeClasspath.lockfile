@@ -17,7 +17,7 @@ com.netflix.nebula:gradle-scm-plugin:5.1.0
 com.netflix.nebula:nebula-dependencies-comparison:0.1.8
 com.netflix.nebula:nebula-dependency-recommender:9.0.1
 com.netflix.nebula:nebula-gradle-interop:1.0.11
-com.netflix.nebula:nebula-test:7.6.0
+com.netflix.nebula:nebula-test:7.9.4
 com.squareup.moshi:moshi:1.9.2
 com.squareup.okio:okio:1.16.0
 commons-codec:commons-codec:1.9
@@ -43,11 +43,11 @@ org.codehaus.plexus:plexus-interpolation:1.25
 org.codehaus.plexus:plexus-utils:3.2.1
 org.eclipse.sisu:org.eclipse.sisu.inject:0.3.3
 org.hamcrest:hamcrest-core:1.3
-org.jetbrains.kotlin:kotlin-reflect:1.3.61
-org.jetbrains.kotlin:kotlin-stdlib-common:1.3.61
-org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.61
-org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.61
-org.jetbrains.kotlin:kotlin-stdlib:1.3.61
+org.jetbrains.kotlin:kotlin-reflect:1.4.0
+org.jetbrains.kotlin:kotlin-stdlib-common:1.4.0
+org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.4.0
+org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.4.0
+org.jetbrains.kotlin:kotlin-stdlib:1.4.0
 org.jetbrains:annotations:13.0
 org.objenesis:objenesis:2.4
 org.slf4j:slf4j-api:1.7.12
