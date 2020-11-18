@@ -340,7 +340,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         writeHelloWorld('example')
 
         when:
-        def result = runTasks('compileJava', '--info', '--warning-mode', 'none', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def result = runTasks('compileJava', '--warning-mode', 'none', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
 
         then:
         noExceptionThrown()
@@ -676,7 +676,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
             buildscript {
                 repositories { jcenter() }
                 dependencies {
-                    classpath 'com.netflix.nebula:gradle-dependency-lock-plugin:9.0.0'
+                    classpath 'com.netflix.nebula:gradle-dependency-lock-plugin:11.+'
                 }
             }
 
@@ -713,13 +713,13 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
 
     @Unroll
     def 'dependency-lock when applied after wins out over new locked alignment rules - coreAlignment #coreAlignment'() {
-        def (GradleDependencyGenerator mavenrepo, File mavenForRules, File jsonRuleFile) = dependencyLockAlignInteractionSetup()
+        def (GradleDependencyGenerator mavenrepo, File mavenForRules, File jsonRuleFile) = dependencyLockAlignInteractionSetupWithLockedResolutionRulesConfiguration()
 
         buildFile << """\
             buildscript {
                 repositories { jcenter() }
                 dependencies {
-                    classpath 'com.netflix.nebula:gradle-dependency-lock-plugin:9.0.0'
+                    classpath 'com.netflix.nebula:gradle-dependency-lock-plugin:11.+'
                 }
             }
 
@@ -740,36 +740,98 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         """.stripIndent()
 
         when:
-        def results = runTasks('dependencyInsight', '--dependency', 'test.nebula', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
-        def resultsForRules = runTasks('dependencyInsight', '--dependency', 'test.rules', '--configuration', 'resolutionRules', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def results = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def resultsForRules = runTasks('dependencies', '--configuration', 'resolutionRules', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
 
         then:
-        results.output.contains 'test.nebula:a locked to 1.41.5'
-        results.output.contains 'test.nebula:b locked to 1.42.2'
-        resultsForRules.output.contains 'Selected by rule : test.rules:resolution-rules locked to 1.0.0'
-
-        // final results where locks win over new alignment rules
+        // results using resolution rules that do not yet align test.nebula
         results.output.contains 'test.nebula:a:1.41.5\n'
         results.output.contains 'test.nebula:b:1.42.2\n'
         resultsForRules.output.contains 'test.rules:resolution-rules:1.+ -> 1.0.0\n'
 
         when:
-        def resultsIgnoringLocks = runTasks('-PdependencyLock.ignore=true', 'dependencyInsight', '--dependency', 'test.nebula', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
-        def resultsForRulesIgnoringLocks = runTasks('-PdependencyLock.ignore=true', 'dependencyInsight', '--dependency', 'test.rules', '--configuration', 'resolutionRules', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def resultsIgnoringLocks = runTasks('-PdependencyLock.ignore=true', 'dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def resultsForRulesIgnoringLocks = runTasks('-PdependencyLock.ignore=true', 'dependencies', '--configuration', 'resolutionRules', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
 
         then:
         // final results if we ignore locks
-        resultsIgnoringLocks.output.contains 'test.nebula:a:1.42.2\n'
+        resultsIgnoringLocks.output.contains 'test.nebula:a:1.41.5 -> 1.42.2\n'
         resultsIgnoringLocks.output.contains 'test.nebula:b:1.42.2\n'
-        resultsForRulesIgnoringLocks.output.contains 'test.rules:resolution-rules:1.1.0\n'
+        resultsForRulesIgnoringLocks.output.contains 'test.rules:resolution-rules:1.+ -> 1.1.0\n'
 
         where:
         coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'dependency-lock causes alignment to short circuit if dependencies are aligned by the lock file'() {
-        def (GradleDependencyGenerator mavenrepo, File mavenForRules, File jsonRuleFile) = dependencyLockAlignInteractionSetup()
+    def 'dependency-lock plugin applied after resolution-rules plugin with non-locked resolution rules - #description - core alignment #coreAlignment'() {
+        // note: this is a more unusual case. Typically resolution rules are distributed like a library, version controlled, and locked like other dependencies
+        def (GradleDependencyGenerator mavenrepo, File rulesJsonFile) = dependencyLockAlignInteractionSetupWithUnlockedResolutionRulesConfiguration()
+        buildFile << """\
+            buildscript {
+                repositories { jcenter() }
+                dependencies {
+                    classpath 'com.netflix.nebula:gradle-dependency-lock-plugin:11.+'
+                }
+            }
+            apply plugin: 'nebula.resolution-rules'
+            apply plugin: 'nebula.dependency-lock'
+            apply plugin: 'java'
+            repositories {
+                ${mavenrepo.mavenRepositoryBlock}
+            }
+            dependencies {
+                resolutionRules files('$rulesJsonFile')
+                implementation 'test.nebula:a:1.41.5'
+                implementation 'test.nebula:b:1.42.2'
+            }
+            """.stripIndent()
+
+        when:
+        def results
+        def tasks = ['dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment"]
+        if(coreAlignment) {
+            results = runTasksAndFail(*tasks)
+        } else {
+            results = runTasks(*tasks)
+        }
+
+        then:
+        if (coreAlignment) {
+            assert results.output.contains('Dependency lock state is out of date:')
+            assert results.output.contains("Resolved 'test.nebula:a:1.42.2' instead of locked version '1.41.5' for project")
+
+            assert results.output.contains('+--- test.nebula:a:1.41.5 -> 1.42.2\n')
+            assert results.output.contains('\\--- test.nebula:b:1.42.2\n')
+        } else {
+            assert results.output.contains('+--- test.nebula:a:1.41.5\n')
+            assert results.output.contains('\\--- test.nebula:b:1.42.2\n')
+        }
+
+        when:
+        def ignoreLocksResults = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment", '-PdependencyLock.ignore=true')
+
+        then:
+        ignoreLocksResults.output.contains '+--- test.nebula:a:1.41.5 -> 1.42.2\n'
+        ignoreLocksResults.output.contains '\\--- test.nebula:b:1.42.2\n'
+
+        when:
+        runTasks('generateLock', 'saveLock', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def locksUpdatedResults = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+
+        then:
+        locksUpdatedResults.output.contains '+--- test.nebula:a:1.41.5 -> 1.42.2\n'
+        locksUpdatedResults.output.contains '\\--- test.nebula:b:1.42.2\n'
+
+        where:
+        coreAlignment | description
+        false         | 'locks win out over new alignment rules'
+        true          | 'fail due to dependency lock state is out of date'
+    }
+
+    @Unroll
+    def 'dependency-lock causes alignment to short circuit if dependencies are aligned by the lock file - core alignment #coreAlignment'() {
+        def (GradleDependencyGenerator mavenrepo, File jsonRuleFile) = dependencyLockAlignInteractionSetupWithUnlockedResolutionRulesConfiguration()
 
         assert jsonRuleFile.exists()
         assert jsonRuleFile.text.contains('"group": "test.nebula"')
@@ -789,7 +851,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
             buildscript {
                 repositories { jcenter() }
                 dependencies {
-                    classpath 'com.netflix.nebula:gradle-dependency-lock-plugin:9.0.0'
+                    classpath 'com.netflix.nebula:gradle-dependency-lock-plugin:11.+'
                 }
             }
 
@@ -820,7 +882,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         coreAlignment << [false, true]
     }
 
-    private List dependencyLockAlignInteractionSetup() {
+    private List dependencyLockAlignInteractionSetupWithLockedResolutionRulesConfiguration() {
         def graph = new DependencyGraphBuilder()
                 .addModule('test.nebula:a:1.41.5')
                 .addModule('test.nebula:a:1.42.2')
@@ -897,6 +959,46 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         }
         '''.stripIndent()
         [mavenrepo, mavenForRules, rulesJsonFile]
+    }
+
+    private List dependencyLockAlignInteractionSetupWithUnlockedResolutionRulesConfiguration() {
+        def graph = new DependencyGraphBuilder()
+                .addModule('test.nebula:a:1.41.5')
+                .addModule('test.nebula:a:1.42.2')
+                .addModule('test.nebula:b:1.41.5')
+                .addModule('test.nebula:b:1.42.2')
+                .build()
+        def mavenrepo = new GradleDependencyGenerator(graph, "$projectDir/testrepogen")
+        mavenrepo.generateTestMavenRepo()
+
+        def rulesJsonFile = new File(projectDir, 'rules.json')
+
+        rulesJsonFile << '''\
+            {
+                "deny": [], "reject": [], "substitute": [], "replace": [],
+                "align": [
+                    {
+                        "name": "testNebula",
+                        "group": "test.nebula",
+                        "reason": "Align test.nebula dependencies",
+                        "author": "Example Person <person@example.org>",
+                        "date": "2016-03-17T20:21:20.368Z"
+                    }
+                ]
+            }
+        '''.stripIndent()
+
+        def dependencyLock = new File(projectDir, 'dependencies.lock')
+
+        dependencyLock << '''\
+        {
+            "compileClasspath": {
+                "test.nebula:a": { "locked": "1.41.5" },
+                "test.nebula:b": { "locked": "1.42.2" }
+            }
+        }
+        '''.stripIndent()
+        [mavenrepo, rulesJsonFile]
     }
 
     @Unroll
@@ -1090,14 +1192,14 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
     }
 
     @Unroll
-    def 'dependency-lock when applied before wins out over new locked alignment rules'() {
-        def (GradleDependencyGenerator mavenrepo, File mavenForRules, File jsonRuleFile) = dependencyLockAlignInteractionSetup()
+    def 'dependency-lock when applied before wins out over new locked alignment rules - core alignment #coreAlignment'() {
+        def (GradleDependencyGenerator mavenrepo, File mavenForRules, File jsonRuleFile) = dependencyLockAlignInteractionSetupWithLockedResolutionRulesConfiguration()
 
         buildFile << """\
             buildscript {
                 repositories { jcenter() }
                 dependencies {
-                    classpath 'com.netflix.nebula:gradle-dependency-lock-plugin:9.0.0'
+                    classpath 'com.netflix.nebula:gradle-dependency-lock-plugin:11.+'
                 }
             }
 
@@ -1118,31 +1220,97 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         """.stripIndent()
 
         when:
-        def results = runTasks('dependencyInsight', '--dependency', 'test.nebula', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
-        def resultsForRules = runTasks('dependencyInsight', '--dependency', 'test.rules', '--configuration', 'resolutionRules', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def results = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def resultsForRules = runTasks('dependencies', '--configuration', 'resolutionRules', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
 
         then:
-        results.output.contains 'test.nebula:a locked to 1.41.5'
-        results.output.contains 'test.nebula:b locked to 1.42.2'
-        resultsForRules.output.contains 'Selected by rule : test.rules:resolution-rules locked to 1.0.0'
-
-        // final results where locks win over new alignment rules
+        // results using resolution rules that do not yet align test.nebula
         results.output.contains 'test.nebula:a:1.41.5\n'
         results.output.contains 'test.nebula:b:1.42.2\n'
         resultsForRules.output.contains 'test.rules:resolution-rules:1.+ -> 1.0.0\n'
 
         when:
-        def resultsIgnoringLocks = runTasks('-PdependencyLock.ignore=true', 'dependencyInsight', '--dependency', 'test.nebula', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
-        def resultsForRulesIgnoringLocks = runTasks('-PdependencyLock.ignore=true', 'dependencyInsight', '--dependency', 'test.rules', '--configuration', 'resolutionRules', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def resultsIgnoringLocks = runTasks('-PdependencyLock.ignore=true', 'dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def resultsForRulesIgnoringLocks = runTasks('-PdependencyLock.ignore=true', 'dependencies', '--configuration', 'resolutionRules', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
 
         then:
         // final results if we ignore locks
-        resultsIgnoringLocks.output.contains 'test.nebula:a:1.42.2\n'
+        resultsIgnoringLocks.output.contains 'test.nebula:a:1.41.5 -> 1.42.2\n'
         resultsIgnoringLocks.output.contains 'test.nebula:b:1.42.2\n'
-        resultsForRulesIgnoringLocks.output.contains 'test.rules:resolution-rules:1.1.0\n'
+        resultsForRulesIgnoringLocks.output.contains 'test.rules:resolution-rules:1.+ -> 1.1.0\n'
 
         where:
         coreAlignment << [false, true]
+    }
+
+    @Unroll
+    def 'dependency-lock plugin applied before resolution-rules plugin with non-locked resolution rules - #description - core alignment #coreAlignment'() {
+        // note: this is a more unusual case. Typically resolution rules are distributed like a library, version controlled, and locked like other dependencies
+        def (GradleDependencyGenerator mavenrepo, File rulesJsonFile) = dependencyLockAlignInteractionSetupWithUnlockedResolutionRulesConfiguration()
+        buildFile << """\
+            buildscript {
+                repositories { jcenter() }
+                dependencies {
+                    classpath 'com.netflix.nebula:gradle-dependency-lock-plugin:11.+'
+                }
+            }
+            apply plugin: 'nebula.dependency-lock'
+            apply plugin: 'nebula.resolution-rules'
+            apply plugin: 'java'
+            repositories {
+                ${mavenrepo.mavenRepositoryBlock}
+            }
+            dependencies {
+                resolutionRules files('$rulesJsonFile')
+                implementation 'test.nebula:a:1.41.5'
+                implementation 'test.nebula:b:1.42.2'
+            }
+            """.stripIndent()
+
+        when:
+        def results
+        def tasks = ['dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment"]
+        if(coreAlignment) {
+            results = runTasksAndFail(*tasks)
+        } else {
+            results = runTasks(*tasks)
+        }
+
+        then:
+        if (coreAlignment) {
+            assert results.output.contains('Dependency lock state is out of date:')
+            assert results.output.contains("Resolved 'test.nebula:a:1.42.2' instead of locked version '1.41.5' for project")
+
+            assert results.output.contains('+--- test.nebula:a:1.41.5 -> 1.42.2\n')
+            assert results.output.contains('\\--- test.nebula:b:1.42.2\n')
+        } else {
+            // plugin ordering is important. Dependency lock plugin must be applied after the resolution rules plugin.
+            // This test case is simply showcasing the current behavior.
+            assert results.output.contains('+--- test.nebula:a:1.41.5 -> 1.42.2\n')
+            // this does not honor the locked versions
+            assert results.output.contains('\\--- test.nebula:b:1.42.2\n')
+        }
+
+        when:
+        def ignoreLocksResults = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment", '-PdependencyLock.ignore=true')
+
+        then:
+        ignoreLocksResults.output.contains '+--- test.nebula:a:1.41.5 -> 1.42.2\n'
+        ignoreLocksResults.output.contains '\\--- test.nebula:b:1.42.2\n'
+        !ignoreLocksResults.output.contains('FAILED')
+
+        when:
+        runTasks('generateLock', 'saveLock', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def locksUpdatedResults = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+
+        then:
+        locksUpdatedResults.output.contains '+--- test.nebula:a:1.41.5 -> 1.42.2\n'
+        locksUpdatedResults.output.contains '\\--- test.nebula:b:1.42.2\n'
+
+        where:
+        coreAlignment | description
+        false         | 'locks do not win. Plugin ordering is important.'
+        true          | 'fail due to dependency lock state is out of date'
     }
 
     private createRulesJar(Collection<File> files, File unneededRoot, File destination) {

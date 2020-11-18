@@ -12,7 +12,6 @@ abstract class AbstractAlignRulesSpec extends IntegrationTestKitSpec {
                 id 'nebula.resolution-rules'
                 id 'java'
             }
-
             dependencies {
                 resolutionRules files('$rulesJsonFile')
             }
