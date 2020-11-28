@@ -61,7 +61,7 @@ contacts {
 gradlePlugin {
     plugins {
         resolutionRules {
-            id = 'nebubla.resolution-rules'
+            id = 'nebula.resolution-rules'
             implementationClass = 'nebula.plugin.resolutionrules.ResolutionRulesPlugin'
         }
     }
