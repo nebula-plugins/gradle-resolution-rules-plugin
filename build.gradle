@@ -22,7 +22,7 @@ plugins {
 }
 
 dependencies {
-    implementation platform("com.fasterxml.jackson:jackson-bom:2.9.9.20190807")
+    implementation enforcedPlatform("com.fasterxml.jackson:jackson-bom:2.9.10.+")
 
     implementation 'org.jetbrains.kotlin:kotlin-reflect'
     implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk7' // Not a direct dependency but ensures alignment when we upgrade Kotlin

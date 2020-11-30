@@ -2,11 +2,11 @@
 # Manual edits can break the build and are not advised.
 # This file is expected to be part of source control.
 cglib:cglib-nodep:3.2.2
-com.fasterxml.jackson.core:jackson-annotations:2.9.0
-com.fasterxml.jackson.core:jackson-core:2.9.9
-com.fasterxml.jackson.core:jackson-databind:2.9.9.3
-com.fasterxml.jackson.module:jackson-module-kotlin:2.9.9
-com.fasterxml.jackson:jackson-bom:2.9.9.20190807
+com.fasterxml.jackson.core:jackson-annotations:2.9.10
+com.fasterxml.jackson.core:jackson-core:2.9.10
+com.fasterxml.jackson.core:jackson-databind:2.9.10.6
+com.fasterxml.jackson.module:jackson-module-kotlin:2.9.10
+com.fasterxml.jackson:jackson-bom:2.9.10.20200824
 com.google.guava:guava:19.0
 com.netflix.nebula:nebula-dependency-recommender:9.0.1
 com.netflix.nebula:nebula-gradle-interop:1.0.11
