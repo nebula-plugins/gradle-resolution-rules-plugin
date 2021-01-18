@@ -1,8 +1,11 @@
 package nebula.plugin.resolutionrules
 
-
+import org.gradle.util.GradleVersion
+import spock.lang.IgnoreIf
 import spock.lang.Unroll
 
+//Spring boot plugin 1.x is using removed runtime configuration. Unless backported for Gradle 7.0 it cannot be used
+@IgnoreIf({ GradleVersion.current().baseVersion >= GradleVersion.version("7.0")})
 class AlignAndSubstituteRulesWithSpringBoot1xPluginSpec extends AbstractRulesWithSpringBootPluginSpec {
     File rulesJsonFile
 
