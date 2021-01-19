@@ -17,7 +17,7 @@
 
 plugins {
     id 'nebula.plugin-plugin' version '14.6.0'
-    id "org.jetbrains.kotlin.jvm" version "1.4.10"
+    id "org.jetbrains.kotlin.jvm" version "1.4.21"
     id 'java-gradle-plugin'
 }
 
