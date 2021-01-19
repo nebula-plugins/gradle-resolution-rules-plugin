@@ -19,6 +19,8 @@ package nebula.plugin.resolutionrules
 import nebula.test.IntegrationTestKitSpec
 import nebula.test.dependencies.DependencyGraphBuilder
 import nebula.test.dependencies.GradleDependencyGenerator
+import org.gradle.util.GradleVersion
+import spock.lang.IgnoreIf
 import spock.lang.Issue
 import spock.lang.Unroll
 
@@ -241,6 +243,8 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
     }
 
     @Unroll
+    //Spring boot plugin 1.x is using removed runtime configuration. Unless backported for Gradle 7.0 it cannot be used
+    @IgnoreIf({ GradleVersion.current().baseVersion >= GradleVersion.version("7.0")})
     def 'align rules work with spring-boot version #springVersion - core alignment #coreAlignment'() {
         def rulesJsonFile = new File(projectDir, 'rules.json')
         rulesJsonFile << '''\
@@ -288,6 +292,8 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
     }
 
     @Unroll
+    //Spring boot plugin 1.x is using removed runtime configuration. Unless backported for Gradle 7.0 it cannot be used
+    @IgnoreIf({ GradleVersion.current().baseVersion >= GradleVersion.version("7.0")})
     def 'spring-boot interaction for version #springVersion - core alignment #coreAlignment'() {
         def rulesFolder = new File(projectDir, 'rules')
         rulesFolder.mkdirs()
@@ -416,68 +422,9 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
     }
 
     @Unroll
-    def 'align rules work with extra-configurations and publishing'() {
+    def 'publishing and dependency-recommender interacting with resolution-rules'() {
         def graph = new DependencyGraphBuilder()
                 .addModule('test.a:a:1.42.2')
-                .build()
-        def mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen")
-        mavenrepo.generateTestMavenRepo()
-
-        def rulesJsonFile = new File(projectDir, 'rules.json')
-
-        rulesJsonFile << '''\
-            {
-                "deny": [], "reject": [], "substitute": [], "replace": [],
-                "align": [
-                    {
-                        "name": "testNebula",
-                        "group": "test.a",
-                        "reason": "Align test.a dependencies",
-                        "author": "Example Person <person@example.org>",
-                        "date": "2016-04-01T20:21:20.368Z"
-                    }
-                ]
-            }
-        '''.stripIndent()
-
-        buildFile << """\
-            buildscript {
-                repositories { jcenter() }
-
-                dependencies {
-                    classpath 'com.netflix.nebula:gradle-extra-configurations-plugin:3.0.3'
-                }
-            }
-
-            apply plugin: 'nebula.resolution-rules'
-            apply plugin: 'java'
-            apply plugin: 'nebula.provided-base'
-
-            repositories {
-                ${mavenrepo.mavenRepositoryBlock}
-            }
-
-            dependencies {
-                resolutionRules files('$rulesJsonFile')
-                provided 'test.a:a:1.+'
-            }
-        """.stripIndent()
-
-        when:
-        def result = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
-
-        then:
-        result.output.contains '\\--- test.a:a:1.+ -> 1.42.2\n'
-
-        where:
-        coreAlignment << [false, true]
-    }
-
-    @Unroll
-    def 'publishing, provided, and dependency-recommender interacting with resolution-rules'() {
-        def graph = new DependencyGraphBuilder()
-                .addModule('test.a:a:1.42.2')
-                .addModule('test.a:b:1.2.1')
                 .build()
         def mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen")
         mavenrepo.generateTestMavenRepo()
@@ -506,7 +453,6 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
                 dependencies {
                     classpath 'com.netflix.nebula:nebula-dependency-recommender:9.0.1'
                     classpath 'com.netflix.nebula:nebula-publishing-plugin:4.4.4'
-                    classpath 'com.netflix.nebula:gradle-extra-configurations-plugin:3.0.3'
                 }
             }
 
@@ -514,7 +460,6 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
             apply plugin: 'nebula.maven-publish'
             apply plugin: 'nebula.resolution-rules'
             apply plugin: 'java'
-            apply plugin: 'nebula.provided-base'
 
 
             repositories {
@@ -528,7 +473,6 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
             dependencies {
                 resolutionRules files('$rulesJsonFile')
                 implementation 'test.a:a'
-                provided 'test.a:b'
             }
         """.stripIndent()
 
@@ -536,8 +480,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         def result = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
 
         then:
-        result.output.contains '+--- test.a:a -> 1.42.2\n'
-        result.output.contains '\\--- test.a:b -> 1.2.1\n'
+        result.output.contains '\\--- test.a:a -> 1.42.2\n'
 
         where:
         coreAlignment << [false, true]
@@ -570,7 +513,6 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
 
                 dependencies {
                     classpath 'com.netflix.nebula:nebula-publishing-plugin:4.4.4'
-                    classpath 'com.netflix.nebula:gradle-extra-configurations-plugin:3.1.0'
                 }
             }
             allprojects {
@@ -587,7 +529,6 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
 
             subprojects {
                 apply plugin: 'nebula.maven-publish'
-                apply plugin: 'nebula.provided-base'
                 apply plugin: 'java'
             }
         """.stripIndent()
