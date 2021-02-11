@@ -17,16 +17,12 @@
 package nebula.plugin.resolutionrules
 
 import com.netflix.nebula.interop.VersionWithSelector
-import com.netflix.nebula.interop.action
 import org.gradle.api.Action
 import org.gradle.api.Project
-import org.gradle.api.artifacts.ComponentModuleMetadataDetails
-import org.gradle.api.artifacts.ComponentSelection
-import org.gradle.api.artifacts.Configuration
-import org.gradle.api.artifacts.ExternalModuleDependency
-import org.gradle.api.artifacts.ResolutionStrategy
+import org.gradle.api.artifacts.*
 import org.gradle.api.artifacts.component.ComponentSelector
 import org.gradle.api.artifacts.component.ModuleComponentSelector
+import org.gradle.api.internal.artifacts.dsl.ModuleVersionSelectorParsers
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import java.io.Serializable
@@ -115,7 +111,8 @@ data class ReplaceRule(override val module: String, val with: String, override v
 data class SubstituteRule(val module: String, val with: String, override var ruleSet: String?,
                           override val reason: String, override val author: String, override val date: String) : BasicRule, Serializable {
     private lateinit var substitutedModule: ComponentSelector
-    private lateinit var withSelector: ModuleComponentSelector
+    private lateinit var withComponentSelector: ModuleComponentSelector
+    private lateinit var withVersionSelector: ModuleVersionSelector
     private val versionSelector by lazy {
         val version = (substitutedModule as ModuleComponentSelector).version
         VersionWithSelector(version).asSelector()
@@ -129,42 +126,42 @@ data class SubstituteRule(val module: String, val with: String, override var rul
             if (withModule !is ModuleComponentSelector) {
                 throw SubstituteRuleMissingVersionException(with, this)
             }
-            withSelector = substitution.module(with) as ModuleComponentSelector
+            withComponentSelector = substitution.module(with) as ModuleComponentSelector
+            withVersionSelector = ModuleVersionSelectorParsers.parser().parseNotation(withComponentSelector.displayName)
         }
 
         if (substitutedModule is ModuleComponentSelector) {
-            resolutionStrategy.dependencySubstitution.all(action {
-                if (requested is ModuleComponentSelector) {
+            // We use eachDependency because dependencySubstitutions.all causes configuration task dependencies to resolve at configuration time
+            resolutionStrategy.eachDependency { details ->
+                val requested = details.requested
                     val moduleSelector = substitutedModule as ModuleComponentSelector
-                    val requestedSelector = requested as ModuleComponentSelector
-                    if (requestedSelector.group == moduleSelector.group && requestedSelector.module == moduleSelector.module) {
-                        val requestedSelectorVersion = requestedSelector.version
+                    if (requested.group == moduleSelector.group && requested.module.name == moduleSelector.module) {
+                        val requestedSelectorVersion = requested.version
                         if (versionSelector.accept(requestedSelectorVersion)
-                                && !requestedSelector.toString().contains(".+")
-                                && !requestedSelector.toString().contains("latest")
+                                && !requested.toString().contains(".+")
+                                && !requested.toString().contains("latest")
                         ) {
-                            val message = "substituted $substitutedModule with $withSelector because '$reason' by rule $ruleSet"
                             // Note on `useTarget`:
                             // Forcing modules via ResolutionStrategy.force(Object...) uses this capability.
                             // from https://docs.gradle.org/current/javadoc/org/gradle/api/artifacts/DependencyResolveDetails.html
-                            useTarget(withSelector, message)
+                            details.useTarget(withVersionSelector) // We can't pass a ModuleComponentSelector here so we take the conversion hit
+                            details.because("substituted $substitutedModule with $withComponentSelector because '$reason' by rule $ruleSet")
                         }
                     }
-                }
-            })
+            }
         } else {
-            var message = "substituted $withSelector because '$reason' by rule $ruleSet"
+            var message = "substituted $withComponentSelector because '$reason' by rule $ruleSet"
 
             val selectorNameSections = substitutedModule.displayName.split(":")
             if (selectorNameSections.size > 2) {
                 val selectorGroupAndArtifact = "${selectorNameSections[0]}:${selectorNameSections[1]}"
-                message = "substituted $selectorGroupAndArtifact with $withSelector because '$reason' by rule $ruleSet"
+                message = "substituted $selectorGroupAndArtifact with $withComponentSelector because '$reason' by rule $ruleSet"
             }
 
             resolutionStrategy.dependencySubstitution {
                 it.substitute(substitutedModule)
                         .because(message)
-                        .with(withSelector)
+                        .with(withComponentSelector)
             }
         }
 
