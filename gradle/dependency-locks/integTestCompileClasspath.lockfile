@@ -8,9 +8,9 @@ com.fasterxml.jackson.core:jackson-databind:2.9.10.8
 com.fasterxml.jackson.module:jackson-module-kotlin:2.9.10
 com.fasterxml.jackson:jackson-bom:2.9.10.20210106
 com.google.guava:guava:19.0
-com.netflix.nebula:nebula-dependency-recommender:9.0.1
+com.netflix.nebula:nebula-dependency-recommender:10.0.1
 com.netflix.nebula:nebula-gradle-interop:1.0.11
-com.netflix.nebula:nebula-test:7.10.1
+com.netflix.nebula:nebula-test:7.10.2
 commons-io:commons-io:2.5
 junit:junit:4.12
 org.hamcrest:hamcrest-core:1.3

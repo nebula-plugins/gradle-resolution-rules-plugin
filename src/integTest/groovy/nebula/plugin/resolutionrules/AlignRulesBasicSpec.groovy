@@ -506,7 +506,7 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
         '''.stripIndent()
 
         buildFile << """\
-            repositories { jcenter() }
+            repositories { mavenCentral() }
             dependencies {
                 implementation 'com.google.guava:guava:12.0'
             }
@@ -894,7 +894,7 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
                 }
             }
 
-            repositories { jcenter() }
+            repositories { mavenCentral() }
             dependencies {
                 implementation 'com.google.guava:guava'
             }
@@ -928,7 +928,7 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
         '''.stripIndent()
 
         buildFile << """\
-            repositories { jcenter() }
+            repositories { mavenCentral() }
 
             configurations.findAll { it.isCanBeResolved() }.collect { it.resolvedConfiguration.resolvedArtifacts }
         """

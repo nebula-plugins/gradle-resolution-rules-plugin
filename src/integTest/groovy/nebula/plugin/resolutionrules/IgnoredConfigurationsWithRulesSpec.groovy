@@ -14,7 +14,7 @@ class IgnoredConfigurationsWithRulesSpec extends IntegrationSpec {
                      apply plugin: 'nebula.resolution-rules'
 
                      repositories {
-                         jcenter()
+                         mavenCentral()
                      }
 
                      dependencies {

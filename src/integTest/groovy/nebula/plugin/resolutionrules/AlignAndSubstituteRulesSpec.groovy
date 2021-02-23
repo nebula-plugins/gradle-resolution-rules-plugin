@@ -2216,7 +2216,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         buildFile.text = ""
         buildFile << """
             buildscript {
-                repositories { jcenter() }
+                repositories { mavenCentral() }
             }
             """.stripIndent()
         buildFile << baseBuildGradleFile("'nebula.dependency-recommender' version '9.0.1\'")

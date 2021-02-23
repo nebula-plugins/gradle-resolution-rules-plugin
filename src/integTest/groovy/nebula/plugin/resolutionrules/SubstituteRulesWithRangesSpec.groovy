@@ -35,7 +35,7 @@ class SubstituteRulesWithRangesSpec extends IntegrationTestKitSpec {
                      apply plugin: 'nebula.resolution-rules'
 
                      repositories {
-                         jcenter()
+                         mavenCentral()
                         ${mavenrepo.mavenRepositoryBlock}
                      }
 

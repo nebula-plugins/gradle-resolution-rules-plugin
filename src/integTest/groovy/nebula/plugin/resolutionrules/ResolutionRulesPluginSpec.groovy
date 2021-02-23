@@ -44,7 +44,7 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
                      apply plugin: 'nebula.resolution-rules'
 
                      repositories {
-                         jcenter()
+                         mavenCentral()
                      }
 
                      dependencies {
@@ -463,7 +463,7 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
              apply plugin: 'java'
              apply plugin: 'nebula.resolution-rules'
              repositories {
-                 jcenter()
+                 mavenCentral()
              }
              dependencies {
                  resolutionRules files("$rulesJsonFile", "$optionalRulesJsonFile")
@@ -520,7 +520,7 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
 
         buildFile.text = """\
              buildscript {
-                repositories { jcenter() }
+                repositories { mavenCentral() }
 
                 dependencies {
                     classpath 'com.netflix.nebula:nebula-dependency-recommender:7.0.1'
@@ -531,7 +531,7 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
              apply plugin: 'nebula.dependency-recommender'
              apply plugin: 'nebula.resolution-rules'
              repositories {
-                 jcenter()
+                 mavenCentral()
                  maven { url '${repo.root.absoluteFile.toURI()}' }
                  ${generator.mavenRepositoryBlock}                 
              }

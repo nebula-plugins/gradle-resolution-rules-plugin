@@ -63,7 +63,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
 
         buildFile << """\
             buildscript {
-                repositories { jcenter() }
+                repositories { mavenCentral() }
 
                 dependencies {
                     classpath 'com.netflix.nebula:nebula-dependency-recommender:9.0.1'
@@ -125,7 +125,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
 
         buildFile << """\
             buildscript {
-                repositories { jcenter() }
+                repositories { mavenCentral() }
 
                 dependencies {
                     classpath 'com.netflix.nebula:nebula-dependency-recommender:9.0.1'
@@ -191,7 +191,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
 
         buildFile << """\
             buildscript {
-                repositories { jcenter() }
+                repositories { mavenCentral() }
                 dependencies {
                     classpath 'com.netflix.nebula:nebula-dependency-recommender:9.0.1'
                 }
@@ -264,7 +264,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
 
         buildFile << """\
             buildscript {
-                repositories { jcenter() }
+                repositories { mavenCentral() }
                 dependencies {
                     classpath('org.springframework.boot:spring-boot-gradle-plugin:${springVersion}')
                 }
@@ -272,7 +272,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
             apply plugin: 'spring-boot'
             apply plugin: 'nebula.resolution-rules'
 
-            repositories { jcenter() }
+            repositories { mavenCentral() }
 
             dependencies {
                 resolutionRules files('$rulesJsonFile')
@@ -323,7 +323,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
 
         buildFile << """\
             buildscript {
-                repositories { jcenter() }
+                repositories { mavenCentral() }
                 dependencies {
                     classpath('org.springframework.boot:spring-boot-gradle-plugin:${springVersion}')
                 }
@@ -333,7 +333,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
             apply plugin: 'nebula.resolution-rules'
 
             repositories {
-                jcenter()
+                mavenCentral()
                 maven { url '${mavenForRules.absolutePath}' }
             }
 
@@ -384,7 +384,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
                     classpath 'io.spring.gradle:dependency-management-plugin:0.6.1.RELEASE'
                 }
                 repositories {
-                    jcenter()
+                    mavenCentral()
                 }
             }
 
@@ -400,7 +400,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
             }
             
             repositories {
-                jcenter()
+                mavenCentral()
             }
             
             dependencies {
@@ -448,7 +448,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
 
         buildFile << """\
             buildscript {
-                repositories { jcenter() }
+                repositories { mavenCentral() }
 
                 dependencies {
                     classpath 'com.netflix.nebula:nebula-dependency-recommender:9.0.1'
@@ -508,7 +508,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         buildFile << """\
             buildscript {
                 repositories {
-                    jcenter()
+                    mavenCentral()
                 }
 
                 dependencies {
@@ -615,7 +615,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
 
         buildFile << """\
             buildscript {
-                repositories { jcenter() }
+                repositories { mavenCentral() }
                 dependencies {
                     classpath 'com.netflix.nebula:gradle-dependency-lock-plugin:11.+'
                 }
@@ -658,7 +658,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
 
         buildFile << """\
             buildscript {
-                repositories { jcenter() }
+                repositories { mavenCentral() }
                 dependencies {
                     classpath 'com.netflix.nebula:gradle-dependency-lock-plugin:11.+'
                 }
@@ -710,7 +710,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         def (GradleDependencyGenerator mavenrepo, File rulesJsonFile) = dependencyLockAlignInteractionSetupWithUnlockedResolutionRulesConfiguration()
         buildFile << """\
             buildscript {
-                repositories { jcenter() }
+                repositories { mavenCentral() }
                 dependencies {
                     classpath 'com.netflix.nebula:gradle-dependency-lock-plugin:11.+'
                 }
@@ -790,7 +790,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
 
         buildFile << """\
             buildscript {
-                repositories { jcenter() }
+                repositories { mavenCentral() }
                 dependencies {
                     classpath 'com.netflix.nebula:gradle-dependency-lock-plugin:11.+'
                 }
@@ -1003,7 +1003,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
 
         buildFile << """\
             buildscript {
-                repositories { jcenter() }
+                repositories { mavenCentral() }
                 dependencies { classpath 'com.netflix.nebula:nebula-dependency-recommender:9.0.1' }
             }
             
@@ -1095,7 +1095,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
 
         buildFile << """\
             buildscript {
-                repositories { jcenter() }
+                repositories { mavenCentral() }
                 dependencies { classpath 'com.netflix.nebula:nebula-dependency-recommender:9.0.1' }
             }
             
@@ -1138,7 +1138,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
 
         buildFile << """\
             buildscript {
-                repositories { jcenter() }
+                repositories { mavenCentral() }
                 dependencies {
                     classpath 'com.netflix.nebula:gradle-dependency-lock-plugin:11.+'
                 }
@@ -1190,7 +1190,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         def (GradleDependencyGenerator mavenrepo, File rulesJsonFile) = dependencyLockAlignInteractionSetupWithUnlockedResolutionRulesConfiguration()
         buildFile << """\
             buildscript {
-                repositories { jcenter() }
+                repositories { mavenCentral() }
                 dependencies {
                     classpath 'com.netflix.nebula:gradle-dependency-lock-plugin:11.+'
                 }

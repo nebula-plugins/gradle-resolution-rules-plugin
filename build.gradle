@@ -29,7 +29,7 @@ dependencies {
     implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8' // Not a direct dependency but ensures alignment when we upgrade Kotlin
     implementation 'com.netflix.nebula:nebula-gradle-interop:latest.release'
     implementation 'com.fasterxml.jackson.module:jackson-module-kotlin'
-    implementation 'com.netflix.nebula:nebula-dependency-recommender:9.0.1'
+    implementation 'com.netflix.nebula:nebula-dependency-recommender:latest.release'
 
     testImplementation gradleTestKit()
     testRuntimeOnly 'com.netflix.nebula:gradle-dependency-lock-plugin:11.+'

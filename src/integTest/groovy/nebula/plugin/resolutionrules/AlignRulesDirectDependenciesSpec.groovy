@@ -201,7 +201,7 @@ class AlignRulesDirectDependenciesSpec extends AbstractAlignRulesSpec {
         '''.stripIndent()
 
         buildFile << """\
-            repositories { jcenter() }
+            repositories { mavenCentral() }
             dependencies {
                 implementation 'org.slf4j:slf4j-api:1.7.21'
                 implementation 'com.google.guava:guava:oops'
@@ -227,7 +227,7 @@ class AlignRulesDirectDependenciesSpec extends AbstractAlignRulesSpec {
         buildFile << """\
             apply plugin: 'java'
 
-            repositories { jcenter() }
+            repositories { mavenCentral() }
 
             dependencies {
                 implementation 'org.slf4j:slf4j-api:1.7.21'
@@ -265,7 +265,7 @@ class AlignRulesDirectDependenciesSpec extends AbstractAlignRulesSpec {
         '''.stripIndent()
 
         buildFile << """\
-            repositories { jcenter() }
+            repositories { mavenCentral() }
             dependencies {
                 implementation 'org.slf4j:slf4j-api:1.7.21'
                 implementation 'com.google.guava:guava:oops'
@@ -308,7 +308,7 @@ class AlignRulesDirectDependenciesSpec extends AbstractAlignRulesSpec {
                 }
             }
 
-            repositories { jcenter() }
+            repositories { mavenCentral() }
 
             dependencies {
                 implementation 'io.grpc:grpc-netty:1.3.0' // grpc-netty brings in dependencies added in Netty 4.1, and will be broken by the force
