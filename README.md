@@ -1,10 +1,12 @@
 # Gradle Resolution Rules Plugin
 
-![Support Status](https://img.shields.io/badge/nebula-supported-brightgreen.svg)
-[![Build Status](https://travis-ci.com/nebula-plugins/gradle-resolution-rules-plugin.svg?branch=master)](https://travis-ci.com/nebula-plugins/gradle-resolution-rules-plugin)
-[![Coverage Status](https://coveralls.io/repos/nebula-plugins/gradle-resolution-rules-plugin/badge.svg?branch=master&service=github)](https://coveralls.io/github/nebula-plugins/gradle-resolution-rules-plugin?branch=master)
-[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/nebula-plugins/gradle-resolution-rules-plugin?utm_source=badgeutm_medium=badgeutm_campaign=pr-badge)
+![Support Status](https://img.shields.io/badge/nebula-active-green.svg)
+[![Gradle Plugin Portal](https://img.shields.io/maven-metadata/v/https/plugins.gradle.org/m2/com.netflix.nebula/gradle-resolution-rules-plugin/maven-metadata.xml.svg?label=gradlePluginPortal)](https://plugins.gradle.org/plugin/nebula.resolution-rules)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.netflix.nebula/gradle-resolution-rules-plugin/badge.svg?style=plastic)](https://maven-badges.herokuapp.com/maven-central/com.netflix.nebula/gradle-resolution-rules-plugin)
+![CI](https://github.com/nebula-plugins/gradle-resolution-rules-plugin/actions/workflows/ci.yml/badge.svg)
+![Publish](https://github.com/nebula-plugins/gradle-resolution-rules-plugin/actions/workflows/publish.yml/badge.svg)
 [![Apache 2.0](https://img.shields.io/github/license/nebula-plugins/gradle-resolution-rules-plugin.svg)](http://www.apache.org/licenses/LICENSE-2.0)
+
 
 Gradle resolution strategies and module metadata provide an effective way to solve the most common dependency issues, however sharing these rules between projects is cumbersome, and requires custom plugins or `apply from` calls. This plugin provides general purpose rule types, allowing rules to be published, versioned, shared between projects, and optionally [dependency locked](https://github.com/nebula-plugins/gradle-dependency-lock-plugin).
 
