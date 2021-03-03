@@ -128,7 +128,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
                 repositories { mavenCentral() }
 
                 dependencies {
-                    classpath 'com.netflix.nebula:nebula-dependency-recommender:9.0.1'
+                    classpath 'com.netflix.nebula:nebula-dependency-recommender:9.0.2'
                 }
             }
 
