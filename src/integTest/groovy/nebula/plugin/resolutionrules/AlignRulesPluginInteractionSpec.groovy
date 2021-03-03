@@ -66,7 +66,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
                 repositories { mavenCentral() }
 
                 dependencies {
-                    classpath 'com.netflix.nebula:nebula-dependency-recommender:9.0.1'
+                    classpath 'com.netflix.nebula:nebula-dependency-recommender:9.0.2'
                 }
             }
 
@@ -193,7 +193,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
             buildscript {
                 repositories { mavenCentral() }
                 dependencies {
-                    classpath 'com.netflix.nebula:nebula-dependency-recommender:9.0.1'
+                    classpath 'com.netflix.nebula:nebula-dependency-recommender:9.0.2'
                 }
             }
             allprojects {
@@ -451,7 +451,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
                 repositories { mavenCentral() }
 
                 dependencies {
-                    classpath 'com.netflix.nebula:nebula-dependency-recommender:9.0.1'
+                    classpath 'com.netflix.nebula:nebula-dependency-recommender:9.0.2'
                     classpath 'com.netflix.nebula:nebula-publishing-plugin:4.4.4'
                 }
             }
@@ -1004,7 +1004,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         buildFile << """\
             buildscript {
                 repositories { mavenCentral() }
-                dependencies { classpath 'com.netflix.nebula:nebula-dependency-recommender:9.0.1' }
+                dependencies { classpath 'com.netflix.nebula:nebula-dependency-recommender:9.0.2' }
             }
             
             allprojects {
@@ -1096,7 +1096,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         buildFile << """\
             buildscript {
                 repositories { mavenCentral() }
-                dependencies { classpath 'com.netflix.nebula:nebula-dependency-recommender:9.0.1' }
+                dependencies { classpath 'com.netflix.nebula:nebula-dependency-recommender:9.0.2' }
             }
             
             allprojects {
