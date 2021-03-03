@@ -66,7 +66,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
                 repositories { mavenCentral() }
 
                 dependencies {
-                    classpath 'com.netflix.nebula:nebula-dependency-recommender:9.0.2'
+                    classpath 'com.netflix.nebula:nebula-dependency-recommender:10.0.1'
                 }
             }
 
@@ -128,7 +128,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
                 repositories { mavenCentral() }
 
                 dependencies {
-                    classpath 'com.netflix.nebula:nebula-dependency-recommender:9.0.2'
+                    classpath 'com.netflix.nebula:nebula-dependency-recommender:10.0.1'
                 }
             }
 
@@ -193,7 +193,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
             buildscript {
                 repositories { mavenCentral() }
                 dependencies {
-                    classpath 'com.netflix.nebula:nebula-dependency-recommender:9.0.2'
+                    classpath 'com.netflix.nebula:nebula-dependency-recommender:10.0.1'
                 }
             }
             allprojects {
@@ -451,8 +451,8 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
                 repositories { mavenCentral() }
 
                 dependencies {
-                    classpath 'com.netflix.nebula:nebula-dependency-recommender:9.0.2'
-                    classpath 'com.netflix.nebula:nebula-publishing-plugin:4.4.4'
+                    classpath 'com.netflix.nebula:nebula-dependency-recommender:10.0.1'
+                    classpath 'com.netflix.nebula:nebula-publishing-plugin:17.3.2'
                 }
             }
 
@@ -512,7 +512,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
                 }
 
                 dependencies {
-                    classpath 'com.netflix.nebula:nebula-publishing-plugin:4.4.4'
+                    classpath 'com.netflix.nebula:nebula-publishing-plugin:17.3.2'
                 }
             }
             allprojects {
@@ -1004,7 +1004,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         buildFile << """\
             buildscript {
                 repositories { mavenCentral() }
-                dependencies { classpath 'com.netflix.nebula:nebula-dependency-recommender:9.0.2' }
+                dependencies { classpath 'com.netflix.nebula:nebula-dependency-recommender:10.0.1' }
             }
             
             allprojects {
@@ -1096,7 +1096,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         buildFile << """\
             buildscript {
                 repositories { mavenCentral() }
-                dependencies { classpath 'com.netflix.nebula:nebula-dependency-recommender:9.0.2' }
+                dependencies { classpath 'com.netflix.nebula:nebula-dependency-recommender:10.0.1' }
             }
             
             allprojects {
