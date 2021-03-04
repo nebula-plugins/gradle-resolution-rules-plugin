@@ -141,6 +141,8 @@ data class SubstituteRule(
     ) {
         throw UnsupportedOperationException("Substitution rules cannot be applied directly and must be applied via SubstituteRules")
     }
+
+    fun isInitialized(): Boolean = this::substitutedModule.isInitialized
 }
 
 class SubstituteRules(val rules: List<SubstituteRule>) : Rule {
@@ -154,16 +156,19 @@ class SubstituteRules(val rules: List<SubstituteRule>) : Rule {
         extension: NebulaResolutionRulesExtension
     ) {
         if (!this::versionedRulesById.isInitialized) {
+            val substitution = resolutionStrategy.dependencySubstitution
+
             val (versionedRules, unversionedRules) = rules.map { rule ->
-                val substitution = resolutionStrategy.dependencySubstitution
-                rule.substitutedModule = substitution.module(rule.module)
-                val withModule = substitution.module(rule.with)
-                if (withModule !is ModuleComponentSelector) {
-                    throw SubstituteRuleMissingVersionException(rule.with, rule)
+                if (!rule.isInitialized()) {
+                    rule.substitutedModule = substitution.module(rule.module)
+                    val withModule = substitution.module(rule.with)
+                    if (withModule !is ModuleComponentSelector) {
+                        throw SubstituteRuleMissingVersionException(rule.with, rule)
+                    }
+                    rule.withComponentSelector = withModule
+                    rule.withVersionSelector = ModuleVersionSelectorParsers.parser()
+                        .parseNotation(rule.withComponentSelector.displayName)
                 }
-                rule.withComponentSelector = withModule
-                rule.withVersionSelector = ModuleVersionSelectorParsers.parser()
-                    .parseNotation(rule.withComponentSelector.displayName)
                 rule
             }.partition { it.substitutedModule is ModuleComponentSelector }
 
