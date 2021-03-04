@@ -4,6 +4,7 @@ import nebula.test.IntegrationTestKitSpec
 import nebula.test.dependencies.DependencyGraphBuilder
 import nebula.test.dependencies.GradleDependencyGenerator
 import nebula.test.dependencies.ModuleBuilder
+import org.gradle.api.logging.LogLevel
 import org.gradle.util.GradleVersion
 import spock.lang.Unroll
 
@@ -36,6 +37,8 @@ class AlignRulesBasicWithCoreSpec extends IntegrationTestKitSpec {
         settingsFile << """\
             rootProject.name = '${moduleName}'
         """.stripIndent()
+
+        logLevel = LogLevel.INFO
     }
 
     def 'align rules and force to latest.release'() {

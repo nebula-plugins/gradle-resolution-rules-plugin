@@ -22,6 +22,9 @@ import org.gradle.api.logging.LogLevel
 import spock.lang.Unroll
 
 class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
+    def setup() {
+        logLevel = LogLevel.INFO
+    }
 
     @Unroll
     def 'align rules do not replace changes made by other rules'() {

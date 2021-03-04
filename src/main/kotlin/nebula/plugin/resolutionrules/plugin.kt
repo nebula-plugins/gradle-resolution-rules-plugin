@@ -61,7 +61,7 @@ class ResolutionRulesPlugin : Plugin<Project> {
 
         project.onExecute {
             if (isCoreAlignmentEnabled()) {
-                logger.warn("${project.name}: coreAlignmentSupport feature enabled")
+                logger.info("${project.name}: coreAlignmentSupport feature enabled")
             }
         }
 
