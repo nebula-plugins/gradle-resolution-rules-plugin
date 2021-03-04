@@ -22,6 +22,7 @@ import org.gradle.api.artifacts.*
 import org.gradle.api.artifacts.component.ComponentSelector
 import org.gradle.api.artifacts.component.ModuleComponentSelector
 import org.gradle.api.internal.artifacts.DefaultModuleIdentifier
+import org.gradle.api.internal.artifacts.DefaultModuleVersionIdentifier
 import org.gradle.api.internal.artifacts.dsl.ModuleVersionSelectorParsers
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.VersionSelector
 import org.gradle.api.logging.Logger
@@ -107,16 +108,19 @@ data class ReplaceRule(
     override val author: String,
     override val date: String
 ) : ModuleRule {
+    private val moduleId = module.toModuleId()
+    private val withId = with.toModuleId()
+
     override fun apply(
         project: Project,
         configuration: Configuration,
         resolutionStrategy: ResolutionStrategy,
         extension: NebulaResolutionRulesExtension
     ) {
-        project.dependencies.modules.module(module) {
+        project.dependencies.modules.module(moduleId) {
             val details = it as ComponentModuleMetadataDetails
             val message = "replaced $module -> $with because '$reason' by rule $ruleSet"
-            details.replacedBy(with, message)
+            details.replacedBy(withId, message)
         }
     }
 }
@@ -208,7 +212,8 @@ class SubstituteRules(val rules: List<SubstituteRule>) : Rule {
             val selectorNameSections = substitutedModule.displayName.split(":")
             if (selectorNameSections.size > 2) {
                 val selectorGroupAndArtifact = "${selectorNameSections[0]}:${selectorNameSections[1]}"
-                message = "substituted $selectorGroupAndArtifact with $withComponentSelector because '${rule.reason}' by rule ${rule.ruleSet}"
+                message =
+                    "substituted $selectorGroupAndArtifact with $withComponentSelector because '${rule.reason}' by rule ${rule.ruleSet}"
             }
 
             resolutionStrategy.dependencySubstitution {
@@ -227,14 +232,12 @@ data class RejectRule(
     override val author: String,
     override val date: String
 ) : ModuleRule {
-    val moduleIdentifier: ModuleIdentifier
+    val moduleVersionId = module.toModuleVersionId()
     lateinit var versionSelector: VersionSelector
 
     init {
-        val parts = module.split(":")
-        moduleIdentifier = DefaultModuleIdentifier.newId(parts[0], parts[1])
-        if (parts.size == 3) {
-            versionSelector = VersionWithSelector(parts[2]).asSelector()
+        if (moduleVersionId.version.isNotEmpty()) {
+            versionSelector = VersionWithSelector(moduleVersionId.version).asSelector()
         }
     }
 
@@ -251,7 +254,7 @@ data class RejectRule(
 }
 
 data class RejectRules(val rules: List<RejectRule>) : Rule {
-    private val ruleByModuleIdentifier = rules.groupBy { it.moduleIdentifier }
+    private val ruleByModuleIdentifier = rules.groupBy { it.moduleVersionId.module }
 
     override fun apply(
         project: Project,
@@ -282,16 +285,7 @@ data class DenyRule(
     override val author: String,
     override val date: String
 ) : ModuleRule {
-    private val moduleId: ModuleIdentifier
-    private lateinit var version: String
-
-    init {
-        val parts = module.split(":")
-        moduleId = DefaultModuleIdentifier.newId(parts[0], parts[1])
-        if (parts.size == 3) {
-            version = parts[2]
-        }
-    }
+    private val moduleVersionId = module.toModuleVersionId()
 
     override fun apply(
         project: Project,
@@ -299,15 +293,16 @@ data class DenyRule(
         resolutionStrategy: ResolutionStrategy,
         extension: NebulaResolutionRulesExtension
     ) {
+        val moduleId = moduleVersionId.module
         val match = configuration.allDependencies.find {
             it is ExternalModuleDependency && it.group == moduleId.group && it.name == moduleId.name
         }
-        if (match != null && (!this::version.isInitialized || match.version == version)) {
+        if (match != null && (moduleVersionId.version.isEmpty() || match.version == moduleVersionId.version)) {
             resolutionStrategy.componentSelection.withModule(moduleId) { selection ->
                 val message = "denied by rule $ruleSet because '$reason'"
                 selection.reject(message)
             }
-            throw DependencyDeniedException(module, this)
+            throw DependencyDeniedException(moduleVersionId, this)
         }
     }
 }
@@ -320,12 +315,7 @@ data class ExcludeRule(
     override val date: String
 ) : ModuleRule {
     private val logger: Logger = Logging.getLogger(ExcludeRule::class.java)
-    private val moduleId: ModuleIdentifier
-
-    init {
-        val parts = module.split(":")
-        moduleId = DefaultModuleIdentifier.newId(parts[0], parts[1])
-    }
+    private val moduleId = module.toModuleId()
 
     @Override
     override fun apply(
@@ -345,12 +335,25 @@ data class ExcludeRule(
     }
 }
 
-class DependencyDeniedException(notation: String, rule: DenyRule) :
-    Exception("Dependency $notation denied by rule ${rule.ruleSet}")
+class DependencyDeniedException(moduleVersionId: ModuleVersionIdentifier, rule: DenyRule) :
+    Exception("Dependency $moduleVersionId denied by rule ${rule.ruleSet}")
 
 class SubstituteRuleMissingVersionException(moduleId: String, rule: SubstituteRule) :
     Exception("The dependency to be substituted ($moduleId) must have a version. Rule ${rule.ruleSet} is invalid")
 
 fun Configuration.exclude(group: String, module: String) {
     exclude(mapOf("group" to group, "module" to module))
+}
+
+fun String.toModuleId(): ModuleIdentifier {
+    val parts = split(":")
+    check(parts.size == 2) { "$this is an invalid module identifier" }
+    return DefaultModuleIdentifier.newId(parts[0], parts[1])
+}
+
+fun String.toModuleVersionId(): ModuleVersionIdentifier {
+    val parts = split(":")
+    val id = DefaultModuleIdentifier.newId(parts[0], parts[1])
+    check((2..3).contains(parts.size)) { "$this is an invalid module identifier" }
+    return DefaultModuleVersionIdentifier.newId(id, if (parts.size == 3) parts[2] else "")
 }

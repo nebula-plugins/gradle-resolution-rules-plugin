@@ -391,7 +391,7 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
         then:
         def rootCause = StackTraceUtils.extractRootCause(result.failure)
         rootCause.class.simpleName == 'DependencyDeniedException'
-        rootCause.message.contains("Dependency com.sun.jersey:jersey-bundle denied by rule deny-dependency-without-version")
+        rootCause.message.contains("Dependency com.sun.jersey:jersey-bundle: denied by rule deny-dependency-without-version")
     }
 
     def 'reject dependency'() {
