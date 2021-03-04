@@ -59,12 +59,6 @@ class ResolutionRulesPlugin : Plugin<Project> {
         configurations = project.configurations
         extension = project.extensions.create("nebulaResolutionRules", NebulaResolutionRulesExtension::class.java, project)
 
-        project.onExecute {
-            if (isCoreAlignmentEnabled()) {
-                logger.warn("${project.name}: coreAlignmentSupport feature enabled")
-            }
-        }
-
         val rootProject = project.rootProject
         rootProject.configurations.maybeCreate(RESOLUTION_RULES_CONFIG_NAME)
         if (rootProject.extensions.findByType(NebulaResolutionRulesExtension::class.java) == null) {
