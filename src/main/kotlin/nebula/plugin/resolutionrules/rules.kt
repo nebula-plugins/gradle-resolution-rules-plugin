@@ -17,13 +17,15 @@
 package nebula.plugin.resolutionrules
 
 import com.netflix.nebula.interop.VersionWithSelector
+import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.artifacts.*
-import org.gradle.api.artifacts.component.ComponentSelector
 import org.gradle.api.artifacts.component.ModuleComponentSelector
 import org.gradle.api.internal.artifacts.DefaultModuleIdentifier
 import org.gradle.api.internal.artifacts.DefaultModuleVersionIdentifier
 import org.gradle.api.internal.artifacts.dsl.ModuleVersionSelectorParsers
+import org.gradle.api.internal.artifacts.ivyservice.dependencysubstitution.DefaultDependencySubstitutions
+import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.ExactVersionSelector
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.VersionSelector
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
@@ -129,11 +131,11 @@ data class SubstituteRule(
     val module: String, val with: String, override var ruleSet: String?,
     override val reason: String, override val author: String, override val date: String
 ) : BasicRule, Serializable {
-    lateinit var substitutedModule: ComponentSelector
+    lateinit var substitutedVersionId: ModuleVersionIdentifier
     lateinit var withComponentSelector: ModuleComponentSelector
-    lateinit var withVersionSelector: ModuleVersionSelector
-    val versionSelector by lazy {
-        val version = (substitutedModule as ModuleComponentSelector).version
+    private val versionSelector by lazy {
+        check(substitutedVersionId.version.isNotEmpty()) { "Version may not be empty" }
+        val version = substitutedVersionId.version
         VersionWithSelector(version).asSelector()
     }
 
@@ -146,12 +148,28 @@ data class SubstituteRule(
         throw UnsupportedOperationException("Substitution rules cannot be applied directly and must be applied via SubstituteRules")
     }
 
-    fun isInitialized(): Boolean = this::substitutedModule.isInitialized
+    fun isInitialized(): Boolean = this::substitutedVersionId.isInitialized
+
+    fun acceptsVersion(version: String): Boolean {
+        return if (substitutedVersionId.version.isNotEmpty()) {
+            when (VersionWithSelector(version).asSelector()) {
+                is ExactVersionSelector -> versionSelector.accept(version)
+                else -> false
+            }
+        } else true
+    }
 }
 
 class SubstituteRules(val rules: List<SubstituteRule>) : Rule {
-    private lateinit var versionedRulesById: Map<ModuleIdentifier, List<SubstituteRule>>
-    private lateinit var unversionedRules: List<SubstituteRule>
+    companion object {
+        private val SUBSTITUTIONS_ADD_RULE = DefaultDependencySubstitutions::class.java.getDeclaredMethod(
+            "addSubstitution",
+            Action::class.java,
+            Boolean::class.java
+        ).apply { isAccessible = true }
+    }
+
+    private lateinit var rulesById: Map<ModuleIdentifier, List<SubstituteRule>>
 
     override fun apply(
         project: Project,
@@ -159,69 +177,50 @@ class SubstituteRules(val rules: List<SubstituteRule>) : Rule {
         resolutionStrategy: ResolutionStrategy,
         extension: NebulaResolutionRulesExtension
     ) {
-        if (!this::versionedRulesById.isInitialized) {
+        if (!this::rulesById.isInitialized) {
             val substitution = resolutionStrategy.dependencySubstitution
-
-            val (versionedRules, unversionedRules) = rules.map { rule ->
+            rulesById = rules.map { rule ->
                 if (!rule.isInitialized()) {
-                    rule.substitutedModule = substitution.module(rule.module)
+                    rule.substitutedVersionId = rule.module.toModuleVersionId()
                     val withModule = substitution.module(rule.with)
                     if (withModule !is ModuleComponentSelector) {
                         throw SubstituteRuleMissingVersionException(rule.with, rule)
                     }
                     rule.withComponentSelector = withModule
-                    rule.withVersionSelector = ModuleVersionSelectorParsers.parser()
-                        .parseNotation(rule.withComponentSelector.displayName)
                 }
                 rule
-            }.partition { it.substitutedModule is ModuleComponentSelector }
-
-            this.unversionedRules = unversionedRules
-            versionedRulesById =
-                versionedRules.groupBy { (it.substitutedModule as ModuleComponentSelector).moduleIdentifier }
+            }.groupBy { it.substitutedVersionId.module }
+                .mapValues { entry -> entry.value.sortedBy { it.substitutedVersionId.version } }
         }
 
-        if (versionedRulesById.isNotEmpty()) {
-            // We use eachDependency because dependencySubstitutions.all causes configuration task dependencies to resolve at configuration time
-            resolutionStrategy.eachDependency { details ->
-                val requested = details.requested
-                val requestedString = requested.toString()
-                val rules = versionedRulesById[requested.module] ?: return@eachDependency
-                val requestedSelectorVersion = requested.version
+        val substitutionAction = Action<DependencySubstitution> { details ->
+            val requested = details.requested
+            if (requested is ModuleComponentSelector) {
+                val rules = rulesById[requested.moduleIdentifier] ?: return@Action
                 rules.forEach { rule ->
-                    if (rule.versionSelector.accept(requestedSelectorVersion)
-                        && !requestedString.contains(".+")
-                        && !requestedString.contains("latest")
-                    ) {
-                        // Note on `useTarget`:
-                        // Forcing modules via ResolutionStrategy.force(Object...) uses this capability.
-                        // from https://docs.gradle.org/current/javadoc/org/gradle/api/artifacts/DependencyResolveDetails.html
-                        details.useTarget(rule.withVersionSelector) // We can't pass a ModuleComponentSelector here so we take the conversion hit
-                        details.because("substituted ${rule.substitutedModule} with ${rule.withComponentSelector} because '${rule.reason}' by rule ${rule.ruleSet}")
-                        return@eachDependency
+                    val withComponentSelector = rule.withComponentSelector
+                    if (rule.acceptsVersion(requested.version)) {
+                        val message =
+                            "substituted ${rule.substitutedVersionId} with $withComponentSelector because '${rule.reason}' by rule ${rule.ruleSet}"
+                        details.useTarget(
+                            withComponentSelector,
+                            message
+                        )
+                        return@Action
                     }
                 }
             }
         }
 
-        unversionedRules.forEach { rule ->
-            val substitutedModule = rule.substitutedModule
-            val withComponentSelector = rule.withComponentSelector
-            var message = "substituted $withComponentSelector because '${rule.reason}' by rule ${rule.ruleSet}"
-
-            val selectorNameSections = substitutedModule.displayName.split(":")
-            if (selectorNameSections.size > 2) {
-                val selectorGroupAndArtifact = "${selectorNameSections[0]}:${selectorNameSections[1]}"
-                message =
-                    "substituted $selectorGroupAndArtifact with $withComponentSelector because '${rule.reason}' by rule ${rule.ruleSet}"
-            }
-
-            resolutionStrategy.dependencySubstitution {
-                it.substitute(substitutedModule)
-                    .because(message)
-                    .with(withComponentSelector)
-            }
-        }
+        /*
+         * Unfortunately impossible to avoid an internal/protected method dependency for now:
+         *
+         * - We can't dependencySubstitutions.all because it causes the configuration to be resolved at task graph calculation time due to the possibility of project substitutions there
+         * - Likewise eachDependency has it's own performance issues - https://github.com/gradle/gradle/issues/16151
+         *
+         * There's no alternative to all that only allows module substitution and we only ever substitute modules for modules, so this is completely safe.
+         */
+        SUBSTITUTIONS_ADD_RULE.invoke(resolutionStrategy.dependencySubstitution, substitutionAction, false)
     }
 }
 
