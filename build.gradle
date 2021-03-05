@@ -40,21 +40,9 @@ apply from: 'gradle/idea.gradle'
 description 'Gradle resolution rules plugin'
 
 contacts {
-    'dmthomas@gmail.com' {
-        moniker 'Danny Thomas'
-        github 'DanielThomas'
-    }
-    'nadavcoh@gmail.com' {
-        moniker 'Nadav Cohen'
-        github 'nadavc'
-    }
-    'rob.spieldenner@gmail.com' {
-        moniker 'Rob Spieldenner'
-        github 'rspieldenner'
-    }
-    'roberto@perezalcolea.info' {
-        moniker 'Roberto Perez Alcolea'
-        github 'rpalcolea'
+    'nebula-plugins-oss@netflix.com' {
+        moniker 'Nebula Plugins Maintainers'
+        github 'nebula-plugins'
     }
 }
 
