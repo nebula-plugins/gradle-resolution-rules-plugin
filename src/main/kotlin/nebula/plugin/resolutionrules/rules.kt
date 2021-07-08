@@ -19,17 +19,28 @@ package nebula.plugin.resolutionrules
 import com.netflix.nebula.interop.VersionWithSelector
 import org.gradle.api.Action
 import org.gradle.api.Project
-import org.gradle.api.artifacts.*
+import org.gradle.api.artifacts.CacheableRule
+import org.gradle.api.artifacts.ComponentMetadataContext
+import org.gradle.api.artifacts.ComponentMetadataDetails
+import org.gradle.api.artifacts.ComponentMetadataRule
+import org.gradle.api.artifacts.Configuration
+import org.gradle.api.artifacts.DependencySubstitution
+import org.gradle.api.artifacts.ExternalModuleDependency
+import org.gradle.api.artifacts.ModuleIdentifier
+import org.gradle.api.artifacts.ModuleVersionIdentifier
+import org.gradle.api.artifacts.ResolutionStrategy
+import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ModuleComponentSelector
+import org.gradle.api.internal.ReusableAction
 import org.gradle.api.internal.artifacts.DefaultModuleIdentifier
 import org.gradle.api.internal.artifacts.DefaultModuleVersionIdentifier
-import org.gradle.api.internal.artifacts.dsl.ModuleVersionSelectorParsers
 import org.gradle.api.internal.artifacts.ivyservice.dependencysubstitution.DefaultDependencySubstitutions
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.ExactVersionSelector
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.VersionSelector
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import java.io.Serializable
+import javax.inject.Inject
 
 interface Rule {
     fun apply(
@@ -109,8 +120,7 @@ data class ReplaceRule(
     override val reason: String,
     override val author: String,
     override val date: String
-) : ModuleRule {
-    private val moduleId = module.toModuleId()
+) : ModuleRule, Serializable {
     private val withId = with.toModuleId()
 
     override fun apply(
@@ -119,10 +129,50 @@ data class ReplaceRule(
         resolutionStrategy: ResolutionStrategy,
         extension: NebulaResolutionRulesExtension
     ) {
-        project.dependencies.modules.module(moduleId) {
-            val details = it as ComponentModuleMetadataDetails
-            val message = "replaced $module -> $with because '$reason' by rule $ruleSet"
-            details.replacedBy(withId, message)
+        if (configuration.name == "compileClasspath") { // Apply only once per project. This is one way to ensure it'll be run for only one configuration
+            project.dependencies.components.all(CapabilityMetadataRule::class.java) {
+                it.params(this)
+            }
+        }
+
+        configuration.resolutionStrategy.capabilitiesResolution.withCapability("${ruleSet}-capability:${ruleSet}-capability") { capabilityResolutionDetails ->
+            val toBeSelected = capabilityResolutionDetails.candidates.find {
+                it.id is ModuleComponentIdentifier &&
+                        (it.id as ModuleComponentIdentifier).moduleIdentifier == withId
+            }
+            if (toBeSelected != null) {
+                capabilityResolutionDetails.select(toBeSelected)
+                capabilityResolutionDetails.because("replaced $module -> $with because '$reason' by rule $ruleSet")
+            }
+        }
+    }
+}
+
+@CacheableRule
+open class CapabilityMetadataRule @Inject constructor(val rule: ReplaceRule) : ComponentMetadataRule, Serializable,
+    ReusableAction {
+    private val logger: Logger = Logging.getLogger(CapabilityMetadataRule::class.java)
+    private val moduleId = rule.module.toModuleId()
+    private val withId = rule.with.toModuleId()
+
+    override fun execute(componentMetadataContext: ComponentMetadataContext?) {
+        modifyDetails(componentMetadataContext!!.details)
+    }
+
+    private fun modifyDetails(details: ComponentMetadataDetails) {
+        val moduleIdMatches = moduleId.group == details.id.group && moduleId.name == details.id.name
+        val withIdMatches = withId.group == details.id.group && withId.name == details.id.name
+        if (moduleIdMatches || withIdMatches) {
+            details.allVariants { variantMetadata ->
+                variantMetadata.withCapabilities { mutableCapabilitiesMetadata ->
+                    mutableCapabilitiesMetadata.addCapability(
+                        "${rule.ruleSet}-capability",
+                        "${rule.ruleSet}-capability",
+                        details.id.version
+                    )
+                }
+            }
+            logger.debug("Adding capability based on '${details.id.group}:${details.id.name}:${details.id.version}' from replacement rule '${rule.ruleSet}'")
         }
     }
 }
