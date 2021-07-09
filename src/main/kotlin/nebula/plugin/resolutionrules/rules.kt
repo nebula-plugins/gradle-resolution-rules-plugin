@@ -37,6 +37,8 @@ import org.gradle.api.internal.artifacts.DefaultModuleVersionIdentifier
 import org.gradle.api.internal.artifacts.ivyservice.dependencysubstitution.DefaultDependencySubstitutions
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.ExactVersionSelector
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.VersionSelector
+import org.gradle.api.logging.Logger
+import org.gradle.api.logging.Logging
 import java.io.Serializable
 import javax.inject.Inject
 
