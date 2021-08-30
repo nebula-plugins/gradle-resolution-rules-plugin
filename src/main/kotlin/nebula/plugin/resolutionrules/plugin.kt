@@ -41,11 +41,12 @@ class ResolutionRulesPlugin : Plugin<Project> {
     private lateinit var configurations: ConfigurationContainer
     private lateinit var extension: NebulaResolutionRulesExtension
     private val ignoredConfigurationPrefixes = listOf(RESOLUTION_RULES_CONFIG_NAME, SPRING_VERSION_MANAGEMENT_CONFIG_NAME,
-            NEBULA_RECOMMENDER_BOM_CONFIG_NAME, SCALA_INCREMENTAL_ANALYSIS_CONFIGURATION_PREFIX, KTLINT_CONFIGURATION_PREFIX, REPOSITORY_CONTENT_DESCRIPTOR_CONFIGURATION_PREFIX)
+            NEBULA_RECOMMENDER_BOM_CONFIG_NAME, SCALA_INCREMENTAL_ANALYSIS_CONFIGURATION_PREFIX, KTLINT_CONFIGURATION_PREFIX, REPOSITORY_CONTENT_DESCRIPTOR_CONFIGURATION_PREFIX, PMD_CONFIGURATION_PREFIX)
 
     companion object Constants {
         const val SPRING_VERSION_MANAGEMENT_CONFIG_NAME = "versionManagement"
         const val KTLINT_CONFIGURATION_PREFIX = "ktlint"
+        const val PMD_CONFIGURATION_PREFIX = "pmd"
         const val SCALA_INCREMENTAL_ANALYSIS_CONFIGURATION_PREFIX = "incrementalScalaAnalysis"
         const val REPOSITORY_CONTENT_DESCRIPTOR_CONFIGURATION_PREFIX = "repositoryContentDescriptor"
         const val JSON_EXT = ".json"
