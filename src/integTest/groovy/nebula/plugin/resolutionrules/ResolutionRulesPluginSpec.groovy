@@ -197,6 +197,20 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
         output.contains 'nebula.resolution-rules is using ruleset: rules.jar'
     }
 
+    def 'dependencies task with configuration on demand'() {
+        def subproject = addSubproject("subprojectA")
+        new File(subproject, "build.gradle") << """
+            apply plugin: 'java'
+            apply plugin: 'nebula.resolution-rules'
+        """.stripIndent()
+
+        when:
+        def result = runTasksSuccessfully(':subprojectA:dependencies', '--configuration', 'compileClasspath', '-Dorg.gradle.configureondemand=true')
+
+        then:
+        result.standardOutput.contains("Configuration on demand is an incubating feature.")
+    }
+
     def 'replace module'() {
         given:
         buildFile << """

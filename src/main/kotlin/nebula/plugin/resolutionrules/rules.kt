@@ -23,15 +23,12 @@ import org.gradle.api.artifacts.*
 import org.gradle.api.artifacts.component.ModuleComponentSelector
 import org.gradle.api.internal.artifacts.DefaultModuleIdentifier
 import org.gradle.api.internal.artifacts.DefaultModuleVersionIdentifier
-import org.gradle.api.internal.artifacts.dsl.ModuleVersionSelectorParsers
 import org.gradle.api.internal.artifacts.ivyservice.dependencysubstitution.DefaultDependencySubstitutions
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.ExactVersionSelector
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.VersionSelector
-import org.gradle.api.logging.Logger
-import org.gradle.api.logging.Logging
 import java.io.Serializable
 
-interface Rule {
+interface Rule : Serializable {
     fun apply(
         project: Project,
         configuration: Configuration,
@@ -59,7 +56,7 @@ data class RuleSet(
     val deny: List<DenyRule> = emptyList(),
     val exclude: List<ExcludeRule> = emptyList(),
     val align: List<AlignRule> = emptyList()
-) {
+) : Serializable {
 
     fun dependencyRulesPartOne() =
         listOf(replace, deny, exclude).flatten() + listOf(SubstituteRules(substitute), RejectRules(reject))
@@ -131,13 +128,9 @@ data class SubstituteRule(
     val module: String, val with: String, override var ruleSet: String?,
     override val reason: String, override val author: String, override val date: String
 ) : BasicRule, Serializable {
-    lateinit var substitutedVersionId: ModuleVersionIdentifier
-    lateinit var withComponentSelector: ModuleComponentSelector
-    private val versionSelector by lazy {
-        check(substitutedVersionId.version.isNotEmpty()) { "Version may not be empty" }
-        val version = substitutedVersionId.version
-        VersionWithSelector(version).asSelector()
-    }
+    @Transient lateinit var substitutedVersionId: ModuleVersionIdentifier
+    @Transient lateinit var withComponentSelector: ModuleComponentSelector
+    @Transient lateinit var versionSelector: VersionSelector
 
     override fun apply(
         project: Project,
@@ -169,7 +162,7 @@ class SubstituteRules(val rules: List<SubstituteRule>) : Rule {
         ).apply { isAccessible = true }
     }
 
-    private lateinit var rulesById: Map<ModuleIdentifier, List<SubstituteRule>>
+    @Transient private lateinit var rulesById: Map<ModuleIdentifier, List<SubstituteRule>>
 
     override fun apply(
         project: Project,
@@ -187,6 +180,7 @@ class SubstituteRules(val rules: List<SubstituteRule>) : Rule {
                         throw SubstituteRuleMissingVersionException(rule.with, rule)
                     }
                     rule.withComponentSelector = withModule
+                    rule.versionSelector = VersionWithSelector(rule.substitutedVersionId.version).asSelector()
                 }
                 rule
             }.groupBy { it.substitutedVersionId.module }
@@ -232,7 +226,7 @@ data class RejectRule(
     override val date: String
 ) : ModuleRule {
     val moduleVersionId = module.toModuleVersionId()
-    lateinit var versionSelector: VersionSelector
+    @Transient lateinit var versionSelector: VersionSelector
 
     init {
         if (moduleVersionId.version.isNotEmpty()) {
@@ -313,7 +307,6 @@ data class ExcludeRule(
     override val author: String,
     override val date: String
 ) : ModuleRule {
-    private val logger: Logger = Logging.getLogger(ExcludeRule::class.java)
     private val moduleId = module.toModuleId()
 
     @Override
@@ -325,7 +318,7 @@ data class ExcludeRule(
     ) {
         val message =
             "excluded $moduleId and transitive dependencies for all dependencies of this configuration by rule $ruleSet"
-        logger.debug(message)
+        ResolutionRulesPlugin.Logger.debug(message)
         // TODO: would like a core Gradle feature that accepts a reason
         configuration.exclude(moduleId.group, moduleId.name)
         resolutionStrategy.componentSelection.withModule(moduleId.toString()) { selection ->
