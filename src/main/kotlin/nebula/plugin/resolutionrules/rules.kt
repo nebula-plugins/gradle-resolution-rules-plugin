@@ -228,12 +228,6 @@ data class RejectRule(
     val moduleVersionId = module.toModuleVersionId()
     @Transient lateinit var versionSelector: VersionSelector
 
-    init {
-        if (moduleVersionId.version.isNotEmpty()) {
-            versionSelector = VersionWithSelector(moduleVersionId.version).asSelector()
-        }
-    }
-
     override fun apply(
         project: Project,
         configuration: Configuration,
@@ -259,6 +253,7 @@ data class RejectRules(val rules: List<RejectRule>) : Rule {
             val candidate = selection.candidate
             val rules = ruleByModuleIdentifier[candidate.moduleIdentifier] ?: return@all
             rules.forEach { rule ->
+                rule.versionSelector = VersionWithSelector(rule.moduleVersionId.version).asSelector()
                 if (!rule.hasVersionSelector() || rule.versionSelector.accept(candidate.version)) {
                     val message = "rejected by rule ${rule.ruleSet} because '${rule.reason}'"
                     selection.reject(message)

@@ -577,7 +577,7 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
         def result = runTasks('dependencies', '--configuration', 'compileClasspath')
 
         then:
-        !result.standardError.contains("esolution rules could not resolve all dependencies to align configuration ':compileClasspath':\n" +
+        !result.standardError.contains("Resolution rules could not resolve all dependencies to align configuration ':compileClasspath':\n" +
                 " - com.google.guava:guava:19.0 -> com.google.guava:guava:19.0 - Could not find com.google.guava:guava:19.0")
     }
 }
