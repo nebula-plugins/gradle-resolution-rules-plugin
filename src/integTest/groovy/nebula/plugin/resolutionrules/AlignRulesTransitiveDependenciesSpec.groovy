@@ -45,15 +45,13 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.output.contains '+--- test.nebula:a:1.0.0 -> 1.1.0\n'
         result.output.contains '\\--- test.other:c:1.0.0\n'
         result.output.contains '     \\--- test.nebula:b:1.1.0\n'
 
-        where:
-        coreAlignment << [false, true]
     }
 
     @Unroll
@@ -94,16 +92,13 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.output.contains '+--- test.nebula:a:1.0.0 -> 1.1.0\n'
         result.output.contains '\\--- test.other:d:1.0.0\n'
         result.output.contains '     \\--- test.other:c:1.0.0\n'
         result.output.contains '          \\--- test.nebula:b:1.1.0\n'
-
-        where:
-        coreAlignment << [false, true]
     }
 
     @Unroll
@@ -143,7 +138,7 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.output.contains '+--- test.nebula:a:1.1.0\n'
@@ -151,9 +146,6 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
         result.output.contains '|         \\--- test.nebula:b:1.0.0 -> 1.1.0\n'
         result.output.contains '|              \\--- test.other:b:1.0.0 (*)\n'
         result.output.contains '\\--- test.nebula:b:1.0.0 -> 1.1.0 (*)\n'
-
-        where:
-        coreAlignment << [false, true]
     }
 
     @Unroll
@@ -190,15 +182,12 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.output.contains '+--- test.nebula:a:1.0.0\n'
         result.output.contains '|    \\--- test.nebula:b:1.0.0\n'
         result.output.contains '\\--- test.nebula:b -> 1.0.0\n'
-
-        where:
-        coreAlignment << [false, true]
     }
 
     @Unroll
@@ -262,7 +251,7 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.output.contains '+--- test.nebula.a:a1:1.+ -> 2.0.0\n'
@@ -271,9 +260,6 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
         result.output.contains '+--- test.nebula.b:b2:1.0.0 -> 2.0.0\n'
         result.output.contains '\\--- test.nebula.a:a3:1.0.0 -> 2.0.0\n'
         result.output.contains '\\--- test.nebula.c:c1:1.0.0'
-
-        where:
-        coreAlignment << [false, true]
     }
 
     @Unroll
@@ -315,13 +301,10 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.output.contains '\\--- test.nebula:d:3.0.0\n'
-
-        where:
-        coreAlignment << [false, true]
     }
 
     @Unroll
@@ -378,14 +361,11 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.output.contains '+--- test.nebula:a:1.0.0 -> 1.1.0'
         result.output.contains '\\--- test.nebula:b:1.2.0 -> 1.1.0'
-
-        where:
-        coreAlignment << [false, true]
     }
 
     @Unroll
@@ -447,15 +427,12 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.output.contains '|    +--- test.group2:module1:1.0.0 -> 3.0.0'
         result.output.contains '|         \\--- test.group2:module2:2.0.0 -> 3.0.0'
         result.output.contains '          \\--- test.group2:module1:3.0.0'
-
-        where:
-        coreAlignment << [false, true]
     }
 
     /* This test is currently failing for Nebula alignment due unfixed bug in alignment rule implementation. We decided not to invest into
@@ -538,15 +515,11 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.output.contains '|    +--- test.group2:module1:1.0.0 -> 2.0.0'
         result.output.contains '|         \\--- test.group2:module2:2.0.0'
         result.output.contains '          \\--- test.group2:module1:3.0.0 -> 2.0.0'
-
-        where:
-//        coreAlignment << [false, true] // This test is currently failing for Nebula alignment due unfixed bug in alignment rule implementation.
-        coreAlignment << [true]
     }
 }

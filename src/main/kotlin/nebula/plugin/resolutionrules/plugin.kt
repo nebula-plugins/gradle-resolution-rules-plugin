@@ -67,12 +67,6 @@ class ResolutionRulesPlugin : Plugin<Project> {
         extension =
             project.extensions.create("nebulaResolutionRules", NebulaResolutionRulesExtension::class.java, project)
 
-        project.onExecute {
-            if (isCoreAlignmentEnabled()) {
-                Logger.info("${project.name}: coreAlignmentSupport feature enabled")
-            }
-        }
-
         val rootProject = project.rootProject
         val configuration = project.configurations.maybeCreate(RESOLUTION_RULES_CONFIG_NAME)
         if (project != rootProject) {
@@ -113,35 +107,16 @@ class ResolutionRulesPlugin : Plugin<Project> {
                             rule.apply(project, config, config.resolutionStrategy, extension)
                         }
 
-                        ruleSet.dependencyRulesPartTwo(isCoreAlignmentEnabled()).forEach { rule ->
+                        ruleSet.dependencyRulesPartTwo().forEach { rule ->
                             rule.apply(project, config, config.resolutionStrategy, extension)
                         }
                         dependencyRulesApplied = true
                     }
                 }
             }
-
-            config.onResolve {
-                if (!dependencyRulesApplied) {
-                    Logger.debug("Skipping resolve rules for $config - dependency rules have not been applied")
-                } else {
-                    val ruleSet = extension.ruleSet()
-                    ruleSet.resolveRules(isCoreAlignmentEnabled()).forEach { rule ->
-                        rule.apply(project, config, config.resolutionStrategy, extension)
-                    }
-                }
-            }
         }
     }
 
-    private fun isCoreAlignmentEnabled(): Boolean {
-        val extension = project.rootProject.extensions.getByType(NebulaResolutionRulesExtension::class.java)
-        return if (System.getProperty("nebula.features.coreAlignmentSupport") != null) {
-            java.lang.Boolean.getBoolean("nebula.features.coreAlignmentSupport")
-        } else {
-            extension.useCoreGradleAlignment
-        }
-    }
 }
 
 @Suppress("UnstableApiUsage")
@@ -220,7 +195,6 @@ open class NebulaResolutionRulesExtension @Inject constructor(private val projec
     var include = ArrayList<String>()
     var optional = ArrayList<String>()
     var exclude = ArrayList<String>()
-    var useCoreGradleAlignment = false
 
     fun ruleSet(): RuleSet {
         val service = NebulaResolutionRulesService.registerService(project).get()

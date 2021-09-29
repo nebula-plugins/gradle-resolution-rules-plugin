@@ -44,7 +44,7 @@ class AlignAndLockWithDowngradedTransitiveDependenciesSpec extends IntegrationTe
     }
 
     @Unroll
-    def 'use downgraded version via a static major.minor.patch force on a transitive dependency - core alignment #coreAlignment | core locking #coreLocking'() {
+    def 'use downgraded version via a static major.minor.patch force on a transitive dependency | core locking #coreLocking'() {
         given:
         setupDependenciesAndAdjustBuildFile()
         buildFile << """
@@ -56,9 +56,9 @@ class AlignAndLockWithDowngradedTransitiveDependenciesSpec extends IntegrationTe
             """.stripIndent()
 
         when:
-        def results = runTasks(*insightTasks(coreAlignment, coreLocking))
-        runTasks(*lockingTasks(coreAlignment, coreLocking))
-        def afterLockingResults = runTasks(*insightTasks(coreAlignment, coreLocking))
+        def results = runTasks(*insightTasks(coreLocking))
+        runTasks(*lockingTasks(coreLocking))
+        def afterLockingResults = runTasks(*insightTasks(coreLocking))
 
         then:
         dependenciesAreAligned(results.output, '2.9.9')
@@ -66,14 +66,11 @@ class AlignAndLockWithDowngradedTransitiveDependenciesSpec extends IntegrationTe
         micropatchVersionIsNotUsed(results.output, afterLockingResults.output, '2.9.9')
 
         where:
-        coreAlignment | coreLocking
-        false         | false
-        true          | false
-        true          | true
+        coreLocking << [false, true]
     }
 
     @Unroll
-    def 'use downgraded version via a dynamic major.minor.+ force on a transitive dependency - core alignment #coreAlignment | core locking #coreLocking'() {
+    def 'use downgraded version via a dynamic major.minor.+ force on a transitive dependency | core locking #coreLocking'() {
         given:
         setupDependenciesAndAdjustBuildFile()
         buildFile << """
@@ -85,9 +82,9 @@ class AlignAndLockWithDowngradedTransitiveDependenciesSpec extends IntegrationTe
             """.stripIndent()
 
         when:
-        def results = runTasks(*insightTasks(coreAlignment, coreLocking))
-        runTasks(*lockingTasks(coreAlignment, coreLocking))
-        def afterLockingResults = runTasks(*insightTasks(coreAlignment, coreLocking))
+        def results = runTasks(*insightTasks(coreLocking))
+        runTasks(*lockingTasks(coreLocking))
+        def afterLockingResults = runTasks(*insightTasks(coreLocking))
 
         then:
         dependenciesAreAligned(results.output, '2.9.10')
@@ -95,14 +92,11 @@ class AlignAndLockWithDowngradedTransitiveDependenciesSpec extends IntegrationTe
         micropatchVersionIsNotUsed(results.output, afterLockingResults.output, '2.9.10')
 
         where:
-        coreAlignment | coreLocking
-        false         | false
-        true          | false
-        true          | true
+        coreLocking << [false, true]
     }
 
     @Unroll
-    def 'use downgraded version via a static major.minor.patch.micropatch forces on a transitive dependency - core alignment #coreAlignment | core locking #coreLocking'() {
+    def 'use downgraded version via a static major.minor.patch.micropatch forces on a transitive dependency| core locking #coreLocking'() {
         given:
         setupDependenciesAndAdjustBuildFile()
         buildFile << """
@@ -114,9 +108,9 @@ class AlignAndLockWithDowngradedTransitiveDependenciesSpec extends IntegrationTe
             """.stripIndent()
 
         when:
-        def results = runTasks(*insightTasks(coreAlignment, coreLocking))
-        runTasks(*lockingTasks(coreAlignment, coreLocking))
-        def afterLockingResults = runTasks(*insightTasks(coreAlignment, coreLocking))
+        def results = runTasks(*insightTasks(coreLocking))
+        runTasks(*lockingTasks(coreLocking))
+        def afterLockingResults = runTasks(*insightTasks(coreLocking))
 
         then:
         dependenciesAreAligned(results.output, '2.9.9')
@@ -124,14 +118,11 @@ class AlignAndLockWithDowngradedTransitiveDependenciesSpec extends IntegrationTe
         micropatchVersionIsUsed(results.output, afterLockingResults.output, '2.9.9') // hurray!
 
         where:
-        coreAlignment | coreLocking
-        false         | false
-        true          | false
-        true          | true
+        coreLocking << [false, true]
     }
 
     @Unroll
-    def 'use downgraded version via a static major.minor.patch strict constraint on a transitive dependency - core alignment #coreAlignment | core locking #coreLocking'() {
+    def 'use downgraded version via a static major.minor.patch strict constraint on a transitive dependency| core locking #coreLocking'() {
         setupDependenciesAndAdjustBuildFile()
         buildFile << """
             dependencies {
@@ -151,9 +142,9 @@ class AlignAndLockWithDowngradedTransitiveDependenciesSpec extends IntegrationTe
             """.stripIndent()
 
         when:
-        def results = runTasks(*insightTasks(coreAlignment, coreLocking))
-        runTasks(*lockingTasks(coreAlignment, coreLocking))
-        def afterLockingResults = runTasks(*insightTasks(coreAlignment, coreLocking))
+        def results = runTasks(*insightTasks(coreLocking))
+        runTasks(*lockingTasks(coreLocking))
+        def afterLockingResults = runTasks(*insightTasks(coreLocking))
 
         then:
         dependenciesAreAligned(results.output, '2.9.9')
@@ -161,14 +152,11 @@ class AlignAndLockWithDowngradedTransitiveDependenciesSpec extends IntegrationTe
         micropatchVersionIsNotUsed(results.output, afterLockingResults.output, '2.9.9')
 
         where:
-        coreAlignment | coreLocking
-//        false         | false // this is not successful
-        true          | false
-        true          | true
+        coreLocking << [false, true]
     }
 
     @Unroll
-    def 'use downgraded version via a dynamic major.minor.+ strict constraint on a transitive dependency - core alignment #coreAlignment | core locking #coreLocking'() {
+    def 'use downgraded version via a dynamic major.minor.+ strict constraint on a transitive dependency| core locking #coreLocking'() {
         setupDependenciesAndAdjustBuildFile()
         buildFile << """
             dependencies {
@@ -190,9 +178,9 @@ class AlignAndLockWithDowngradedTransitiveDependenciesSpec extends IntegrationTe
             """.stripIndent()
 
         when:
-        def results = runTasks(*insightTasks(coreAlignment, coreLocking))
-        runTasks(*lockingTasks(coreAlignment, coreLocking))
-        def afterLockingResults = runTasks(*insightTasks(coreAlignment, coreLocking))
+        def results = runTasks(*insightTasks(coreLocking))
+        runTasks(*lockingTasks(coreLocking))
+        def afterLockingResults = runTasks(*insightTasks(coreLocking))
 
         then:
         dependenciesAreAligned(results.output, '2.9.10')
@@ -200,14 +188,11 @@ class AlignAndLockWithDowngradedTransitiveDependenciesSpec extends IntegrationTe
         micropatchVersionIsNotUsed(results.output, afterLockingResults.output, '2.9.10')
 
         where:
-        coreAlignment | coreLocking
-//        false         | false // this is not successful
-        true          | false
-        true          | true
+        coreLocking << [false, true]
     }
 
     @Unroll
-    def 'use downgraded version via matching forces with static major.minor.patch version - core alignment #coreAlignment | core locking #coreLocking'() {
+    def 'use downgraded version via matching forces with static major.minor.patch version| core locking #coreLocking'() {
         given:
         setupDependenciesAndAdjustBuildFile()
         buildFile << """
@@ -223,9 +208,9 @@ class AlignAndLockWithDowngradedTransitiveDependenciesSpec extends IntegrationTe
             """.stripIndent()
 
         when:
-        def results = runTasks(*insightTasks(coreAlignment, coreLocking))
-        runTasks(*lockingTasks(coreAlignment, coreLocking))
-        def afterLockingResults = runTasks(*insightTasks(coreAlignment, coreLocking))
+        def results = runTasks(*insightTasks(coreLocking))
+        runTasks(*lockingTasks(coreLocking))
+        def afterLockingResults = runTasks(*insightTasks(coreLocking))
 
         then:
         dependenciesAreAligned(results.output, '2.9.9')
@@ -233,14 +218,11 @@ class AlignAndLockWithDowngradedTransitiveDependenciesSpec extends IntegrationTe
         micropatchVersionIsUsed(results.output, afterLockingResults.output, '2.9.9') // hurray!
 
         where:
-        coreAlignment | coreLocking
-        false         | false
-        true          | false
-        true          | true
+        coreLocking << [false, true]
     }
 
     @Unroll
-    def 'use downgraded version via matching forces with dynamic major.minor.+ version - core alignment #coreAlignment | core locking #coreLocking'() {
+    def 'use downgraded version via matching forces with dynamic major.minor.+ version| core locking #coreLocking'() {
         given:
         setupDependenciesAndAdjustBuildFile()
         buildFile << """
@@ -256,9 +238,9 @@ class AlignAndLockWithDowngradedTransitiveDependenciesSpec extends IntegrationTe
             """.stripIndent()
 
         when:
-        def results = runTasks(*insightTasks(coreAlignment, coreLocking))
-        runTasks(*lockingTasks(coreAlignment, coreLocking))
-        def afterLockingResults = runTasks(*insightTasks(coreAlignment, coreLocking))
+        def results = runTasks(*insightTasks(coreLocking))
+        runTasks(*lockingTasks(coreLocking))
+        def afterLockingResults = runTasks(*insightTasks(coreLocking))
 
         then:
         dependenciesAreAligned(results.output, '2.9.10')
@@ -266,18 +248,13 @@ class AlignAndLockWithDowngradedTransitiveDependenciesSpec extends IntegrationTe
         micropatchVersionIsUsed(results.output, afterLockingResults.output, '2.9.10') // hurray!
 
         where:
-        coreAlignment | coreLocking
-        false         | false
-        true          | false
-        true          | true
+        coreLocking << [false, true]
     }
 
     @Unroll
-    def 'use downgraded version via virtual platform constraint with static major.minor.patch version - core alignment only | core locking #coreLocking'() {
+    def 'use downgraded version via virtual platform constraint with static major.minor.patch version | core locking #coreLocking'() {
         // note: platform constraints like this are only possible with core Gradle alignment
         given:
-        def coreAlignment = true
-
         setupDependenciesAndAdjustBuildFile()
         buildFile << """
             dependencies {
@@ -291,9 +268,9 @@ class AlignAndLockWithDowngradedTransitiveDependenciesSpec extends IntegrationTe
             """.stripIndent()
 
         when:
-        def results = runTasks(*insightTasks(coreAlignment, coreLocking))
-        runTasks(*lockingTasks(coreAlignment, coreLocking))
-        def afterLockingResults = runTasks(*insightTasks(coreAlignment, coreLocking))
+        def results = runTasks(*insightTasks(coreLocking))
+        runTasks(*lockingTasks(coreLocking))
+        def afterLockingResults = runTasks(*insightTasks(coreLocking))
 
         then:
         dependenciesAreAligned(results.output, '2.9.9')
@@ -308,11 +285,9 @@ class AlignAndLockWithDowngradedTransitiveDependenciesSpec extends IntegrationTe
 
     @Unroll
     @Ignore("This does not end up with aligned dependencies. This is raised to Gradle")
-    def 'use downgraded version via virtual platform constraint with static major.minor.patch.micropatch version - core alignment only | core locking #coreLocking'() {
+    def 'use downgraded version via virtual platform constraint with static major.minor.patch.micropatch version | core locking #coreLocking'() {
         // note: platform constraints like this are only possible with core Gradle alignment
         given:
-        def coreAlignment = true
-
         setupDependenciesAndAdjustBuildFile()
         buildFile << """
             dependencies {
@@ -326,9 +301,9 @@ class AlignAndLockWithDowngradedTransitiveDependenciesSpec extends IntegrationTe
             """.stripIndent()
 
         when:
-        def results = runTasks(*insightTasks(coreAlignment, coreLocking))
-        runTasks(*lockingTasks(coreAlignment, coreLocking))
-        def afterLockingResults = runTasks(*insightTasks(coreAlignment, coreLocking))
+        def results = runTasks(*insightTasks(coreLocking))
+        runTasks(*lockingTasks(coreLocking))
+        def afterLockingResults = runTasks(*insightTasks(coreLocking))
 
         then:
         dependenciesAreAligned(results.output, '2.9.9')
@@ -342,10 +317,9 @@ class AlignAndLockWithDowngradedTransitiveDependenciesSpec extends IntegrationTe
     }
 
     @Unroll
-    def 'use downgraded version via virtual platform constraint with dynamic version #version - core alignment only'() {
+    def 'use downgraded version via virtual platform constraint with dynamic version #version'() {
         // note: platform constraints like this are only possible with core Gradle alignment
         // this test verifies the current non-working behavior so that we can track when it changes
-        def coreAlignment = true
         setupDependenciesAndAdjustBuildFile()
         buildFile << """
             dependencies {
@@ -359,7 +333,7 @@ class AlignAndLockWithDowngradedTransitiveDependenciesSpec extends IntegrationTe
             """.stripIndent()
 
         when:
-        def results = runTasksAndFail('dependencyInsight', '--dependency', 'com.fasterxml.jackson', "-Dnebula.features.coreAlignmentSupport=$coreAlignment", "--singlepath")
+        def results = runTasksAndFail('dependencyInsight', '--dependency', 'com.fasterxml.jackson', "--singlepath")
 
         then:
         results.output.contains('> fromIndex = -1')
@@ -370,19 +344,19 @@ class AlignAndLockWithDowngradedTransitiveDependenciesSpec extends IntegrationTe
         DYNAMIC_RANGE                     | _
     }
 
-    private static def insightTasks(boolean coreAlignment, boolean coreLocking) {
-        ['dependencies', '--configuration', 'compileClasspath', *flags(coreAlignment, coreLocking)]
+    private static def insightTasks(boolean coreLocking) {
+        ['dependencies', '--configuration', 'compileClasspath', *flags(coreLocking)]
     }
 
-    private static def lockingTasks(boolean coreAlignment, boolean coreLocking) {
+    private static def lockingTasks(boolean coreLocking) {
         if (coreLocking) {
-            return ['dependencies', '--write-locks', '--configuration', 'compileClasspath', *flags(coreAlignment, coreLocking)]
+            return ['dependencies', '--write-locks', '--configuration', 'compileClasspath', *flags(coreLocking)]
         }
-        return ['generateLock', 'saveLock', *flags(coreAlignment, coreLocking)]
+        return ['generateLock', 'saveLock', *flags(coreLocking)]
     }
 
-    private static def flags(boolean coreAlignment, boolean coreLocking) {
-        return ["-Dnebula.features.coreAlignmentSupport=${coreAlignment}", "-Dnebula.features.coreLockingSupport=${coreLocking}"]
+    private static def flags(boolean coreLocking) {
+        return ["-Dnebula.features.coreLockingSupport=${coreLocking}"]
     }
 
     private void setupDependenciesAndAdjustBuildFile(String version = "2.10.5") {

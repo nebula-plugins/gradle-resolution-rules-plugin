@@ -54,7 +54,7 @@ class AbstractAlignAndMigrateSpec extends AbstractAlignRulesSpec {
         mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
     }
 
-    Collection<String> dependencyInsightTasks(boolean coreAlignment) {
-        return ['dependencyInsight', '--dependency', 'test.nebula', "-Dnebula.features.coreAlignmentSupport=$coreAlignment"]
+    Collection<String> dependencyInsightTasks() {
+        return ['dependencyInsight', '--dependency', 'test.nebula']
     }
 }
