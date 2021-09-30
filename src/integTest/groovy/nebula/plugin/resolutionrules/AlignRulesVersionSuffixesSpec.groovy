@@ -11,7 +11,7 @@ class AlignRulesVersionSuffixesSpec extends AbstractAlignRulesSpec {
     }
 
     @Unroll
-    def 'requesting a specific version with no release version available - core alignment #coreAlignment'() {
+    def 'requesting a specific version with no release version available'() {
         def graph = new DependencyGraphBuilder()
                 .addModule('test.nebula:a:1.0.0')
                 .addModule(new ModuleBuilder('test.nebula:b:1.0.0-1').addDependency('test.nebula:a:1.0.0').build())
@@ -47,26 +47,20 @@ class AlignRulesVersionSuffixesSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def results = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
-        def insightResults = runTasks('dependencyInsight', '--dependency', 'test.nebula', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def results = runTasks('dependencies', '--configuration', 'compileClasspath')
+        def insightResults = runTasks('dependencyInsight', '--dependency', 'test.nebula')
 
         then:
         results.output.contains '--- test.nebula:b:1.0.0-1\n'
         results.output.contains '--- test.nebula:c:1.0.0-eap-1\n'
         results.output.contains '--- test.nebula:d:1.0.0.pr.1\n'
         results.output.contains '\\--- test.nebula:a:1.0.0\n'
-
-        if (coreAlignment) {
-            assert insightResults.output.contains("belongs to platform aligned-platform:$moduleName-0-for-test.nebula:1.0.0")
-            assert insightResults.output.findAll("belongs to platform aligned-platform:$moduleName-0-for-test.nebula:1.0.0").size() == 4
-        }
-
-        where:
-        coreAlignment << [false, true]
+        assert insightResults.output.contains("belongs to platform aligned-platform:$moduleName-0-for-test.nebula:1.0.0")
+        assert insightResults.output.findAll("belongs to platform aligned-platform:$moduleName-0-for-test.nebula:1.0.0").size() == 4
     }
 
     @Unroll
-    def 'requesting a specific version with a release version available - core alignment #coreAlignment'() {
+    def 'requesting a specific version with a release version available'() {
         def graph = new DependencyGraphBuilder()
                 .addModule('test.nebula:a:1.0.0')
                 .addModule(new ModuleBuilder('test.nebula:b:1.0.0-1').addDependency('test.nebula:a:1.0.0').build())
@@ -105,26 +99,21 @@ class AlignRulesVersionSuffixesSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def results = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
-        def insightResults = runTasks('dependencyInsight', '--dependency', 'test.nebula', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def results = runTasks('dependencies', '--configuration', 'compileClasspath')
+        def insightResults = runTasks('dependencyInsight', '--dependency', 'test.nebula')
 
         then:
         results.output.contains '--- test.nebula:b:1.0.0-1\n'
         results.output.contains '--- test.nebula:c:1.0.0-eap-1 -> 1.0.0\n'
         results.output.contains '--- test.nebula:d:1.0.0.pr.1 -> 1.0.0\n'
         results.output.contains '\\--- test.nebula:a:1.0.0\n'
+        assert insightResults.output.contains("belongs to platform aligned-platform:$moduleName-0-for-test.nebula:1.0.0")
+        assert insightResults.output.findAll("belongs to platform aligned-platform:$moduleName-0-for-test.nebula:1.0.0").size() == 4
 
-        if (coreAlignment) {
-            assert insightResults.output.contains("belongs to platform aligned-platform:$moduleName-0-for-test.nebula:1.0.0")
-            assert insightResults.output.findAll("belongs to platform aligned-platform:$moduleName-0-for-test.nebula:1.0.0").size() == 4
-        }
-
-        where:
-        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'requesting major.+ with no release version available - core alignment #coreAlignment'() {
+    def 'requesting major.+ with no release version available'() {
         def graph = new DependencyGraphBuilder()
                 .addModule('test.nebula:a:1.0.0')
                 .addModule(new ModuleBuilder('test.nebula:b:1.0.0-1').addDependency('test.nebula:a:1.0.0').build())
@@ -160,26 +149,20 @@ class AlignRulesVersionSuffixesSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def results = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
-        def insightResults = runTasks('dependencyInsight', '--dependency', 'test.nebula', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
-
-        if (coreAlignment) {
-            assert insightResults.output.contains("belongs to platform aligned-platform:$moduleName-0-for-test.nebula:1.0.0")
-            assert insightResults.output.findAll("belongs to platform aligned-platform:$moduleName-0-for-test.nebula:1.0.0").size() == 4
-        }
+        def results = runTasks('dependencies', '--configuration', 'compileClasspath')
+        def insightResults = runTasks('dependencyInsight', '--dependency', 'test.nebula')
+        insightResults.output.contains("belongs to platform aligned-platform:$moduleName-0-for-test.nebula:1.0.0")
+        insightResults.output.findAll("belongs to platform aligned-platform:$moduleName-0-for-test.nebula:1.0.0").size() == 4
 
         then:
         results.output.contains '--- test.nebula:b:1.+ -> 1.0.0-1\n'
         results.output.contains '--- test.nebula:c:1.+ -> 1.0.0-eap-1\n'
         results.output.contains '--- test.nebula:d:1.+ -> 1.0.0.pr.1\n'
         results.output.contains '\\--- test.nebula:a:1.0.0\n'
-
-        where:
-        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'requesting major.+ with a release version available - core alignment #coreAlignment'() {
+    def 'requesting major.+ with a release version available'() {
         def graph = new DependencyGraphBuilder()
                 .addModule('test.nebula:a:1.0.0')
                 .addModule(new ModuleBuilder('test.nebula:b:1.0.0-1').addDependency('test.nebula:a:1.0.0').build())
@@ -218,21 +201,15 @@ class AlignRulesVersionSuffixesSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def results = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
-        def insightResults = runTasks('dependencyInsight', '--dependency', 'test.nebula', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def results = runTasks('dependencies', '--configuration', 'compileClasspath')
+        def insightResults = runTasks('dependencyInsight', '--dependency', 'test.nebula')
 
         then:
         results.output.contains '--- test.nebula:b:1.+ -> 1.0.0-1\n'
         results.output.contains '--- test.nebula:c:1.+ -> 1.0.0\n'
         results.output.contains '--- test.nebula:d:1.+ -> 1.0.0\n'
         results.output.contains '\\--- test.nebula:a:1.0.0\n'
-
-        if (coreAlignment) {
-            assert insightResults.output.contains("belongs to platform aligned-platform:$moduleName-0-for-test.nebula:1.0.0")
-            assert insightResults.output.findAll("belongs to platform aligned-platform:$moduleName-0-for-test.nebula:1.0.0").size() == 4
-        }
-
-        where:
-        coreAlignment << [false, true]
+        assert insightResults.output.contains("belongs to platform aligned-platform:$moduleName-0-for-test.nebula:1.0.0")
+        assert insightResults.output.findAll("belongs to platform aligned-platform:$moduleName-0-for-test.nebula:1.0.0").size() == 4
     }
 }

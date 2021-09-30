@@ -14,7 +14,7 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginWithoutManagedDepsSpec extend
     }
 
     @Unroll
-    def 'direct dep | with lower requested version | core alignment #coreAlignment'() {
+    def 'direct dep | with lower requested version'() {
         given:
         // in Spring Boot 2.x plugin, the `io.spring.dependency-management` plugin is added for dependency management. We are not including it here.
         setupForDirectDependencyScenario(extSpringBootVersion, forcedVersion, '',
@@ -28,7 +28,7 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginWithoutManagedDepsSpec extend
             """.stripIndent()
 
         when:
-        def result = runTasks(*tasks(coreAlignment))
+        def result = runTasks(*tasks())
         def output = result.output
 
         then:
@@ -45,11 +45,10 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginWithoutManagedDepsSpec extend
 
         requestedVersion = ':\${springVersion}'
         forcedVersion = ''
-        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'direct dep | with higher requested version | core alignment #coreAlignment'() {
+    def 'direct dep | with higher requested version'() {
         given:
         // in Spring Boot 2.x plugin, the `io.spring.dependency-management` plugin is added for dependency management. We are not including it here.
         setupForDirectDependencyScenario(extSpringBootVersion, forcedVersion, '',
@@ -63,7 +62,7 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginWithoutManagedDepsSpec extend
             """.stripIndent()
 
         when:
-        def result = runTasks(*tasks(coreAlignment))
+        def result = runTasks(*tasks())
         def output = result.output
 
         then:
@@ -79,12 +78,10 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginWithoutManagedDepsSpec extend
         managedSpringVersion = '5.1.6.RELEASE' // from https://repo1.maven.org/maven2/org/springframework/boot/spring-boot-dependencies/2.1.4.RELEASE/spring-boot-dependencies-2.1.4.RELEASE.pom
 
         requestedVersion = ':\${springVersion}'
-        forcedVersion = ''
-        coreAlignment << [false, true]
-    }
+        forcedVersion = '' }
 
     @Unroll
-    def 'direct dep | with requested version and forced | core alignment #coreAlignment'() {
+    def 'direct dep | with requested version and forced'() {
         given:
         // in Spring Boot 2.x plugin, the `io.spring.dependency-management` plugin is added for dependency management. We are not including it here.
         setupForDirectDependencyScenario(extSpringBootVersion, forcedVersion, '',
@@ -98,7 +95,7 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginWithoutManagedDepsSpec extend
             """.stripIndent()
 
         when:
-        def result = runTasks(*tasks(coreAlignment))
+        def result = runTasks(*tasks())
         def output = result.output
 
         then:
@@ -114,11 +111,10 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginWithoutManagedDepsSpec extend
 
         requestedVersion = ':\${springVersion}'
         forcedVersion = '4.2.4.RELEASE'
-        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'transitive dep | with requested version | core alignment #coreAlignment'() {
+    def 'transitive dep | with requested version'() {
         given:
         // in Spring Boot 2.x plugin, the `io.spring.dependency-management` plugin is added for dependency management. We are not including it here.
         setupForTransitiveDependencyScenario(extSpringBootVersion, forcedVersion, '',
@@ -130,7 +126,7 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginWithoutManagedDepsSpec extend
             """.stripIndent()
 
         when:
-        def result = runTasks(*tasks(coreAlignment, 'org.slf4j'))
+        def result = runTasks(*tasks('org.slf4j'))
         def output = result.output
 
         then:
@@ -145,11 +141,10 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginWithoutManagedDepsSpec extend
 
         requestedVersion = ':\$slf4jVersion'
         forcedVersion = ''
-        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'transitive dep | without requested version and forced | core alignment #coreAlignment'() {
+    def 'transitive dep | without requested version and forced'() {
         given:
         // in Spring Boot 2.x plugin, the `io.spring.dependency-management` plugin is added for dependency management. We are not including it here.
         setupForTransitiveDependencyScenario(extSpringBootVersion, forcedVersion, '',
@@ -161,7 +156,7 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginWithoutManagedDepsSpec extend
             """.stripIndent()
 
         when:
-        def result = runTasks(*tasks(coreAlignment, 'org.slf4j'))
+        def result = runTasks(*tasks('org.slf4j'))
         def output = result.output
 
         then:
@@ -176,11 +171,10 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginWithoutManagedDepsSpec extend
 
         requestedVersion = ''
         forcedVersion = '1.7.10'
-        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'transitive dep | with lower requested version and forced to different version | core alignment #coreAlignment'() {
+    def 'transitive dep | with lower requested version and forced to different version'() {
         given:
         // in Spring Boot 2.x plugin, the `io.spring.dependency-management` plugin is added for dependency management. We are not including it here.
         setupForTransitiveDependencyScenario(extSpringBootVersion, forcedVersion, '',
@@ -192,7 +186,7 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginWithoutManagedDepsSpec extend
             """.stripIndent()
 
         when:
-        def result = runTasks(*tasks(coreAlignment, 'org.slf4j'))
+        def result = runTasks(*tasks('org.slf4j'))
         def output = result.output
 
         then:
@@ -207,11 +201,10 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginWithoutManagedDepsSpec extend
 
         requestedVersion = ':\$slf4jVersion'
         forcedVersion = '1.7.10'
-        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'transitive dep | with higher requested version and forced to different version | core alignment #coreAlignment'() {
+    def 'transitive dep | with higher requested version and forced to different version'() {
         given:
         // in Spring Boot 2.x plugin, the `io.spring.dependency-management` plugin is added for dependency management. We are not including it here.
         setupForTransitiveDependencyScenario(extSpringBootVersion, forcedVersion, '',
@@ -223,7 +216,7 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginWithoutManagedDepsSpec extend
             """.stripIndent()
 
         when:
-        def result = runTasks(*tasks(coreAlignment, 'org.slf4j'))
+        def result = runTasks(*tasks('org.slf4j'))
         def output = result.output
 
         then:
@@ -238,11 +231,10 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginWithoutManagedDepsSpec extend
 
         requestedVersion = ':\$slf4jVersion'
         forcedVersion = '1.7.10'
-        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'transitive dep | with requested version and forced to same version | core alignment #coreAlignment'() {
+    def 'transitive dep | with requested version and forced to same version'() {
         given:
         // in Spring Boot 2.x plugin, the `io.spring.dependency-management` plugin is added for dependency management. We are not including it here.
         setupForTransitiveDependencyScenario(extSpringBootVersion, forcedVersion, '',
@@ -254,7 +246,7 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginWithoutManagedDepsSpec extend
             """.stripIndent()
 
         when:
-        def result = runTasks(*tasks(coreAlignment, 'org.slf4j'))
+        def result = runTasks(*tasks('org.slf4j'))
         def output = result.output
 
         then:
@@ -269,7 +261,6 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginWithoutManagedDepsSpec extend
 
         requestedVersion = ':\$slf4jVersion'
         forcedVersion = extSlf4jVersion
-        coreAlignment << [false, true]
     }
 
 }

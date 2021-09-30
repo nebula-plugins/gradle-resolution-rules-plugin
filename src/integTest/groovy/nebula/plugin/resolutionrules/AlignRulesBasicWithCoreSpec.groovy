@@ -14,7 +14,6 @@ class AlignRulesBasicWithCoreSpec extends IntegrationTestKitSpec {
     def setup() {
         debug = true
         keepFiles = true
-        new File("${projectDir}/gradle.properties").text = "systemProp.nebula.features.coreAlignmentSupport=true"
         if (GradleVersion.current().baseVersion < GradleVersion.version("6.0")) {
             settingsFile << '''\
                 enableFeaturePreview("GRADLE_METADATA")
@@ -78,7 +77,6 @@ class AlignRulesBasicWithCoreSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
 
-        result.output.contains 'coreAlignmentSupport feature enabled'
         result.output.contains 'belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:1.1.0'
     }
 
@@ -122,8 +120,6 @@ class AlignRulesBasicWithCoreSpec extends IntegrationTestKitSpec {
         def resultingVersion = "1.1.0"
         dependencyInsightContains(result.output, "test.nebula:a", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
-
-        result.output.contains 'coreAlignmentSupport feature enabled'
     }
 
     def 'multiple align rules'() {
@@ -182,12 +178,6 @@ class AlignRulesBasicWithCoreSpec extends IntegrationTestKitSpec {
         result.output.contains 'test.nebula:b:1.1.0\n'
         result.output.contains 'test.other:c:1.0.0\n'
         result.output.contains 'test.other:d:0.12.+ -> 1.0.0\n'
-
-        when:
-        result = runTasks('dependencyInsight', '--dependency', 'test.nebula:a')
-
-        then:
-        result.output.contains 'coreAlignmentSupport feature enabled'
     }
 
     @Unroll
@@ -227,41 +217,27 @@ class AlignRulesBasicWithCoreSpec extends IntegrationTestKitSpec {
             }
             """.stripIndent()
         when:
-        def dependenciesResult = runTasks('dependencies', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
-        def result = runTasks(*tasks(coreAlignment))
+        def dependenciesResult = runTasks('dependencies')
+        def result = runTasks(*tasks())
 
         then:
         dependencyInsightContains(result.output, "test.nebula:exampleapp-client", resultingVersion)
 
-        if (coreAlignment) {
-            // Nebula implementation attempts to resolve multiple times which introduces new versions
-            assert dependenciesResult.output.contains("""
+        assert dependenciesResult.output.contains("""
             \\--- test.nebula:exampleapp-client:80.0.139 -> 80.0.225
                  +--- test.nebula:exampleapp-common:80.0.249
                  \\--- test.nebula:exampleapp-smart-client:80.0.10
             """.stripIndent())
-        } else {
-            // Gradle implementation only considers versions currently observed during resolution
-            assert dependenciesResult.output.contains("""
-            \\--- test.nebula:exampleapp-client:80.0.139 -> 80.0.236
-                 +--- test.nebula:exampleapp-common:80.0.260
-                 \\--- test.nebula:exampleapp-smart-client:80.0.21
-                      \\--- test.nebula:exampleapp-model:80.0.15
-            """.stripIndent())
-        }
 
         where:
-        coreAlignment | resultingVersion
-        false         | "80.0.236"
-        true          | "80.0.225"
+        resultingVersion << ["80.0.225"]
     }
 
-    private static def tasks(Boolean usingCoreAlignment, Boolean usingCoreBomSupport = false, String groupForInsight = 'test.nebula') {
+    private static def tasks(Boolean usingCoreBomSupport = false, String groupForInsight = 'test.nebula') {
         return [
                 'dependencyInsight',
                 '--dependency',
                 groupForInsight,
-                "-Dnebula.features.coreAlignmentSupport=$usingCoreAlignment",
                 "-Dnebula.features.coreBomSupport=$usingCoreBomSupport"
         ]
     }

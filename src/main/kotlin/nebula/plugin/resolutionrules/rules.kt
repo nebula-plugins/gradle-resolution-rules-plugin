@@ -61,14 +61,7 @@ data class RuleSet(
     fun dependencyRulesPartOne() =
         listOf(replace, deny, exclude).flatten() + listOf(SubstituteRules(substitute), RejectRules(reject))
 
-    fun dependencyRulesPartTwo(coreAlignmentEnabled: Boolean) =
-        if (coreAlignmentEnabled)
-            listOf(align).flatten()
-        else
-            emptyList()
-
-    fun resolveRules(coreAlignmentEnabled: Boolean) =
-        if (coreAlignmentEnabled) emptyList() else listOf(AlignRules(align))
+    fun dependencyRulesPartTwo() = listOf(align).flatten()
 
     fun generateAlignmentBelongsToName() {
         align.forEachIndexed { index, alignRule ->

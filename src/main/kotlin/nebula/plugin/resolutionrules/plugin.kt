@@ -43,7 +43,7 @@ class ResolutionRulesPlugin : Plugin<Project> {
     private lateinit var configurations: ConfigurationContainer
     private lateinit var extension: NebulaResolutionRulesExtension
     private val ignoredConfigurationPrefixes = listOf(RESOLUTION_RULES_CONFIG_NAME, SPRING_VERSION_MANAGEMENT_CONFIG_NAME,
-            NEBULA_RECOMMENDER_BOM_CONFIG_NAME, SCALA_INCREMENTAL_ANALYSIS_CONFIGURATION_PREFIX, KTLINT_CONFIGURATION_PREFIX, REPOSITORY_CONTENT_DESCRIPTOR_CONFIGURATION_PREFIX)
+        NEBULA_RECOMMENDER_BOM_CONFIG_NAME, SCALA_INCREMENTAL_ANALYSIS_CONFIGURATION_PREFIX, KTLINT_CONFIGURATION_PREFIX, REPOSITORY_CONTENT_DESCRIPTOR_CONFIGURATION_PREFIX)
     private val ignoredConfigurationSuffixes = listOf(PMD_CONFIGURATION_SUFFIX)
 
     companion object {
@@ -66,12 +66,6 @@ class ResolutionRulesPlugin : Plugin<Project> {
         configurations = project.configurations
         extension =
             project.extensions.create("nebulaResolutionRules", NebulaResolutionRulesExtension::class.java, project)
-
-        project.onExecute {
-            if (isCoreAlignmentEnabled()) {
-                Logger.info("${project.name}: coreAlignmentSupport feature enabled")
-            }
-        }
 
         val rootProject = project.rootProject
         val configuration = project.configurations.maybeCreate(RESOLUTION_RULES_CONFIG_NAME)
@@ -113,35 +107,16 @@ class ResolutionRulesPlugin : Plugin<Project> {
                             rule.apply(project, config, config.resolutionStrategy, extension)
                         }
 
-                        ruleSet.dependencyRulesPartTwo(isCoreAlignmentEnabled()).forEach { rule ->
+                        ruleSet.dependencyRulesPartTwo().forEach { rule ->
                             rule.apply(project, config, config.resolutionStrategy, extension)
                         }
                         dependencyRulesApplied = true
                     }
                 }
             }
-
-            config.onResolve {
-                if (!dependencyRulesApplied) {
-                    Logger.debug("Skipping resolve rules for $config - dependency rules have not been applied")
-                } else {
-                    val ruleSet = extension.ruleSet()
-                    ruleSet.resolveRules(isCoreAlignmentEnabled()).forEach { rule ->
-                        rule.apply(project, config, config.resolutionStrategy, extension)
-                    }
-                }
-            }
         }
     }
 
-    private fun isCoreAlignmentEnabled(): Boolean {
-        val extension = project.rootProject.extensions.getByType(NebulaResolutionRulesExtension::class.java)
-        return if (System.getProperty("nebula.features.coreAlignmentSupport") != null) {
-            java.lang.Boolean.getBoolean("nebula.features.coreAlignmentSupport")
-        } else {
-            extension.useCoreGradleAlignment
-        }
-    }
 }
 
 @Suppress("UnstableApiUsage")
@@ -220,7 +195,6 @@ open class NebulaResolutionRulesExtension @Inject constructor(private val projec
     var include = ArrayList<String>()
     var optional = ArrayList<String>()
     var exclude = ArrayList<String>()
-    var useCoreGradleAlignment = false
 
     fun ruleSet(): RuleSet {
         val service = NebulaResolutionRulesService.registerService(project).get()

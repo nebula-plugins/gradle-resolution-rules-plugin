@@ -27,7 +27,7 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
     }
 
     @Unroll
-    def 'force to good version while substitution is triggered by a transitive dependency | core alignment #coreAlignment'() {
+    def 'force to good version while substitution is triggered by a transitive dependency'() {
         buildFile << """\
             dependencies {
                 implementation('test.nebula:a:1.1.0') {
@@ -40,7 +40,7 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
         """.stripIndent()
 
         when:
-        def tasks = ['dependencyInsight', '--dependency', 'test.nebula', '--warning-mode', 'none', "-Dnebula.features.coreAlignmentSupport=$coreAlignment"]
+        def tasks = ['dependencyInsight', '--dependency', 'test.nebula', '--warning-mode', 'none']
         def results = runTasks(*tasks)
 
         then:
@@ -52,13 +52,10 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
         results.output.contains 'aligned'
         results.output.contains '- Forced'
         results.output.contains "- Selected by rule : substituted test.nebula:a:1.2.0 with test.nebula:a:1.3.0 because '★ custom substitution reason'"
-
-        where:
-        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'force to bad version triggers a substitution | core alignment #coreAlignment'() {
+    def 'force to bad version triggers a substitution'() {
         buildFile << """\
             dependencies {
                 implementation('test.nebula:a:1.2.0') {
@@ -70,31 +67,21 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
         """.stripIndent()
 
         when:
-        def tasks = ['dependencyInsight', '--dependency', 'test.nebula', '--warning-mode', 'none', "-Dnebula.features.coreAlignmentSupport=$coreAlignment"]
+        def tasks = ['dependencyInsight', '--dependency', 'test.nebula', '--warning-mode', 'none']
         def results = runTasks(*tasks)
 
         then:
-        if (coreAlignment) {
-            // substitution rule to a known-good-version was the primary contributor; force to a bad version was a secondary contributor
-            assert results.output.contains('test.nebula:a:1.2.0 -> 1.3.0\n')
-            assert results.output.contains('test.nebula:b:1.0.0 -> 1.3.0\n')
-            assert results.output.contains('test.nebula:c:1.0.0 -> 1.3.0\n')
-        } else {
-            // force to a bad version is the primary contributor; the substitution rule was a secondary contributor
-            assert results.output.contains('test.nebula:a:1.2.0\n') // force syntax is the primary contributor
-            assert results.output.contains('test.nebula:b:1.0.0 -> 1.2.0\n')
-            assert results.output.contains('test.nebula:c:1.0.0 -> 1.2.0\n')
-        }
+        // substitution rule to a known-good-version was the primary contributor; force to a bad version was a secondary contributor
+        assert results.output.contains('test.nebula:a:1.2.0 -> 1.3.0\n')
+        assert results.output.contains('test.nebula:b:1.0.0 -> 1.3.0\n')
+        assert results.output.contains('test.nebula:c:1.0.0 -> 1.3.0\n')
         results.output.contains 'aligned'
         results.output.contains('- Forced')
         results.output.contains "- Selected by rule : substituted test.nebula:a:1.2.0 with test.nebula:a:1.3.0 because '★ custom substitution reason'"
-
-        where:
-        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'force to a good version while substitution is triggered by a direct dependency | core alignment #coreAlignment'() {
+    def 'force to a good version while substitution is triggered by a direct dependency'() {
         buildFile << """\
             dependencies {
                 implementation('test.nebula:a:1.1.0') {
@@ -106,7 +93,7 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
         """.stripIndent()
 
         when:
-        def tasks = ['dependencyInsight', '--dependency', 'test.nebula', '--warning-mode', 'none', "-Dnebula.features.coreAlignmentSupport=$coreAlignment"]
+        def tasks = ['dependencyInsight', '--dependency', 'test.nebula', '--warning-mode', 'none']
         def results = runTasks(*tasks)
 
         then:
@@ -118,13 +105,10 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
         results.output.contains 'aligned'
         results.output.toLowerCase().contains 'forced'
         results.output.contains "- Selected by rule : substituted test.nebula:c:1.2.0 with test.nebula:c:1.3.0 because '★ custom substitution reason'"
-
-        where:
-        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'resolution strategy force to good version while substitution is triggered by a transitive dependency | core alignment #coreAlignment'() {
+    def 'resolution strategy force to good version while substitution is triggered by a transitive dependency'() {
         buildFile << """\
             configurations.all {
                 resolutionStrategy {
@@ -140,30 +124,21 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
         """.stripIndent()
 
         when:
-        def tasks = ['dependencyInsight', '--dependency', 'test.nebula', "-Dnebula.features.coreAlignmentSupport=$coreAlignment"]
+        def tasks = ['dependencyInsight', '--dependency', 'test.nebula']
         def results = runTasks(*tasks)
 
         then:
-        if (coreAlignment) {
-            assert results.output.contains('Multiple forces on different versions for virtual platform')
-            assert results.output.contains('test.nebula:a:1.1.0 FAILED')
-        } else {
-            // force to an okay version is the primary contributor; the substitution rule was a secondary contributor
-            assert results.output.contains('test.nebula:a:1.2.0 -> 1.1.0\n')
-            assert results.output.contains('test.nebula:b:1.0.0 -> 1.1.0\n')
-            assert results.output.contains('test.nebula:c:1.0.0 -> 1.1.0\n')
-        }
+        assert results.output.contains('Multiple forces on different versions for virtual platform')
+        assert results.output.contains('test.nebula:a:1.1.0 FAILED')
 
         results.output.contains 'aligned'
         results.output.contains '- Forced'
         results.output.contains "- Selected by rule : substituted test.nebula:a:1.2.0 with test.nebula:a:1.3.0 because '★ custom substitution reason'"
 
-        where:
-        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'resolution strategy force to bad version triggers a substitution | core alignment #coreAlignment'() {
+    def 'resolution strategy force to bad version triggers a substitution'() {
         buildFile << """\
             configurations.all {
                 resolutionStrategy {
@@ -178,31 +153,21 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
         """.stripIndent()
 
         when:
-        def tasks = ['dependencyInsight', '--dependency', 'test.nebula', "-Dnebula.features.coreAlignmentSupport=$coreAlignment"]
+        def tasks = ['dependencyInsight', '--dependency', 'test.nebula']
         def results = runTasks(*tasks)
 
         then:
-        if (coreAlignment) {
-            // substitution rule to a known-good-version was the primary contributor; force to a bad version was a secondary contributor
-            assert results.output.contains('test.nebula:a:1.2.0 -> 1.3.0\n')
-            assert results.output.contains('test.nebula:b:1.0.0 -> 1.3.0\n')
-            assert results.output.contains('test.nebula:c:1.0.0 -> 1.3.0\n')
-        } else {
-            // force to a bad version is the primary contributor; the substitution rule was a secondary contributor
-            assert results.output.contains('test.nebula:a:1.2.0\n') // force syntax is the primary contributor
-            assert results.output.contains('test.nebula:b:1.0.0 -> 1.2.0\n')
-            assert results.output.contains('test.nebula:c:1.0.0 -> 1.2.0\n')
-        }
+        // substitution rule to a known-good-version was the primary contributor; force to a bad version was a secondary contributor
+        assert results.output.contains('test.nebula:a:1.2.0 -> 1.3.0\n')
+        assert results.output.contains('test.nebula:b:1.0.0 -> 1.3.0\n')
+        assert results.output.contains('test.nebula:c:1.0.0 -> 1.3.0\n')
         results.output.contains 'aligned'
         results.output.contains('- Forced')
         results.output.contains "- Selected by rule : substituted test.nebula:a:1.2.0 with test.nebula:a:1.3.0 because '★ custom substitution reason'"
-
-        where:
-        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'resolution strategy force to a good version while substitution is triggered by a direct dependency | core alignment #coreAlignment'() {
+    def 'resolution strategy force to a good version while substitution is triggered by a direct dependency'() {
         buildFile << """\
             configurations.all {
                 resolutionStrategy {
@@ -217,7 +182,7 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
         """.stripIndent()
 
         when:
-        def tasks = ['dependencyInsight', '--dependency', 'test.nebula', "-Dnebula.features.coreAlignmentSupport=$coreAlignment"]
+        def tasks = ['dependencyInsight', '--dependency', 'test.nebula']
         def results = runTasks(*tasks)
 
         then:
@@ -229,13 +194,10 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
         results.output.contains 'aligned'
         results.output.toLowerCase().contains 'forced'
         results.output.contains "- Selected by rule : substituted test.nebula:c:1.2.0 with test.nebula:c:1.3.0 because '★ custom substitution reason'"
-
-        where:
-        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'dependency with strict version declaration to a good version while a substitution is triggered by a transitive dependency | core alignment #coreAlignment'() {
+    def 'dependency with strict version declaration to a good version while a substitution is triggered by a transitive dependency'() {
         buildFile << """\
             dependencies {
                 implementation('test.nebula:a:1.1.0') {
@@ -248,34 +210,23 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
         """.stripIndent()
 
         when:
-        def tasks = ['dependencyInsight', '--dependency', 'test.nebula', "-Dnebula.features.coreAlignmentSupport=$coreAlignment"]
+        def tasks = ['dependencyInsight', '--dependency', 'test.nebula']
         def results = runTasks(*tasks)
 
         then:
-        if (coreAlignment) {
-            // strictly rich version constraint to an okay version is the primary contributor
-            assert results.output.contains('test.nebula:a:{strictly 1.1.0} -> 1.1.0\n')
-            assert results.output.contains('test.nebula:a:1.2.0 -> 1.1.0\n')
-            assert results.output.contains('test.nebula:b:1.0.0 -> 1.1.0\n')
-            assert results.output.contains('test.nebula:c:1.0.0 -> 1.1.0\n')
-            assert results.output.contains('- Forced')
-        } else {
-            // substitution to a known-good-version is the primary contributor
-            assert results.output.contains('test.nebula:a:{strictly 1.1.0} -> 1.3.0\n')
-            assert results.output.contains('test.nebula:a:1.2.0 -> 1.3.0\n')
-            assert results.output.contains('test.nebula:b:1.0.0 -> 1.3.0\n')
-            assert results.output.contains('test.nebula:c:1.0.0 -> 1.3.0\n')
-        }
+        // strictly rich version constraint to an okay version is the primary contributor
+        assert results.output.contains('test.nebula:a:{strictly 1.1.0} -> 1.1.0\n')
+        assert results.output.contains('test.nebula:a:1.2.0 -> 1.1.0\n')
+        assert results.output.contains('test.nebula:b:1.0.0 -> 1.1.0\n')
+        assert results.output.contains('test.nebula:c:1.0.0 -> 1.1.0\n')
+        assert results.output.contains('- Forced')
 
         results.output.contains 'aligned'
         results.output.contains("- Selected by rule : substituted test.nebula:a:1.2.0 with test.nebula:a:1.3.0 because '★ custom substitution reason'")
-
-        where:
-        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'dependency with strict version declaration to a bad version triggers a substitution | core alignment #coreAlignment'() {
+    def 'dependency with strict version declaration to a bad version triggers a substitution'() {
         buildFile << """\
             dependencies {
                 implementation('test.nebula:a') {
@@ -287,7 +238,7 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
         """.stripIndent()
 
         when:
-        def tasks = ['dependencyInsight', '--dependency', 'test.nebula', "-Dnebula.features.coreAlignmentSupport=$coreAlignment"]
+        def tasks = ['dependencyInsight', '--dependency', 'test.nebula']
         def results = runTasks(*tasks)
 
         then:
@@ -298,13 +249,10 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
 
         results.output.contains 'aligned'
         results.output.contains "- Selected by rule : substituted test.nebula:a:1.2.0 with test.nebula:a:1.3.0 because '★ custom substitution reason'"
-
-        where:
-        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'dependency with strict version declaration to a good version while substitution is triggered by a direct dependency | core alignment #coreAlignment'() {
+    def 'dependency with strict version declaration to a good version while substitution is triggered by a direct dependency'() {
         buildFile << """\
             dependencies {
                 implementation('test.nebula:a') {
@@ -318,32 +266,22 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
         """.stripIndent()
 
         when:
-        def tasks = ['dependencyInsight', '--dependency', 'test.nebula', "-Dnebula.features.coreAlignmentSupport=$coreAlignment"]
+        def tasks = ['dependencyInsight', '--dependency', 'test.nebula']
         def results = runTasks(*tasks)
 
         then:
-        if (coreAlignment) {
-            // rich version strictly declaration to an okay version is the primary contributor; the substitution rule was a secondary contributor
-            assert results.output.contains('test.nebula:a:{strictly 1.1.0} -> 1.1.0')
-            assert results.output.contains('test.nebula:b:{strictly 1.1.0} -> 1.1.0')
-            assert results.output.contains('test.nebula:c:1.2.0 -> 1.1.0')
-            assert results.output.contains('- Forced')
-        } else {
-            // substitution rule to a known-good-version is the primary contributor; rich version strictly declaration to an okay version is the secondary contributor
-            assert results.output.contains('test.nebula:a:{strictly 1.1.0} -> 1.3.0')
-            assert results.output.contains('test.nebula:b:{strictly 1.1.0} -> 1.3.0')
-            assert results.output.contains('test.nebula:c:1.2.0 -> 1.3.0')
-        }
+        // rich version strictly declaration to an okay version is the primary contributor; the substitution rule was a secondary contributor
+        assert results.output.contains('test.nebula:a:{strictly 1.1.0} -> 1.1.0')
+        assert results.output.contains('test.nebula:b:{strictly 1.1.0} -> 1.1.0')
+        assert results.output.contains('test.nebula:c:1.2.0 -> 1.1.0')
+        assert results.output.contains('- Forced')
 
         results.output.contains 'aligned'
         results.output.contains("- Selected by rule : substituted test.nebula:c:1.2.0 with test.nebula:c:1.3.0 because '★ custom substitution reason'")
-
-        where:
-        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'dependency constraint with strict version declaration to a good version while a substitution is triggered by a transitive dependency | core alignment #coreAlignment'() {
+    def 'dependency constraint with strict version declaration to a good version while a substitution is triggered by a transitive dependency'() {
         buildFile << """\
             dependencies {
                 constraints {
@@ -366,7 +304,7 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
         new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
 
         when:
-        def tasks = ['dependencyInsight', '--dependency', 'test.nebula', "-Dnebula.features.coreAlignmentSupport=$coreAlignment"]
+        def tasks = ['dependencyInsight', '--dependency', 'test.nebula']
         def results = runTasks(*tasks)
 
         then:
@@ -375,21 +313,15 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
         results.output.contains('test.nebula:a:1.2.0 -> 1.1.0\n')
         results.output.contains('test.nebula:b:1.0.0 -> 1.1.0\n')
         results.output.contains('test.nebula:c:1.0.0 -> 1.1.0\n')
-
-        if (coreAlignment) {
-            assert results.output.contains('- Forced')
-        }
+        results.output.contains('- Forced')
 
         results.output.contains 'aligned'
         results.output.contains("- Selected by rule : substituted test.nebula:a:1.2.0 with test.nebula:a:1.3.0 because '★ custom substitution reason'")
         results.output.contains 'By ancestor'
-
-        where:
-        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'dependency constraint with strict version declaration to a bad version triggers a substitution | core alignment #coreAlignment'() {
+    def 'dependency constraint with strict version declaration to a bad version triggers a substitution'() {
         buildFile << """\
             dependencies {
                 constraints {
@@ -412,7 +344,7 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
         new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
 
         when:
-        def tasks = ['dependencyInsight', '--dependency', 'test.nebula', "-Dnebula.features.coreAlignmentSupport=$coreAlignment"]
+        def tasks = ['dependencyInsight', '--dependency', 'test.nebula']
         def results = runTasks(*tasks)
 
         then:
@@ -423,13 +355,10 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
 
         results.output.contains 'aligned'
         results.output.contains "- Selected by rule : substituted test.nebula:a:1.2.0 with test.nebula:a:1.3.0 because '★ custom substitution reason'"
-
-        where:
-        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'dependency constraint with strict version declaration to a good version while substitution is triggered by a direct dependency | core alignment #coreAlignment'() {
+    def 'dependency constraint with strict version declaration to a good version while substitution is triggered by a direct dependency'() {
         buildFile << """\
             dependencies {
                 constraints {
@@ -455,29 +384,19 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
         new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
 
         when:
-        def tasks = ['dependencyInsight', '--dependency', 'test.nebula', "-Dnebula.features.coreAlignmentSupport=$coreAlignment"]
+        def tasks = ['dependencyInsight', '--dependency', 'test.nebula']
         def results = runTasks(*tasks)
 
         then:
-        if (coreAlignment) {
-            // rich version strictly declaration to an okay version is the primary contributor; the substitution rule was a secondary contributor
-            assert results.output.contains('test.nebula:a:{strictly 1.1.0} -> 1.1.0')
-            assert results.output.contains('test.nebula:b:{strictly 1.1.0} -> 1.1.0')
-            assert results.output.contains('test.nebula:c:1.2.0 -> 1.1.0')
-            assert results.output.contains('- Forced')
-            assert results.output.contains('By ancestor')
-        } else {
-            // substitution rule to a known-good-version is the primary contributor; rich version strictly declaration to an okay version is the secondary contributor
-            assert results.output.contains('test.nebula:a:{strictly 1.1.0} -> 1.3.0')
-            assert results.output.contains('test.nebula:b:{strictly 1.1.0} -> 1.3.0')
-            assert results.output.contains('test.nebula:c:1.2.0 -> 1.3.0')
-        }
+        // rich version strictly declaration to an okay version is the primary contributor; the substitution rule was a secondary contributor
+        assert results.output.contains('test.nebula:a:{strictly 1.1.0} -> 1.1.0')
+        assert results.output.contains('test.nebula:b:{strictly 1.1.0} -> 1.1.0')
+        assert results.output.contains('test.nebula:c:1.2.0 -> 1.1.0')
+        assert results.output.contains('- Forced')
+        assert results.output.contains('By ancestor')
 
         results.output.contains 'aligned'
         results.output.contains("- Selected by rule : substituted test.nebula:c:1.2.0 with test.nebula:c:1.3.0 because '★ custom substitution reason'")
-
-        where:
-        coreAlignment << [false, true]
     }
 
     void setupProjectAndDependencies() {

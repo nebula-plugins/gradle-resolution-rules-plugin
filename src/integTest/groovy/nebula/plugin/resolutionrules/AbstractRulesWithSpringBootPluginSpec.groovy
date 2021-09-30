@@ -27,12 +27,11 @@ class AbstractRulesWithSpringBootPluginSpec extends IntegrationTestKitSpec {
             """.stripIndent()
     }
 
-    static def tasks(Boolean usingCoreAlignment, String groupForInsight = 'org.springframework:') {
+    static def tasks(String groupForInsight = 'org.springframework:') {
         return [
                 'dependencyInsight',
                 '--dependency',
-                groupForInsight,
-                "-Dnebula.features.coreAlignmentSupport=$usingCoreAlignment"
+                groupForInsight
         ]
     }
 

@@ -89,13 +89,10 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.output.contains '\\--- test.a:a -> 1.42.2\n'
-
-        where:
-        coreAlignment << [false, true]
     }
 
     @Unroll
@@ -152,13 +149,10 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.output.contains '\\--- test.a:a -> 1.42.2\n'
-
-        where:
-        coreAlignment << [false, true]
     }
 
     @Unroll
@@ -233,19 +227,16 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         """.stripIndent()
 
         when:
-        def result = runTasks(':a:dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def result = runTasks(':a:dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.output.contains '\\--- test.a:a -> 1.42.2\n'
-
-        where:
-        coreAlignment << [false, true]
     }
 
     @Unroll
     //Spring boot plugin 1.x is using removed runtime configuration. Unless backported for Gradle 7.0 it cannot be used
     @IgnoreIf({ GradleVersion.current().baseVersion >= GradleVersion.version("7.0")})
-    def 'align rules work with spring-boot version #springVersion - core alignment #coreAlignment'() {
+    def 'align rules work with spring-boot version #springVersion '() {
         def rulesJsonFile = new File(projectDir, 'rules.json')
         rulesJsonFile << '''\
             {
@@ -281,20 +272,19 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compileClasspath', '--warning-mode', 'none', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath', '--warning-mode', 'none')
 
         then:
         noExceptionThrown()
 
         where:
         springVersion = '1.4.0.RELEASE'
-        coreAlignment << [false, true]
     }
 
     @Unroll
     //Spring boot plugin 1.x is using removed runtime configuration. Unless backported for Gradle 7.0 it cannot be used
     @IgnoreIf({ GradleVersion.current().baseVersion >= GradleVersion.version("7.0")})
-    def 'spring-boot interaction for version #springVersion - core alignment #coreAlignment'() {
+    def 'spring-boot interaction for version #springVersion '() {
         def rulesFolder = new File(projectDir, 'rules')
         rulesFolder.mkdirs()
         def rulesJsonFile = new File(rulesFolder, 'rules.json')
@@ -346,14 +336,13 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         writeHelloWorld('example')
 
         when:
-        def result = runTasks('compileJava', '--warning-mode', 'none', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def result = runTasks('compileJava', '--warning-mode', 'none')
 
         then:
         noExceptionThrown()
 
         where:
         springVersion = '1.4.0.RELEASE'
-        coreAlignment << [false, true]
     }
 
     @Unroll
@@ -412,13 +401,11 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.output.contains('+--- com.amazonaws:aws-java-sdk-s3 -> 1.11.18')
 
-        where:
-        coreAlignment << [false, true]
     }
 
     @Unroll
@@ -477,13 +464,10 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.output.contains '\\--- test.a:a -> 1.42.2\n'
-
-        where:
-        coreAlignment << [false, true]
     }
 
     @Unroll
@@ -547,13 +531,10 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         '''.stripIndent())
 
         when:
-        def results = runTasks(':a:dependencies', ':b:dependencies', 'assemble', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def results = runTasks(':a:dependencies', ':b:dependencies', 'assemble')
 
         then:
         noExceptionThrown()
-
-        where:
-        coreAlignment << [false, true]
     }
 
     @Unroll
@@ -638,8 +619,8 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         """.stripIndent()
 
         when:
-        def results = runTasks('dependencyInsight', '--dependency', 'a', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
-        def resultsForRules = runTasks('dependencyInsight', '--dependency', 'test.rules', '--configuration', 'resolutionRules', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def results = runTasks('dependencyInsight', '--dependency', 'a', '--configuration', 'compileClasspath')
+        def resultsForRules = runTasks('dependencyInsight', '--dependency', 'test.rules', '--configuration', 'resolutionRules')
 
         then:
         results.output.contains 'test.nebula:a:1.41.5 -> 1.42.2\n'
@@ -647,9 +628,6 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
 
         resultsForRules.output.contains 'test.rules:resolution-rules:1.+ -> 1.0.0\n'
         resultsForRules.output.contains 'Selected by rule : test.rules:resolution-rules locked to 1.0.0'
-
-        where:
-        coreAlignment << [false, true]
     }
 
     @Unroll
@@ -681,8 +659,8 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         """.stripIndent()
 
         when:
-        def results = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
-        def resultsForRules = runTasks('dependencies', '--configuration', 'resolutionRules', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def results = runTasks('dependencies', '--configuration', 'compileClasspath')
+        def resultsForRules = runTasks('dependencies', '--configuration', 'resolutionRules')
 
         then:
         // results using resolution rules that do not yet align test.nebula
@@ -691,21 +669,18 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         resultsForRules.output.contains 'test.rules:resolution-rules:1.+ -> 1.0.0\n'
 
         when:
-        def resultsIgnoringLocks = runTasks('-PdependencyLock.ignore=true', 'dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
-        def resultsForRulesIgnoringLocks = runTasks('-PdependencyLock.ignore=true', 'dependencies', '--configuration', 'resolutionRules', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def resultsIgnoringLocks = runTasks('-PdependencyLock.ignore=true', 'dependencies', '--configuration', 'compileClasspath')
+        def resultsForRulesIgnoringLocks = runTasks('-PdependencyLock.ignore=true', 'dependencies', '--configuration', 'resolutionRules')
 
         then:
         // final results if we ignore locks
         resultsIgnoringLocks.output.contains 'test.nebula:a:1.41.5 -> 1.42.2\n'
         resultsIgnoringLocks.output.contains 'test.nebula:b:1.42.2\n'
         resultsForRulesIgnoringLocks.output.contains 'test.rules:resolution-rules:1.+ -> 1.1.0\n'
-
-        where:
-        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'dependency-lock plugin applied after resolution-rules plugin with non-locked resolution rules - #description - core alignment #coreAlignment'() {
+    def 'dependency-lock plugin applied after resolution-rules plugin with non-locked resolution rules - fail due to dependency lock state is out of date '() {
         // note: this is a more unusual case. Typically resolution rules are distributed like a library, version controlled, and locked like other dependencies
         def (GradleDependencyGenerator mavenrepo, File rulesJsonFile) = dependencyLockAlignInteractionSetupWithUnlockedResolutionRulesConfiguration()
         buildFile << """\
@@ -730,48 +705,34 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
 
         when:
         def results
-        def tasks = ['dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment"]
-        if(coreAlignment) {
-            results = runTasksAndFail(*tasks)
-        } else {
-            results = runTasks(*tasks)
-        }
+        def tasks = ['dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=true"]
+        results = runTasksAndFail(*tasks)
 
         then:
-        if (coreAlignment) {
-            assert results.output.contains('Dependency lock state is out of date:')
-            assert results.output.contains("Resolved 'test.nebula:a:1.42.2' instead of locked version '1.41.5' for project")
+        assert results.output.contains('Dependency lock state is out of date:')
+        assert results.output.contains("Resolved 'test.nebula:a:1.42.2' instead of locked version '1.41.5' for project")
 
-            assert results.output.contains('+--- test.nebula:a:1.41.5 -> 1.42.2\n')
-            assert results.output.contains('\\--- test.nebula:b:1.42.2\n')
-        } else {
-            assert results.output.contains('+--- test.nebula:a:1.41.5\n')
-            assert results.output.contains('\\--- test.nebula:b:1.42.2\n')
-        }
+        assert results.output.contains('+--- test.nebula:a:1.41.5 -> 1.42.2\n')
+        assert results.output.contains('\\--- test.nebula:b:1.42.2\n')
 
         when:
-        def ignoreLocksResults = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment", '-PdependencyLock.ignore=true')
+        def ignoreLocksResults = runTasks('dependencies', '--configuration', 'compileClasspath', '-PdependencyLock.ignore=true', "-Dnebula.features.coreAlignmentSupport=true")
 
         then:
         ignoreLocksResults.output.contains '+--- test.nebula:a:1.41.5 -> 1.42.2\n'
         ignoreLocksResults.output.contains '\\--- test.nebula:b:1.42.2\n'
 
         when:
-        runTasks('generateLock', 'saveLock', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
-        def locksUpdatedResults = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        runTasks('generateLock', 'saveLock')
+        def locksUpdatedResults = runTasks('dependencies', '--configuration', 'compileClasspath')
 
         then:
         locksUpdatedResults.output.contains '+--- test.nebula:a:1.41.5 -> 1.42.2\n'
         locksUpdatedResults.output.contains '\\--- test.nebula:b:1.42.2\n'
-
-        where:
-        coreAlignment | description
-        false         | 'locks win out over new alignment rules'
-        true          | 'fail due to dependency lock state is out of date'
     }
 
     @Unroll
-    def 'dependency-lock causes alignment to short circuit if dependencies are aligned by the lock file - core alignment #coreAlignment'() {
+    def 'dependency-lock causes alignment to short circuit if dependencies are aligned by the lock file '() {
         def (GradleDependencyGenerator mavenrepo, File jsonRuleFile) = dependencyLockAlignInteractionSetupWithUnlockedResolutionRulesConfiguration()
 
         assert jsonRuleFile.exists()
@@ -812,15 +773,13 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         """.stripIndent()
 
         when:
-        def results = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def results = runTasks('dependencies', '--configuration', 'compileClasspath')
 
         then:
         !results.output.contains('aligning test.nebula:a to [1.41.5,1.42.2]')
         results.output.contains '+--- test.nebula:a:1.41.5\n'
         results.output.contains '\\--- test.nebula:b:1.42.2 -> 1.41.5'
 
-        where:
-        coreAlignment << [false, true]
     }
 
     private List dependencyLockAlignInteractionSetupWithLockedResolutionRulesConfiguration() {
@@ -1024,14 +983,11 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         """.stripIndent()
 
         when:
-        def result = runTasks(':app:dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def result = runTasks(':app:dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.output.contains '|    +--- test.nebula:b FAILED'
         result.output.contains '|    \\--- test.nebula:c -> 1.0.0 FAILED'
-
-        where:
-        coreAlignment << [false, true]
     }
 
     @Unroll
@@ -1120,20 +1076,17 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         """.stripIndent()
 
         when:
-        def result = runTasks(':app:dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def result = runTasks(':app:dependencies', '--configuration', 'compileClasspath')
 
         then:
         result.output.contains '|    +--- test.nebula:b FAILED'
         result.output.contains '|    \\--- test.nebula:c -> 1.0.0 FAILED'
         def expectedMessage = 'Dependency test.nebula:a omitted version with no recommended version. General causes include a dependency being removed from the recommendation source or not applying a recommendation source to a project that depends on another project using a recommender.'
         result.output.contains(expectedMessage)
-
-        where:
-        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'dependency-lock when applied before wins out over new locked alignment rules - core alignment #coreAlignment'() {
+    def 'dependency-lock when applied before wins out over new locked alignment rules '() {
         def (GradleDependencyGenerator mavenrepo, File mavenForRules, File jsonRuleFile) = dependencyLockAlignInteractionSetupWithLockedResolutionRulesConfiguration()
 
         buildFile << """\
@@ -1161,8 +1114,8 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         """.stripIndent()
 
         when:
-        def results = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
-        def resultsForRules = runTasks('dependencies', '--configuration', 'resolutionRules', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def results = runTasks('dependencies', '--configuration', 'compileClasspath')
+        def resultsForRules = runTasks('dependencies', '--configuration', 'resolutionRules')
 
         then:
         // results using resolution rules that do not yet align test.nebula
@@ -1171,21 +1124,18 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         resultsForRules.output.contains 'test.rules:resolution-rules:1.+ -> 1.0.0\n'
 
         when:
-        def resultsIgnoringLocks = runTasks('-PdependencyLock.ignore=true', 'dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
-        def resultsForRulesIgnoringLocks = runTasks('-PdependencyLock.ignore=true', 'dependencies', '--configuration', 'resolutionRules', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        def resultsIgnoringLocks = runTasks('-PdependencyLock.ignore=true', 'dependencies', '--configuration', 'compileClasspath')
+        def resultsForRulesIgnoringLocks = runTasks('-PdependencyLock.ignore=true', 'dependencies', '--configuration', 'resolutionRules')
 
         then:
         // final results if we ignore locks
         resultsIgnoringLocks.output.contains 'test.nebula:a:1.41.5 -> 1.42.2\n'
         resultsIgnoringLocks.output.contains 'test.nebula:b:1.42.2\n'
         resultsForRulesIgnoringLocks.output.contains 'test.rules:resolution-rules:1.+ -> 1.1.0\n'
-
-        where:
-        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'dependency-lock plugin applied before resolution-rules plugin with non-locked resolution rules - #description - core alignment #coreAlignment'() {
+    def 'dependency-lock plugin applied before resolution-rules plugin with non-locked resolution rules - fail due to dependency lock state is out of date '() {
         // note: this is a more unusual case. Typically resolution rules are distributed like a library, version controlled, and locked like other dependencies
         def (GradleDependencyGenerator mavenrepo, File rulesJsonFile) = dependencyLockAlignInteractionSetupWithUnlockedResolutionRulesConfiguration()
         buildFile << """\
@@ -1209,31 +1159,19 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
             """.stripIndent()
 
         when:
-        def results
-        def tasks = ['dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment"]
-        if(coreAlignment) {
-            results = runTasksAndFail(*tasks)
-        } else {
-            results = runTasks(*tasks)
-        }
+        def tasks = ['dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=true"]
+        def results = runTasksAndFail(*tasks)
+
 
         then:
-        if (coreAlignment) {
-            assert results.output.contains('Dependency lock state is out of date:')
-            assert results.output.contains("Resolved 'test.nebula:a:1.42.2' instead of locked version '1.41.5' for project")
+        assert results.output.contains('Dependency lock state is out of date:')
+        assert results.output.contains("Resolved 'test.nebula:a:1.42.2' instead of locked version '1.41.5' for project")
 
-            assert results.output.contains('+--- test.nebula:a:1.41.5 -> 1.42.2\n')
-            assert results.output.contains('\\--- test.nebula:b:1.42.2\n')
-        } else {
-            // plugin ordering is important. Dependency lock plugin must be applied after the resolution rules plugin.
-            // This test case is simply showcasing the current behavior.
-            assert results.output.contains('+--- test.nebula:a:1.41.5 -> 1.42.2\n')
-            // this does not honor the locked versions
-            assert results.output.contains('\\--- test.nebula:b:1.42.2\n')
-        }
+        assert results.output.contains('+--- test.nebula:a:1.41.5 -> 1.42.2\n')
+        assert results.output.contains('\\--- test.nebula:b:1.42.2\n')
 
         when:
-        def ignoreLocksResults = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment", '-PdependencyLock.ignore=true')
+        def ignoreLocksResults = runTasks('dependencies', '--configuration', 'compileClasspath', '-PdependencyLock.ignore=true', "-Dnebula.features.coreAlignmentSupport=true")
 
         then:
         ignoreLocksResults.output.contains '+--- test.nebula:a:1.41.5 -> 1.42.2\n'
@@ -1241,17 +1179,12 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         !ignoreLocksResults.output.contains('FAILED')
 
         when:
-        runTasks('generateLock', 'saveLock', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
-        def locksUpdatedResults = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=$coreAlignment")
+        runTasks('generateLock', 'saveLock')
+        def locksUpdatedResults = runTasks('dependencies', '--configuration', 'compileClasspath')
 
         then:
         locksUpdatedResults.output.contains '+--- test.nebula:a:1.41.5 -> 1.42.2\n'
         locksUpdatedResults.output.contains '\\--- test.nebula:b:1.42.2\n'
-
-        where:
-        coreAlignment | description
-        false         | 'locks do not win. Plugin ordering is important.'
-        true          | 'fail due to dependency lock state is out of date'
     }
 
     private createRulesJar(Collection<File> files, File unneededRoot, File destination) {

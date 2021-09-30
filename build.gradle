@@ -56,8 +56,7 @@ gradlePlugin {
 }
 
 tasks.integrationTest {
-    // alignment is determined via a system property, so we don't want to share state
-    forkEvery = 1
+    maxParallelForks = (int) (Runtime.getRuntime().availableProcessors() / 2 + 1)
 }
 
 pluginBundle {

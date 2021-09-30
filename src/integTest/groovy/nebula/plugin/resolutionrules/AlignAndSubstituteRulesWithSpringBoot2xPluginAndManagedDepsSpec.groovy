@@ -14,7 +14,7 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginAndManagedDepsSpec extends Ab
     }
 
     @Unroll
-    def 'direct dep | with provided version | core alignment #coreAlignment'() {
+    def 'direct dep | with provided version'() {
         given:
         // in Spring Boot 2.x plugin, the `io.spring.dependency-management` plugin is added for dependency management
         setupForDirectDependencyScenario(extSpringBootVersion, forcedVersion,
@@ -23,7 +23,7 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginAndManagedDepsSpec extends Ab
         addSpringDependenciesWhenUsingManagedDependencies(requestedVersion)
 
         when:
-        def result = runTasks(*tasks(coreAlignment))
+        def result = runTasks(*tasks())
         def output = result.output
 
         then:
@@ -40,11 +40,10 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginAndManagedDepsSpec extends Ab
 
         requestedVersion = ''
         forcedVersion = ''
-        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'direct dep | with lower requested version | core alignment #coreAlignment'() {
+    def 'direct dep | with lower requested version'() {
         given:
         // in Spring Boot 2.x plugin, the `io.spring.dependency-management` plugin is added for dependency management
         setupForDirectDependencyScenario(extSpringBootVersion, forcedVersion,
@@ -53,7 +52,7 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginAndManagedDepsSpec extends Ab
         addSpringDependenciesWhenUsingManagedDependencies(requestedVersion)
 
         when:
-        def result = runTasks(*tasks(coreAlignment))
+        def result = runTasks(*tasks())
         def output = result.output
 
         then:
@@ -72,11 +71,10 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginAndManagedDepsSpec extends Ab
 
         requestedVersion = ':\${springVersion}'
         forcedVersion = ''
-        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'direct dep | with higher requested version | core alignment #coreAlignment'() {
+    def 'direct dep | with higher requested version'() {
         given:
         // in Spring Boot 2.x plugin, the `io.spring.dependency-management` plugin is added for dependency management
         setupForDirectDependencyScenario(extSpringBootVersion, forcedVersion,
@@ -85,7 +83,7 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginAndManagedDepsSpec extends Ab
         addSpringDependenciesWhenUsingManagedDependencies(requestedVersion)
 
         when:
-        def result = runTasks(*tasks(coreAlignment))
+        def result = runTasks(*tasks())
         def output = result.output
 
         then:
@@ -104,11 +102,10 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginAndManagedDepsSpec extends Ab
 
         requestedVersion = ':\${springVersion}'
         forcedVersion = ''
-        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'direct dep | without requested version and forced | core alignment #coreAlignment'() {
+    def 'direct dep | without requested version and forced'() {
         given:
         // in Spring Boot 2.x plugin, the `io.spring.dependency-management` plugin is added for dependency management
         setupForDirectDependencyScenario(extSpringBootVersion, forcedVersion,
@@ -117,22 +114,15 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginAndManagedDepsSpec extends Ab
         addSpringDependenciesWhenUsingManagedDependencies(requestedVersion)
 
         when:
-        def result = runTasks(*tasks(coreAlignment))
+        def result = runTasks(*tasks())
         def output = result.output
 
         then:
         writeOutputToProjectDir(output)
-        if (coreAlignment) {
-            dependencyInsightContains(output, 'org.springframework:spring-aop', managedSpringVersion)
-            dependencyInsightContains(output, 'org.springframework:spring-beans', managedSpringVersion)
-            dependencyInsightContains(output, 'org.springframework:spring-expression', managedSpringVersion)
-            dependencyInsightContains(output, 'org.springframework:spring-core', managedSpringVersion)
-        } else {
-            dependencyInsightContains(output, 'org.springframework:spring-aop', forcedVersion)
-            dependencyInsightContains(output, 'org.springframework:spring-beans', forcedVersion)
-            dependencyInsightContains(output, 'org.springframework:spring-expression', forcedVersion)
-            dependencyInsightContains(output, 'org.springframework:spring-core', forcedVersion)
-        }
+        dependencyInsightContains(output, 'org.springframework:spring-aop', managedSpringVersion)
+        dependencyInsightContains(output, 'org.springframework:spring-beans', managedSpringVersion)
+        dependencyInsightContains(output, 'org.springframework:spring-expression', managedSpringVersion)
+        dependencyInsightContains(output, 'org.springframework:spring-core', managedSpringVersion)
 
         where:
         extSpringVersion = '4.2.4.RELEASE'
@@ -141,11 +131,10 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginAndManagedDepsSpec extends Ab
 
         requestedVersion = ''
         forcedVersion = '4.2.9.RELEASE'
-        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'direct dep | with requested version and forced to different versions | core alignment #coreAlignment'() {
+    def 'direct dep | with requested version and forced to different versions'() {
         given:
         // in Spring Boot 2.x plugin, the `io.spring.dependency-management` plugin is added for dependency management
         setupForDirectDependencyScenario(extSpringBootVersion, forcedVersion,
@@ -154,26 +143,18 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginAndManagedDepsSpec extends Ab
         addSpringDependenciesWhenUsingManagedDependencies(requestedVersion)
 
         when:
-        def result = runTasks(*tasks(coreAlignment))
+        def result = runTasks(*tasks())
         def output = result.output
 
         then:
         writeOutputToProjectDir(output)
-        if (coreAlignment) {
-            dependencyInsightContains(output, 'org.springframework:spring-core', 'FAILED')
+        dependencyInsightContains(output, 'org.springframework:spring-core', 'FAILED')
 
-            dependencyInsightContains(output, 'org.springframework:spring-context', 'FAILED')
-            dependencyInsightContains(output, 'org.springframework:spring-web', 'FAILED')
-            dependencyInsightContains(output, 'org.springframework:spring-webmvc', 'FAILED')
+        dependencyInsightContains(output, 'org.springframework:spring-context', 'FAILED')
+        dependencyInsightContains(output, 'org.springframework:spring-web', 'FAILED')
+        dependencyInsightContains(output, 'org.springframework:spring-webmvc', 'FAILED')
 
-            assert output.contains('Multiple forces on different versions for virtual platform aligned-platform')
-
-        } else {
-            dependencyInsightContains(output, 'org.springframework:spring-aop', forcedVersion)
-            dependencyInsightContains(output, 'org.springframework:spring-beans', forcedVersion)
-            dependencyInsightContains(output, 'org.springframework:spring-expression', forcedVersion)
-            dependencyInsightContains(output, 'org.springframework:spring-core', forcedVersion)
-        }
+        assert output.contains('Multiple forces on different versions for virtual platform aligned-platform')
 
         where:
         extSpringVersion = '4.2.4.RELEASE'
@@ -182,11 +163,10 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginAndManagedDepsSpec extends Ab
 
         requestedVersion = ':\${springVersion}'
         forcedVersion = '4.2.9.RELEASE'
-        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'direct dep | with requested version and forced to same version | core alignment #coreAlignment'() {
+    def 'direct dep | with requested version and forced to same version'() {
         given:
         // in Spring Boot 2.x plugin, the `io.spring.dependency-management` plugin is added for dependency management
         setupForDirectDependencyScenario(extSpringBootVersion, forcedVersion,
@@ -195,26 +175,19 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginAndManagedDepsSpec extends Ab
         addSpringDependenciesWhenUsingManagedDependencies(requestedVersion)
 
         when:
-        def result = runTasks(*tasks(coreAlignment))
+        def result = runTasks(*tasks())
         def output = result.output
 
         then:
         writeOutputToProjectDir(output)
-        if (coreAlignment) {
-            dependencyInsightContains(output, 'org.springframework:spring-core', 'FAILED')
+        dependencyInsightContains(output, 'org.springframework:spring-core', 'FAILED')
 
-            dependencyInsightContains(output, 'org.springframework:spring-context', 'FAILED')
-            dependencyInsightContains(output, 'org.springframework:spring-web', 'FAILED')
-            dependencyInsightContains(output, 'org.springframework:spring-webmvc', 'FAILED')
+        dependencyInsightContains(output, 'org.springframework:spring-context', 'FAILED')
+        dependencyInsightContains(output, 'org.springframework:spring-web', 'FAILED')
+        dependencyInsightContains(output, 'org.springframework:spring-webmvc', 'FAILED')
 
-            assert output.contains('Multiple forces on different versions for virtual platform aligned-platform')
+        assert output.contains('Multiple forces on different versions for virtual platform aligned-platform')
 
-        } else {
-            dependencyInsightContains(output, 'org.springframework:spring-aop', forcedVersion)
-            dependencyInsightContains(output, 'org.springframework:spring-beans', forcedVersion)
-            dependencyInsightContains(output, 'org.springframework:spring-expression', forcedVersion)
-            dependencyInsightContains(output, 'org.springframework:spring-core', forcedVersion)
-        }
 
         where:
         extSpringVersion = '4.2.4.RELEASE'
@@ -223,11 +196,10 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginAndManagedDepsSpec extends Ab
 
         requestedVersion = ':\${springVersion}'
         forcedVersion = extSpringVersion
-        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'transitive dep | with provided version | core alignment #coreAlignment'() {
+    def 'transitive dep | with provided version'() {
         given:
         // in Spring Boot 2.x plugin, the `io.spring.dependency-management` plugin is added for dependency management
         setupForTransitiveDependencyScenario(extSpringBootVersion, forcedVersion,
@@ -240,7 +212,7 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginAndManagedDepsSpec extends Ab
             """.stripIndent()
 
         when:
-        def result = runTasks(*tasks(coreAlignment, 'org.slf4j'))
+        def result = runTasks(*tasks('org.slf4j'))
         def output = result.output
 
         then:
@@ -256,11 +228,10 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginAndManagedDepsSpec extends Ab
 
         requestedVersion = ''
         forcedVersion = ''
-        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'transitive dep | with requested version | core alignment #coreAlignment'() {
+    def 'transitive dep | with requested version'() {
         given:
         // in Spring Boot 2.x plugin, the `io.spring.dependency-management` plugin is added for dependency management
         setupForTransitiveDependencyScenario(extSpringBootVersion, forcedVersion,
@@ -273,7 +244,7 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginAndManagedDepsSpec extends Ab
             """.stripIndent()
 
         when:
-        def result = runTasks(*tasks(coreAlignment, 'org.slf4j'))
+        def result = runTasks(*tasks('org.slf4j'))
         def output = result.output
 
         then:
@@ -289,11 +260,10 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginAndManagedDepsSpec extends Ab
 
         requestedVersion = ':\$slf4jVersion'
         forcedVersion = ''
-        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'transitive dep | without requested version and forced | core alignment #coreAlignment'() {
+    def 'transitive dep | without requested version and forced'() {
         given:
         // in Spring Boot 2.x plugin, the `io.spring.dependency-management` plugin is added for dependency management
         setupForTransitiveDependencyScenario(extSpringBootVersion, forcedVersion,
@@ -306,18 +276,13 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginAndManagedDepsSpec extends Ab
             """.stripIndent()
 
         when:
-        def result = runTasks(*tasks(coreAlignment, 'org.slf4j'))
+        def result = runTasks(*tasks('org.slf4j'))
         def output = result.output
 
         then:
         writeOutputToProjectDir(output)
-        if (coreAlignment) {
-            dependencyInsightContains(output, 'org.slf4j:slf4j-simple', managedSlf4jVersion)
-            dependencyInsightContains(output, 'org.slf4j:slf4j-api', managedSlf4jVersion)
-        } else {
-            dependencyInsightContains(output, 'org.slf4j:slf4j-simple', forcedVersion)
-            dependencyInsightContains(output, 'org.slf4j:slf4j-api', forcedVersion)
-        }
+        dependencyInsightContains(output, 'org.slf4j:slf4j-simple', managedSlf4jVersion)
+        dependencyInsightContains(output, 'org.slf4j:slf4j-api', managedSlf4jVersion)
 
         where:
         extSpringVersion = '4.2.4.RELEASE'
@@ -327,11 +292,10 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginAndManagedDepsSpec extends Ab
 
         requestedVersion = ''
         forcedVersion = '1.7.10'
-        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'transitive dep | with lower requested version and forced to different version | core alignment #coreAlignment'() {
+    def 'transitive dep | with lower requested version and forced to different version'() {
         given:
         // in Spring Boot 2.x plugin, the `io.spring.dependency-management` plugin is added for dependency management
         setupForTransitiveDependencyScenario(extSpringBootVersion, forcedVersion,
@@ -344,18 +308,13 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginAndManagedDepsSpec extends Ab
             """.stripIndent()
 
         when:
-        def result = runTasks(*tasks(coreAlignment, 'org.slf4j'))
+        def result = runTasks(*tasks('org.slf4j'))
         def output = result.output
 
         then:
         writeOutputToProjectDir(output)
-        if (coreAlignment) {
-            dependencyInsightContains(output, 'org.slf4j:slf4j-simple', 'FAILED')
-            assert output.contains('Multiple forces on different versions for virtual platform aligned-platform')
-        } else {
-            dependencyInsightContains(output, 'org.slf4j:slf4j-simple', forcedVersion)
-            dependencyInsightContains(output, 'org.slf4j:slf4j-api', forcedVersion)
-        }
+        dependencyInsightContains(output, 'org.slf4j:slf4j-simple', 'FAILED')
+        assert output.contains('Multiple forces on different versions for virtual platform aligned-platform')
 
         where:
         extSpringVersion = '4.2.4.RELEASE'
@@ -365,11 +324,10 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginAndManagedDepsSpec extends Ab
 
         requestedVersion = ':\$slf4jVersion'
         forcedVersion = '1.7.10'
-        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'transitive dep | with higher requested version and forced to different version | core alignment #coreAlignment'() {
+    def 'transitive dep | with higher requested version and forced to different version'() {
         given:
         // in Spring Boot 2.x plugin, the `io.spring.dependency-management` plugin is added for dependency management
         setupForTransitiveDependencyScenario(extSpringBootVersion, forcedVersion,
@@ -382,18 +340,13 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginAndManagedDepsSpec extends Ab
             """.stripIndent()
 
         when:
-        def result = runTasks(*tasks(coreAlignment, 'org.slf4j'))
+        def result = runTasks(*tasks('org.slf4j'))
         def output = result.output
 
         then:
         writeOutputToProjectDir(output)
-        if (coreAlignment) {
-            dependencyInsightContains(output, 'org.slf4j:slf4j-simple', 'FAILED')
-            assert output.contains('Multiple forces on different versions for virtual platform aligned-platform')
-        } else {
-            dependencyInsightContains(output, 'org.slf4j:slf4j-simple', forcedVersion)
-            dependencyInsightContains(output, 'org.slf4j:slf4j-api', forcedVersion)
-        }
+        dependencyInsightContains(output, 'org.slf4j:slf4j-simple', 'FAILED')
+        assert output.contains('Multiple forces on different versions for virtual platform aligned-platform')
 
         where:
         extSpringVersion = '4.2.4.RELEASE'
@@ -403,11 +356,10 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginAndManagedDepsSpec extends Ab
 
         requestedVersion = ':\$slf4jVersion'
         forcedVersion = '1.7.10'
-        coreAlignment << [false, true]
     }
 
     @Unroll
-    def 'transitive dep | with requested version and forced to same version | core alignment #coreAlignment'() {
+    def 'transitive dep | with requested version and forced to same version'() {
         given:
         // in Spring Boot 2.x plugin, the `io.spring.dependency-management` plugin is added for dependency management
         setupForTransitiveDependencyScenario(extSpringBootVersion, forcedVersion,
@@ -420,18 +372,13 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginAndManagedDepsSpec extends Ab
             """.stripIndent()
 
         when:
-        def result = runTasks(*tasks(coreAlignment, 'org.slf4j'))
+        def result = runTasks(*tasks( 'org.slf4j'))
         def output = result.output
 
         then:
         writeOutputToProjectDir(output)
-        if (coreAlignment) {
-            dependencyInsightContains(output, 'org.slf4j:slf4j-simple', 'FAILED')
-            assert output.contains('Multiple forces on different versions for virtual platform aligned-platform')
-        } else {
-            dependencyInsightContains(output, 'org.slf4j:slf4j-simple', forcedVersion)
-            dependencyInsightContains(output, 'org.slf4j:slf4j-api', forcedVersion)
-        }
+        dependencyInsightContains(output, 'org.slf4j:slf4j-simple', 'FAILED')
+        assert output.contains('Multiple forces on different versions for virtual platform aligned-platform')
 
         where:
         extSpringVersion = '4.2.4.RELEASE'
@@ -441,6 +388,5 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginAndManagedDepsSpec extends Ab
 
         requestedVersion = ':\$slf4jVersion'
         forcedVersion = extSlf4jVersion
-        coreAlignment << [false, true]
     }
 }
