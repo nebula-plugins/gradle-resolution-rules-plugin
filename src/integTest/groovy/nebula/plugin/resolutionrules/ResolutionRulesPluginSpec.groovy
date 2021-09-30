@@ -197,6 +197,20 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
         output.contains 'nebula.resolution-rules is using ruleset: rules.jar'
     }
 
+    def 'dependencies task with configuration on demand'() {
+        def subproject = addSubproject("subprojectA")
+        new File(subproject, "build.gradle") << """
+            apply plugin: 'java'
+            apply plugin: 'nebula.resolution-rules'
+        """.stripIndent()
+
+        when:
+        def result = runTasksSuccessfully(':subprojectA:dependencies', '--configuration', 'compileClasspath', '-Dorg.gradle.configureondemand=true')
+
+        then:
+        result.standardOutput.contains("Configuration on demand is an incubating feature.")
+    }
+
     def 'replace module'() {
         given:
         buildFile << """
@@ -549,5 +563,21 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
 
         then:
         !result.standardOutput.contains("Dependency resolution rules will not be applied to configuration ':nebulaRecommenderBom', it was resolved before the project was executed")
+    }
+
+    def 'do not reject dependency if version is not part of the selector in rule'() {
+        given:
+        buildFile << """
+                     dependencies {
+                        implementation 'com.google.guava:guava:19.0'
+                     }
+                     """.stripIndent()
+
+        when:
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
+
+        then:
+        !result.standardError.contains("Resolution rules could not resolve all dependencies to align configuration ':compileClasspath':\n" +
+                " - com.google.guava:guava:19.0 -> com.google.guava:guava:19.0 - Could not find com.google.guava:guava:19.0")
     }
 }

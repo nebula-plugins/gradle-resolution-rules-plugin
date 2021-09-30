@@ -34,7 +34,7 @@ class AlignRulesMultiprojectSpec extends IntegrationSpec {
         fork = false
         rulesJsonFile = new File(projectDir, "${moduleName}.json")
         buildFile << """\
-            subprojects {
+            allprojects {
                 ${applyPlugin(ResolutionRulesPlugin)}
                 
 
