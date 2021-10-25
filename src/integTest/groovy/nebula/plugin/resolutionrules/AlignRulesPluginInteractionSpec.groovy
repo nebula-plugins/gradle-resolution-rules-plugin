@@ -89,7 +89,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreLockingSupport=false")
 
         then:
         result.output.contains '\\--- test.a:a -> 1.42.2\n'
@@ -149,7 +149,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreLockingSupport=false")
 
         then:
         result.output.contains '\\--- test.a:a -> 1.42.2\n'
@@ -227,7 +227,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         """.stripIndent()
 
         when:
-        def result = runTasks(':a:dependencies', '--configuration', 'compileClasspath')
+        def result = runTasks(':a:dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreLockingSupport=false")
 
         then:
         result.output.contains '\\--- test.a:a -> 1.42.2\n'
@@ -272,7 +272,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compileClasspath', '--warning-mode', 'none')
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath', '--warning-mode', 'none', "-Dnebula.features.coreLockingSupport=false")
 
         then:
         noExceptionThrown()
@@ -336,7 +336,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         writeHelloWorld('example')
 
         when:
-        def result = runTasks('compileJava', '--warning-mode', 'none')
+        def result = runTasks('compileJava', '--warning-mode', 'none', "-Dnebula.features.coreLockingSupport=false")
 
         then:
         noExceptionThrown()
@@ -401,7 +401,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreLockingSupport=false")
 
         then:
         result.output.contains('+--- com.amazonaws:aws-java-sdk-s3 -> 1.11.18')
@@ -464,7 +464,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreLockingSupport=false")
 
         then:
         result.output.contains '\\--- test.a:a -> 1.42.2\n'
@@ -531,7 +531,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         '''.stripIndent())
 
         when:
-        def results = runTasks(':a:dependencies', ':b:dependencies', 'assemble')
+        def results = runTasks(':a:dependencies', ':b:dependencies', 'assemble', "-Dnebula.features.coreLockingSupport=false")
 
         then:
         noExceptionThrown()
@@ -619,8 +619,8 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         """.stripIndent()
 
         when:
-        def results = runTasks('dependencyInsight', '--dependency', 'a', '--configuration', 'compileClasspath')
-        def resultsForRules = runTasks('dependencyInsight', '--dependency', 'test.rules', '--configuration', 'resolutionRules')
+        def results = runTasks('dependencyInsight', '--dependency', 'a', '--configuration', 'compileClasspath', "-Dnebula.features.coreLockingSupport=false")
+        def resultsForRules = runTasks('dependencyInsight', '--dependency', 'test.rules', '--configuration', 'resolutionRules', "-Dnebula.features.coreLockingSupport=false")
 
         then:
         results.output.contains 'test.nebula:a:1.41.5 -> 1.42.2\n'
@@ -631,7 +631,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
     }
 
     @Unroll
-    def 'dependency-lock when applied after wins out over new locked alignment rules - coreAlignment #coreAlignment'() {
+    def 'dependency-lock when applied after wins out over new locked alignment rules'() {
         def (GradleDependencyGenerator mavenrepo, File mavenForRules, File jsonRuleFile) = dependencyLockAlignInteractionSetupWithLockedResolutionRulesConfiguration()
 
         buildFile << """\
@@ -659,8 +659,8 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         """.stripIndent()
 
         when:
-        def results = runTasks('dependencies', '--configuration', 'compileClasspath')
-        def resultsForRules = runTasks('dependencies', '--configuration', 'resolutionRules')
+        def results = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreLockingSupport=false")
+        def resultsForRules = runTasks('dependencies', '--configuration', 'resolutionRules', "-Dnebula.features.coreLockingSupport=false")
 
         then:
         // results using resolution rules that do not yet align test.nebula
@@ -669,8 +669,8 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         resultsForRules.output.contains 'test.rules:resolution-rules:1.+ -> 1.0.0\n'
 
         when:
-        def resultsIgnoringLocks = runTasks('-PdependencyLock.ignore=true', 'dependencies', '--configuration', 'compileClasspath')
-        def resultsForRulesIgnoringLocks = runTasks('-PdependencyLock.ignore=true', 'dependencies', '--configuration', 'resolutionRules')
+        def resultsIgnoringLocks = runTasks('-PdependencyLock.ignore=true', 'dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreLockingSupport=false")
+        def resultsForRulesIgnoringLocks = runTasks('-PdependencyLock.ignore=true', 'dependencies', '--configuration', 'resolutionRules', "-Dnebula.features.coreLockingSupport=false")
 
         then:
         // final results if we ignore locks
@@ -705,7 +705,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
 
         when:
         def results
-        def tasks = ['dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=true"]
+        def tasks = ['dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=true", "-Dnebula.features.coreLockingSupport=false"]
         results = runTasksAndFail(*tasks)
 
         then:
@@ -716,7 +716,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         assert results.output.contains('\\--- test.nebula:b:1.42.2\n')
 
         when:
-        def ignoreLocksResults = runTasks('dependencies', '--configuration', 'compileClasspath', '-PdependencyLock.ignore=true', "-Dnebula.features.coreAlignmentSupport=true")
+        def ignoreLocksResults = runTasks('dependencies', '--configuration', 'compileClasspath', '-PdependencyLock.ignore=true', "-Dnebula.features.coreAlignmentSupport=true", "-Dnebula.features.coreLockingSupport=false")
 
         then:
         ignoreLocksResults.output.contains '+--- test.nebula:a:1.41.5 -> 1.42.2\n'
@@ -724,7 +724,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
 
         when:
         runTasks('generateLock', 'saveLock')
-        def locksUpdatedResults = runTasks('dependencies', '--configuration', 'compileClasspath')
+        def locksUpdatedResults = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreLockingSupport=false")
 
         then:
         locksUpdatedResults.output.contains '+--- test.nebula:a:1.41.5 -> 1.42.2\n'
@@ -773,7 +773,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         """.stripIndent()
 
         when:
-        def results = runTasks('dependencies', '--configuration', 'compileClasspath')
+        def results = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreLockingSupport=false")
 
         then:
         !results.output.contains('aligning test.nebula:a to [1.41.5,1.42.2]')
@@ -983,7 +983,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         """.stripIndent()
 
         when:
-        def result = runTasks(':app:dependencies', '--configuration', 'compileClasspath')
+        def result = runTasks(':app:dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreLockingSupport=false")
 
         then:
         result.output.contains '|    +--- test.nebula:b FAILED'
@@ -1076,7 +1076,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         """.stripIndent()
 
         when:
-        def result = runTasks(':app:dependencies', '--configuration', 'compileClasspath')
+        def result = runTasks(':app:dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreLockingSupport=false")
 
         then:
         result.output.contains '|    +--- test.nebula:b FAILED'
@@ -1114,8 +1114,8 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         """.stripIndent()
 
         when:
-        def results = runTasks('dependencies', '--configuration', 'compileClasspath')
-        def resultsForRules = runTasks('dependencies', '--configuration', 'resolutionRules')
+        def results = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreLockingSupport=false")
+        def resultsForRules = runTasks('dependencies', '--configuration', 'resolutionRules', "-Dnebula.features.coreLockingSupport=false")
 
         then:
         // results using resolution rules that do not yet align test.nebula
@@ -1159,7 +1159,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
             """.stripIndent()
 
         when:
-        def tasks = ['dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=true"]
+        def tasks = ['dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreAlignmentSupport=true", "-Dnebula.features.coreLockingSupport=false"]
         def results = runTasksAndFail(*tasks)
 
 
@@ -1171,7 +1171,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         assert results.output.contains('\\--- test.nebula:b:1.42.2\n')
 
         when:
-        def ignoreLocksResults = runTasks('dependencies', '--configuration', 'compileClasspath', '-PdependencyLock.ignore=true', "-Dnebula.features.coreAlignmentSupport=true")
+        def ignoreLocksResults = runTasks('dependencies', '--configuration', 'compileClasspath', '-PdependencyLock.ignore=true', "-Dnebula.features.coreAlignmentSupport=true", "-Dnebula.features.coreLockingSupport=false")
 
         then:
         ignoreLocksResults.output.contains '+--- test.nebula:a:1.41.5 -> 1.42.2\n'
@@ -1180,7 +1180,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
 
         when:
         runTasks('generateLock', 'saveLock')
-        def locksUpdatedResults = runTasks('dependencies', '--configuration', 'compileClasspath')
+        def locksUpdatedResults = runTasks('dependencies', '--configuration', 'compileClasspath', "-Dnebula.features.coreLockingSupport=false")
 
         then:
         locksUpdatedResults.output.contains '+--- test.nebula:a:1.41.5 -> 1.42.2\n'
