@@ -24,7 +24,7 @@ class AlignAndLockWithDowngradedTransitiveDependenciesSpec extends IntegrationTe
                     }
                 }
                 dependencies {
-                    classpath "com.netflix.nebula:gradle-dependency-lock-plugin:11.+"
+                    classpath "com.netflix.nebula:gradle-dependency-lock-plugin:12.+"
                 }
             }
             plugins {

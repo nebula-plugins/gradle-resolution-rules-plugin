@@ -16,7 +16,7 @@
  */
 
 plugins {
-    id 'nebula.plugin-plugin' version '16.1.0'
+    id 'nebula.plugin-plugin' version '16.2.0'
     id "org.jetbrains.kotlin.jvm" version "1.5.31"
     id 'java-gradle-plugin'
 }
@@ -32,7 +32,7 @@ dependencies {
     implementation 'com.netflix.nebula:nebula-dependency-recommender:latest.release'
 
     testImplementation gradleTestKit()
-    testRuntimeOnly 'com.netflix.nebula:gradle-dependency-lock-plugin:11.+'
+    testRuntimeOnly 'com.netflix.nebula:gradle-dependency-lock-plugin:latest.release'
 }
 
 apply from: 'gradle/idea.gradle'
