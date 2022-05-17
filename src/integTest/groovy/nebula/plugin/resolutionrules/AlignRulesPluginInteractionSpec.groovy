@@ -627,7 +627,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
         results.output.contains 'test.nebula:b:1.42.2\n'
 
         resultsForRules.output.contains 'test.rules:resolution-rules:1.+ -> 1.0.0\n'
-        resultsForRules.output.contains 'Selected by rule : test.rules:resolution-rules locked to 1.0.0'
+        resultsForRules.output.contains 'Selected by rule: test.rules:resolution-rules locked to 1.0.0'
     }
 
     @Unroll

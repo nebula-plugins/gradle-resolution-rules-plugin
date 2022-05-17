@@ -51,7 +51,7 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
 
         results.output.contains 'aligned'
         results.output.contains '- Forced'
-        results.output.contains "- Selected by rule : substituted test.nebula:a:1.2.0 with test.nebula:a:1.3.0 because '★ custom substitution reason'"
+        results.output.contains "- Selected by rule: substituted test.nebula:a:1.2.0 with test.nebula:a:1.3.0 because '★ custom substitution reason'"
     }
 
     @Unroll
@@ -77,7 +77,7 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
         assert results.output.contains('test.nebula:c:1.0.0 -> 1.3.0\n')
         results.output.contains 'aligned'
         results.output.contains('- Forced')
-        results.output.contains "- Selected by rule : substituted test.nebula:a:1.2.0 with test.nebula:a:1.3.0 because '★ custom substitution reason'"
+        results.output.contains "- Selected by rule: substituted test.nebula:a:1.2.0 with test.nebula:a:1.3.0 because '★ custom substitution reason'"
     }
 
     @Unroll
@@ -104,7 +104,7 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
 
         results.output.contains 'aligned'
         results.output.toLowerCase().contains 'forced'
-        results.output.contains "- Selected by rule : substituted test.nebula:c:1.2.0 with test.nebula:c:1.3.0 because '★ custom substitution reason'"
+        results.output.contains "- Selected by rule: substituted test.nebula:c:1.2.0 with test.nebula:c:1.3.0 because '★ custom substitution reason'"
     }
 
     @Unroll
@@ -133,7 +133,7 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
 
         results.output.contains 'aligned'
         results.output.contains '- Forced'
-        results.output.contains "- Selected by rule : substituted test.nebula:a:1.2.0 with test.nebula:a:1.3.0 because '★ custom substitution reason'"
+        results.output.contains "- Selected by rule: substituted test.nebula:a:1.2.0 with test.nebula:a:1.3.0 because '★ custom substitution reason'"
 
     }
 
@@ -163,7 +163,7 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
         assert results.output.contains('test.nebula:c:1.0.0 -> 1.3.0\n')
         results.output.contains 'aligned'
         results.output.contains('- Forced')
-        results.output.contains "- Selected by rule : substituted test.nebula:a:1.2.0 with test.nebula:a:1.3.0 because '★ custom substitution reason'"
+        results.output.contains "- Selected by rule: substituted test.nebula:a:1.2.0 with test.nebula:a:1.3.0 because '★ custom substitution reason'"
     }
 
     @Unroll
@@ -193,7 +193,7 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
 
         results.output.contains 'aligned'
         results.output.toLowerCase().contains 'forced'
-        results.output.contains "- Selected by rule : substituted test.nebula:c:1.2.0 with test.nebula:c:1.3.0 because '★ custom substitution reason'"
+        results.output.contains "- Selected by rule: substituted test.nebula:c:1.2.0 with test.nebula:c:1.3.0 because '★ custom substitution reason'"
     }
 
     @Unroll
@@ -222,7 +222,7 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
         assert results.output.contains('- Forced')
 
         results.output.contains 'aligned'
-        results.output.contains("- Selected by rule : substituted test.nebula:a:1.2.0 with test.nebula:a:1.3.0 because '★ custom substitution reason'")
+        results.output.contains("- Selected by rule: substituted test.nebula:a:1.2.0 with test.nebula:a:1.3.0 because '★ custom substitution reason'")
     }
 
     @Unroll
@@ -248,7 +248,7 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
         results.output.contains 'test.nebula:c:1.0.0 -> 1.3.0'
 
         results.output.contains 'aligned'
-        results.output.contains "- Selected by rule : substituted test.nebula:a:1.2.0 with test.nebula:a:1.3.0 because '★ custom substitution reason'"
+        results.output.contains "- Selected by rule: substituted test.nebula:a:1.2.0 with test.nebula:a:1.3.0 because '★ custom substitution reason'"
     }
 
     @Unroll
@@ -277,7 +277,7 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
         assert results.output.contains('- Forced')
 
         results.output.contains 'aligned'
-        results.output.contains("- Selected by rule : substituted test.nebula:c:1.2.0 with test.nebula:c:1.3.0 because '★ custom substitution reason'")
+        results.output.contains("- Selected by rule: substituted test.nebula:c:1.2.0 with test.nebula:c:1.3.0 because '★ custom substitution reason'")
     }
 
     @Unroll
@@ -316,7 +316,7 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
         results.output.contains('- Forced')
 
         results.output.contains 'aligned'
-        results.output.contains("- Selected by rule : substituted test.nebula:a:1.2.0 with test.nebula:a:1.3.0 because '★ custom substitution reason'")
+        results.output.contains("- Selected by rule: substituted test.nebula:a:1.2.0 with test.nebula:a:1.3.0 because '★ custom substitution reason'")
         results.output.contains 'By ancestor'
     }
 
@@ -354,7 +354,7 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
         results.output.contains 'test.nebula:c:1.0.0 -> 1.3.0'
 
         results.output.contains 'aligned'
-        results.output.contains "- Selected by rule : substituted test.nebula:a:1.2.0 with test.nebula:a:1.3.0 because '★ custom substitution reason'"
+        results.output.contains "- Selected by rule: substituted test.nebula:a:1.2.0 with test.nebula:a:1.3.0 because '★ custom substitution reason'"
     }
 
     @Unroll
@@ -396,7 +396,7 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
         assert results.output.contains('By ancestor')
 
         results.output.contains 'aligned'
-        results.output.contains("- Selected by rule : substituted test.nebula:c:1.2.0 with test.nebula:c:1.3.0 because '★ custom substitution reason'")
+        results.output.contains("- Selected by rule: substituted test.nebula:c:1.2.0 with test.nebula:c:1.3.0 because '★ custom substitution reason'")
     }
 
     void setupProjectAndDependencies() {

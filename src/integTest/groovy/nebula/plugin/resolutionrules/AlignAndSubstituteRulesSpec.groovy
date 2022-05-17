@@ -853,7 +853,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         dependencyInsightContains(result.output, "test.nebula:b", resultingVersion)
         dependencyInsightContains(result.output, "test.nebula:c", resultingVersion)
 
-        dependencyInsightContains(result.output, "test.nebula:a", resultingVersion) // alignment wins over the details.useVersion via `By conflict resolution : between versions 1.0.0 and 0.5.0`
+        dependencyInsightContains(result.output, "test.nebula:a", resultingVersion) // alignment wins over the details.useVersion via `By conflict resolution: between versions 1.0.0 and 0.5.0`
         assert result.output.contains("belongs to platform aligned-platform:rules-0-for-test.nebula-or-test.nebula.ext:$resultingVersion")
     }
 

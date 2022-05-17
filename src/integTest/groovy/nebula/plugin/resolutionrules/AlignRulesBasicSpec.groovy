@@ -227,7 +227,7 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
         then:
         // 'a' is aligned
         aResult.output.contains 'test.nebula:a:1.1'
-        aResult.output.contains 'By constraint : belongs to platform aligned-platform:dependencyInsight-has-extra-info-for-alignment-0-for-test.nebula:1.1.0'
+        aResult.output.contains 'By constraint: belongs to platform aligned-platform:dependencyInsight-has-extra-info-for-alignment-0-for-test.nebula:1.1.0'
         aResult.output.findAll("test.nebula:a:.* -> 1.1.0").size() > 0
 
         when:
@@ -243,7 +243,7 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
         then:
         // 'c' is aligned
         cResult.output.contains 'test.nebula:c:1.1.0'
-        cResult.output.contains "By constraint : belongs to platform aligned-platform:dependencyInsight-has-extra-info-for-alignment-0-for-test.nebula:1.1.0"
+        cResult.output.contains "By constraint: belongs to platform aligned-platform:dependencyInsight-has-extra-info-for-alignment-0-for-test.nebula:1.1.0"
         cResult.output.findAll("test.nebula:c:.* -> 1.1.0").size() > 0
     }
 

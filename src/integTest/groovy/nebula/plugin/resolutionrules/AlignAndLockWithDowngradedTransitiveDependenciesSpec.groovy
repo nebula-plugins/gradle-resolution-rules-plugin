@@ -333,7 +333,7 @@ class AlignAndLockWithDowngradedTransitiveDependenciesSpec extends IntegrationTe
             """.stripIndent()
 
         when:
-        def results = runTasksAndFail('dependencyInsight', '--dependency', 'com.fasterxml.jackson', "--singlepath")
+        def results = runTasksAndFail('dependencyInsight', '--dependency', 'com.fasterxml.jackson', "--single-path")
 
         then:
         results.output.contains('> fromIndex = -1')
