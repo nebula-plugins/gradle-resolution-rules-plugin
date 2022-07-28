@@ -70,7 +70,7 @@ class AlignMatcher(val rule: AlignRule, groupPattern: Pattern, includesPatterns:
     }
 }
 
-@CacheableRule
+//@CacheableRule
 open class AlignedPlatformMetadataRule @Inject constructor(val rule: AlignRule) : ComponentMetadataRule, Serializable, ReusableAction {
     private val logger: Logger = Logging.getLogger(AlignedPlatformMetadataRule::class.java)
 
