@@ -16,7 +16,7 @@
  */
 
 plugins {
-    id 'nebula.plugin-plugin' version '16.3.0'
+    id 'nebula.plugin-plugin' version '17.0.0'
     id "org.jetbrains.kotlin.jvm" version "1.5.31"
     id 'java-gradle-plugin'
 }
@@ -46,26 +46,23 @@ contacts {
     }
 }
 
-gradlePlugin {
-    plugins {
-        resolutionRules {
-            id = 'nebula.resolution-rules'
-            implementationClass = 'nebula.plugin.resolutionrules.ResolutionRulesPlugin'
-        }
-    }
-}
+
 
 tasks.integrationTest {
     maxParallelForks = (int) (Runtime.getRuntime().availableProcessors() / 2 + 1)
 }
 
 pluginBundle {
+    tags = ['nebula', 'resolve', 'resolution', 'rules']
+}
+
+gradlePlugin {
     plugins {
         resolutionRules {
             id = 'nebula.resolution-rules'
+            implementationClass = 'nebula.plugin.resolutionrules.ResolutionRulesPlugin'
             displayName = 'Gradle Resolution Rules plugin'
             description = project.description
-            tags = ['nebula', 'resolve', 'resolution', 'rules']
         }
     }
 }
