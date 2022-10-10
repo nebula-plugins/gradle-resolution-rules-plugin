@@ -1848,7 +1848,7 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         """
         plugins {
             id 'java'
-            id 'nebula.resolution-rules'$pluginToAdd
+            id 'com.netflix.nebula.resolution-rules'$pluginToAdd
         }
         repositories {
             maven { url '${projectDir.toPath().relativize(mavenrepo.toPath()).toFile()}' }

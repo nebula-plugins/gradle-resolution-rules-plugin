@@ -25,7 +25,7 @@ class AlignRulesBasicWithCoreSpec extends IntegrationTestKitSpec {
 
         buildFile << """\
             plugins {
-                id 'nebula.resolution-rules'
+                id 'com.netflix.nebula.resolution-rules'
                 id 'java'
             }
             dependencies {

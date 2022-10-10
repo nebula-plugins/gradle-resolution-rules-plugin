@@ -89,7 +89,7 @@ buildscript {
 }
 plugins {
     id 'java'
-    id 'nebula.resolution-rules'
+    id 'com.netflix.nebula.resolution-rules'
 }
 apply plugin: 'org.springframework.boot'$additionalPlugin
 repositories {

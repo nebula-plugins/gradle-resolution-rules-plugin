@@ -70,7 +70,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
                 }
             }
 
-            apply plugin: 'nebula.resolution-rules'
+            apply plugin: 'com.netflix.nebula.resolution-rules'
             apply plugin: 'java'
             apply plugin: 'nebula.dependency-recommender'
 
@@ -130,7 +130,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
             }
 
             apply plugin: 'nebula.dependency-recommender'
-            apply plugin: 'nebula.resolution-rules'
+            apply plugin: 'com.netflix.nebula.resolution-rules'
             apply plugin: 'java'
 
 
@@ -192,7 +192,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
             }
             allprojects {
                 apply plugin: 'nebula.dependency-recommender'
-                apply plugin: 'nebula.resolution-rules'
+                apply plugin: 'com.netflix.nebula.resolution-rules'
 
                 repositories {
                     ${mavenrepo.mavenRepositoryBlock}
@@ -261,7 +261,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
                 }
             }
             apply plugin: 'spring-boot'
-            apply plugin: 'nebula.resolution-rules'
+            apply plugin: 'com.netflix.nebula.resolution-rules'
 
             repositories { mavenCentral() }
 
@@ -320,7 +320,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
             }
 
             apply plugin: 'spring-boot'
-            apply plugin: 'nebula.resolution-rules'
+            apply plugin: 'com.netflix.nebula.resolution-rules'
 
             repositories {
                 mavenCentral()
@@ -378,7 +378,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
             }
 
             apply plugin: 'java'
-            apply plugin: 'nebula.resolution-rules'
+            apply plugin: 'com.netflix.nebula.resolution-rules'
             apply plugin: 'io.spring.dependency-management'
             
             dependencyManagement {
@@ -445,7 +445,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
 
             apply plugin: 'nebula.dependency-recommender'
             apply plugin: 'nebula.maven-publish'
-            apply plugin: 'nebula.resolution-rules'
+            apply plugin: 'com.netflix.nebula.resolution-rules'
             apply plugin: 'java'
 
 
@@ -500,7 +500,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
                 }
             }
             allprojects {
-                apply plugin: 'nebula.resolution-rules'
+                apply plugin: 'com.netflix.nebula.resolution-rules'
             
                 repositories {
                     ${mavenrepo.mavenRepositoryBlock}
@@ -602,7 +602,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
                 }
             }
 
-            apply plugin: 'nebula.resolution-rules'
+            apply plugin: 'com.netflix.nebula.resolution-rules'
             apply plugin: 'nebula.dependency-lock'
             apply plugin: 'java'
 
@@ -642,7 +642,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
                 }
             }
 
-            apply plugin: 'nebula.resolution-rules'
+            apply plugin: 'com.netflix.nebula.resolution-rules'
             apply plugin: 'nebula.dependency-lock'
             apply plugin: 'java'
 
@@ -690,7 +690,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
                     classpath 'com.netflix.nebula:gradle-dependency-lock-plugin:11.+'
                 }
             }
-            apply plugin: 'nebula.resolution-rules'
+            apply plugin: 'com.netflix.nebula.resolution-rules'
             apply plugin: 'nebula.dependency-lock'
             apply plugin: 'java'
             repositories {
@@ -757,7 +757,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
                 }
             }
 
-            apply plugin: 'nebula.resolution-rules'
+            apply plugin: 'com.netflix.nebula.resolution-rules'
             apply plugin: 'nebula.dependency-lock'
             apply plugin: 'java'
 
@@ -967,7 +967,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
             }
             
             allprojects {
-                apply plugin: 'nebula.resolution-rules'
+                apply plugin: 'com.netflix.nebula.resolution-rules'
                 apply plugin: 'nebula.dependency-recommender'
             }
 
@@ -1056,7 +1056,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
             }
             
             allprojects {
-                apply plugin: 'nebula.resolution-rules'
+                apply plugin: 'com.netflix.nebula.resolution-rules'
                 apply plugin: 'nebula.dependency-recommender'
                 dependencyRecommendations {
                     strictMode = true
@@ -1098,7 +1098,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
             }
 
             apply plugin: 'nebula.dependency-lock'
-            apply plugin: 'nebula.resolution-rules'
+            apply plugin: 'com.netflix.nebula.resolution-rules'
             apply plugin: 'java'
 
             repositories {
@@ -1146,7 +1146,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
                 }
             }
             apply plugin: 'nebula.dependency-lock'
-            apply plugin: 'nebula.resolution-rules'
+            apply plugin: 'com.netflix.nebula.resolution-rules'
             apply plugin: 'java'
             repositories {
                 ${mavenrepo.mavenRepositoryBlock}

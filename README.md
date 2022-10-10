@@ -26,7 +26,7 @@ We produce a rules for dependencies found in Maven Central and other public repo
 
 ```groovy
 allprojects {
-    apply plugin: 'nebula.resolution-rules'
+    apply plugin: 'com.netflix.nebula.resolution-rules'
 }
 
 dependencies {

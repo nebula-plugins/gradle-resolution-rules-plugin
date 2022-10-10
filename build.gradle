@@ -59,7 +59,7 @@ pluginBundle {
 gradlePlugin {
     plugins {
         resolutionRules {
-            id = 'nebula.resolution-rules'
+            id = 'com.netflix.nebula.resolution-rules'
             implementationClass = 'nebula.plugin.resolutionrules.ResolutionRulesPlugin'
             displayName = 'Gradle Resolution Rules plugin'
             description = project.description

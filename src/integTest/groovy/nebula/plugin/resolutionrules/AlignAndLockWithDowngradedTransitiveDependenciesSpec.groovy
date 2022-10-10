@@ -28,7 +28,7 @@ class AlignAndLockWithDowngradedTransitiveDependenciesSpec extends IntegrationTe
                 }
             }
             plugins {
-                id 'nebula.resolution-rules'
+                id 'com.netflix.nebula.resolution-rules'
                 id 'java'
             }
             apply plugin: 'nebula.dependency-lock'

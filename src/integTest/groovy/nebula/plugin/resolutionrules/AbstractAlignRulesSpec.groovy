@@ -9,7 +9,7 @@ abstract class AbstractAlignRulesSpec extends IntegrationTestKitSpec {
         rulesJsonFile = new File(projectDir, "${moduleName}.json")
         buildFile << """\
             plugins {
-                id 'nebula.resolution-rules'
+                id 'com.netflix.nebula.resolution-rules'
                 id 'java'
             }
             dependencies {

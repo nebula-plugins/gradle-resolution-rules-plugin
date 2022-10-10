@@ -41,7 +41,7 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
 
         buildFile << """
                      apply plugin: 'java'
-                     apply plugin: 'nebula.resolution-rules'
+                     apply plugin: 'com.netflix.nebula.resolution-rules'
 
                      repositories {
                          mavenCentral()
@@ -201,7 +201,7 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
         def subproject = addSubproject("subprojectA")
         new File(subproject, "build.gradle") << """
             apply plugin: 'java'
-            apply plugin: 'nebula.resolution-rules'
+            apply plugin: 'com.netflix.nebula.resolution-rules'
         """.stripIndent()
 
         when:
@@ -475,7 +475,7 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
         given:
         buildFile.text = """\
              apply plugin: 'java'
-             apply plugin: 'nebula.resolution-rules'
+             apply plugin: 'com.netflix.nebula.resolution-rules'
              repositories {
                  mavenCentral()
              }
@@ -543,7 +543,7 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
 
              apply plugin: 'java'
              apply plugin: 'nebula.dependency-recommender'
-             apply plugin: 'nebula.resolution-rules'
+             apply plugin: 'com.netflix.nebula.resolution-rules'
              repositories {
                  mavenCentral()
                  maven { url '${repo.root.absoluteFile.toURI()}' }

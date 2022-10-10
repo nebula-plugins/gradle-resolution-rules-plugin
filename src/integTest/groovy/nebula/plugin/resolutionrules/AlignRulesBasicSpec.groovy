@@ -961,14 +961,14 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
 
         buildFile.text = """\
             plugins {
-                id 'nebula.resolution-rules'
+                id 'com.netflix.nebula.resolution-rules'
             }
             allprojects {
                 group = 'example.nebula'
                 version = '1.2.0'
             }
             subprojects {
-                apply plugin: 'nebula.resolution-rules'
+                apply plugin: 'com.netflix.nebula.resolution-rules'
                 apply plugin: 'java'
                 repositories {
                     ${generator.mavenRepositoryBlock}
@@ -1034,10 +1034,10 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
 
         buildFile.text = """\
             plugins {
-                id 'nebula.resolution-rules'
+                id 'com.netflix.nebula.resolution-rules'
             }
   
-            apply plugin: 'nebula.resolution-rules'
+            apply plugin: 'com.netflix.nebula.resolution-rules'
             apply plugin: 'java'
             repositories {
                     ${generator.mavenRepositoryBlock}
