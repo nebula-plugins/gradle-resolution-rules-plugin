@@ -17,7 +17,7 @@
 
 plugins {
     id 'com.netflix.nebula.plugin-plugin' version '19.0.1'
-    id "org.jetbrains.kotlin.jvm" version "1.5.31"
+    id "org.jetbrains.kotlin.jvm" version "1.6.21"
     id 'java-gradle-plugin'
 }
 
@@ -79,11 +79,6 @@ idea {
     }
 }
 
-tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
-    kotlinOptions {
-        jvmTarget = '1.8'
-    }
-}
 
 tasks.withType(GenerateModuleMetadata).configureEach {
     suppressedValidationErrors.add('enforced-platform')
