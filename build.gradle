@@ -16,7 +16,7 @@
  */
 
 plugins {
-    id 'com.netflix.nebula.plugin-plugin' version '19.0.2'
+    id 'com.netflix.nebula.plugin-plugin' version '20.0.0'
     id "org.jetbrains.kotlin.jvm" version "1.6.21"
     id 'java-gradle-plugin'
 }
@@ -52,10 +52,6 @@ tasks.integrationTest {
     maxParallelForks = (int) (Runtime.getRuntime().availableProcessors() / 2 + 1)
 }
 
-pluginBundle {
-    tags = ['nebula', 'resolve', 'resolution', 'rules']
-}
-
 gradlePlugin {
     plugins {
         resolutionRules {
@@ -63,6 +59,7 @@ gradlePlugin {
             implementationClass = 'nebula.plugin.resolutionrules.ResolutionRulesPlugin'
             displayName = 'Gradle Resolution Rules plugin'
             description = project.description
+            tags.set(['nebula', 'resolve', 'resolution', 'rules'])
         }
     }
 }
