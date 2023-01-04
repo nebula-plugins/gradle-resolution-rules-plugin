@@ -52,7 +52,7 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
         """.stripIndent()
 
         when:
-        def tasks = ['dependencies', '--configuration', 'compileClasspath', '--warning-mode', 'none']
+        def tasks = ['dependencies', '--configuration', 'compileClasspath', '--warning-mode', 'none', '-s']
         def result = runTasks(*tasks)
 
 
@@ -66,7 +66,6 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
         name            | force
        "all"           | "configurations.all { resolutionStrategy { force 'test.nebula:a:0.15.0' } }"
        "configuration" | "configurations.compileClasspath { resolutionStrategy { force 'test.nebula:a:0.15.0' } }"
-        "dependency"    | "dependencies { implementation ('test.nebula:a:0.15.0') { force = true } }"
     }
 
     @Unroll

@@ -16,8 +16,8 @@
  */
 
 plugins {
-    id 'com.netflix.nebula.plugin-plugin' version '20.0.0'
-    id "org.jetbrains.kotlin.jvm" version "1.6.21"
+    id 'com.netflix.nebula.plugin-plugin' version '20.2.2'
+    id "org.jetbrains.kotlin.jvm" version "1.8.0"
     id 'java-gradle-plugin'
 }
 
@@ -65,8 +65,9 @@ gradlePlugin {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(8)
+    }
 }
 
 idea {
@@ -79,4 +80,8 @@ idea {
 
 tasks.withType(GenerateModuleMetadata).configureEach {
     suppressedValidationErrors.add('enforced-platform')
+}
+
+javaCrossCompile {
+    disableKotlinSupport = true
 }

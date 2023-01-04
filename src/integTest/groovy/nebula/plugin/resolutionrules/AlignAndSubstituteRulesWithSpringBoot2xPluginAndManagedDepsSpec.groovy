@@ -35,8 +35,8 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginAndManagedDepsSpec extends Ab
 
         where:
         extSpringVersion = '4.2.4.RELEASE'
-        extSpringBootVersion = '2.1.4.RELEASE'
-        managedSpringVersion = '5.1.6.RELEASE' // from https://repo1.maven.org/maven2/org/springframework/boot/spring-boot-dependencies/2.1.4.RELEASE/spring-boot-dependencies-2.1.4.RELEASE.pom
+        extSpringBootVersion = '2.7.0'
+        managedSpringVersion = '5.3.20' // from https://repo1.maven.org/maven2/org/springframework/boot/spring-boot-dependencies/5.3.20/spring-boot-dependencies-5.3.20.pom
 
         requestedVersion = ''
         forcedVersion = ''
@@ -66,8 +66,8 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginAndManagedDepsSpec extends Ab
 
         where:
         extSpringVersion = '4.2.4.RELEASE'
-        extSpringBootVersion = '2.1.4.RELEASE'
-        managedSpringVersion = '5.1.6.RELEASE' // from https://repo1.maven.org/maven2/org/springframework/boot/spring-boot-dependencies/2.1.4.RELEASE/spring-boot-dependencies-2.1.4.RELEASE.pom
+        extSpringBootVersion = '2.7.0'
+        managedSpringVersion = '5.3.20' // from https://repo1.maven.org/maven2/org/springframework/boot/spring-boot-dependencies/5.3.20/spring-boot-dependencies-5.3.20.pom
 
         requestedVersion = ':\${springVersion}'
         forcedVersion = ''
@@ -96,9 +96,9 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginAndManagedDepsSpec extends Ab
         output.findAll("org.springframework.*:${managedSpringVersion}\n").size() == 0
 
         where:
-        extSpringVersion = '5.1.8.RELEASE'
-        extSpringBootVersion = '2.1.4.RELEASE'
-        managedSpringVersion = '5.1.6.RELEASE' // from https://repo1.maven.org/maven2/org/springframework/boot/spring-boot-dependencies/2.1.4.RELEASE/spring-boot-dependencies-2.1.4.RELEASE.pom
+        extSpringVersion = '5.3.24'
+        extSpringBootVersion = '2.7.0'
+        managedSpringVersion = '5.3.20' // from https://repo1.maven.org/maven2/org/springframework/boot/spring-boot-dependencies/5.3.20/spring-boot-dependencies-5.3.20.pom
 
         requestedVersion = ':\${springVersion}'
         forcedVersion = ''
@@ -126,8 +126,8 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginAndManagedDepsSpec extends Ab
 
         where:
         extSpringVersion = '4.2.4.RELEASE'
-        extSpringBootVersion = '2.1.4.RELEASE'
-        managedSpringVersion = '5.1.6.RELEASE' // from https://repo1.maven.org/maven2/org/springframework/boot/spring-boot-dependencies/2.1.4.RELEASE/spring-boot-dependencies-2.1.4.RELEASE.pom
+        extSpringBootVersion = '2.7.0'
+        managedSpringVersion = '5.3.20' // from https://repo1.maven.org/maven2/org/springframework/boot/spring-boot-dependencies/5.3.20/spring-boot-dependencies-5.3.20.pom
 
         requestedVersion = ''
         forcedVersion = '4.2.9.RELEASE'
@@ -158,8 +158,8 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginAndManagedDepsSpec extends Ab
 
         where:
         extSpringVersion = '4.2.4.RELEASE'
-        extSpringBootVersion = '2.1.4.RELEASE'
-        managedSpringVersion = '5.1.6.RELEASE' // from https://repo1.maven.org/maven2/org/springframework/boot/spring-boot-dependencies/2.1.4.RELEASE/spring-boot-dependencies-2.1.4.RELEASE.pom
+        extSpringBootVersion = '2.7.0'
+        managedSpringVersion = '5.3.20' // from https://repo1.maven.org/maven2/org/springframework/boot/spring-boot-dependencies/5.3.20/spring-boot-dependencies-5.3.20.pom
 
         requestedVersion = ':\${springVersion}'
         forcedVersion = '4.2.9.RELEASE'
@@ -191,8 +191,8 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginAndManagedDepsSpec extends Ab
 
         where:
         extSpringVersion = '4.2.4.RELEASE'
-        extSpringBootVersion = '2.1.4.RELEASE'
-        managedSpringVersion = '5.1.6.RELEASE' // from https://repo1.maven.org/maven2/org/springframework/boot/spring-boot-dependencies/2.1.4.RELEASE/spring-boot-dependencies-2.1.4.RELEASE.pom
+        extSpringBootVersion = '2.7.0'
+        managedSpringVersion = '5.3.20' // from https://repo1.maven.org/maven2/org/springframework/boot/spring-boot-dependencies/5.3.20/spring-boot-dependencies-5.3.20.pom
 
         requestedVersion = ':\${springVersion}'
         forcedVersion = extSpringVersion
@@ -222,10 +222,9 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginAndManagedDepsSpec extends Ab
 
         where:
         extSpringVersion = '4.2.4.RELEASE'
-        extSpringBootVersion = '2.1.4.RELEASE'
+        extSpringBootVersion = '2.7.0'
         extSlf4jVersion = '1.6.0'
-        managedSlf4jVersion = '1.7.26' // from https://repo1.maven.org/maven2/org/springframework/boot/spring-boot-dependencies/2.1.4.RELEASE/spring-boot-dependencies-2.1.4.RELEASE.pom
-
+        managedSlf4jVersion = '1.7.36' //  from https://repo1.maven.org/maven2/org/springframework/boot/spring-boot-dependencies/5.3.20/spring-boot-dependencies-5.3.20.pom
         requestedVersion = ''
         forcedVersion = ''
     }
@@ -254,10 +253,9 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginAndManagedDepsSpec extends Ab
 
         where:
         extSpringVersion = '4.2.4.RELEASE'
-        extSpringBootVersion = '2.1.4.RELEASE'
+        extSpringBootVersion = '2.7.0'
         extSlf4jVersion = '1.6.0'
-        managedSlf4jVersion = '1.7.26' // from https://repo1.maven.org/maven2/org/springframework/boot/spring-boot-dependencies/2.1.4.RELEASE/spring-boot-dependencies-2.1.4.RELEASE.pom
-
+        managedSlf4jVersion = '1.7.36' // from https://repo1.maven.org/maven2/org/springframework/boot/spring-boot-dependencies/5.3.20/spring-boot-dependencies-5.3.20.pom
         requestedVersion = ':\$slf4jVersion'
         forcedVersion = ''
     }
@@ -286,9 +284,9 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginAndManagedDepsSpec extends Ab
 
         where:
         extSpringVersion = '4.2.4.RELEASE'
-        extSpringBootVersion = '2.1.4.RELEASE'
+        extSpringBootVersion = '2.7.0'
         extSlf4jVersion = '1.6.0'
-        managedSlf4jVersion = '1.7.26' // from https://repo1.maven.org/maven2/org/springframework/boot/spring-boot-dependencies/2.1.4.RELEASE/spring-boot-dependencies-2.1.4.RELEASE.pom
+        managedSlf4jVersion = '1.7.36' //  from https://repo1.maven.org/maven2/org/springframework/boot/spring-boot-dependencies/5.3.20/spring-boot-dependencies-5.3.20.pom
 
         requestedVersion = ''
         forcedVersion = '1.7.10'
@@ -318,7 +316,7 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginAndManagedDepsSpec extends Ab
 
         where:
         extSpringVersion = '4.2.4.RELEASE'
-        extSpringBootVersion = '2.1.4.RELEASE'
+        extSpringBootVersion = '2.7.0'
         extSlf4jVersion = '1.6.0'
         managedSlf4jVersion = '1.7.26' // from https://repo1.maven.org/maven2/org/springframework/boot/spring-boot-dependencies/2.1.4.RELEASE/spring-boot-dependencies-2.1.4.RELEASE.pom
 
@@ -350,7 +348,7 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginAndManagedDepsSpec extends Ab
 
         where:
         extSpringVersion = '4.2.4.RELEASE'
-        extSpringBootVersion = '2.1.4.RELEASE'
+        extSpringBootVersion = '2.7.0'
         extSlf4jVersion = '1.8.0-beta4'
         managedSlf4jVersion = '1.7.26' // from https://repo1.maven.org/maven2/org/springframework/boot/spring-boot-dependencies/2.1.4.RELEASE/spring-boot-dependencies-2.1.4.RELEASE.pom
 
@@ -382,7 +380,7 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginAndManagedDepsSpec extends Ab
 
         where:
         extSpringVersion = '4.2.4.RELEASE'
-        extSpringBootVersion = '2.1.4.RELEASE'
+        extSpringBootVersion = '2.7.0'
         extSlf4jVersion = '1.6.0'
         managedSlf4jVersion = '1.7.26' // from https://repo1.maven.org/maven2/org/springframework/boot/spring-boot-dependencies/2.1.4.RELEASE/spring-boot-dependencies-2.1.4.RELEASE.pom
 

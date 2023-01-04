@@ -31,7 +31,7 @@ class AbstractRulesWithSpringBootPluginSpec extends IntegrationTestKitSpec {
         return [
                 'dependencyInsight',
                 '--dependency',
-                groupForInsight
+                groupForInsight, '-s'
         ]
     }
 
@@ -79,7 +79,7 @@ class AbstractRulesWithSpringBootPluginSpec extends IntegrationTestKitSpec {
 buildscript {
     dependencies {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:$extSpringBootVersion")
-        classpath "io.spring.gradle:dependency-management-plugin:1.0.7.RELEASE"
+        classpath "io.spring.gradle:dependency-management-plugin:1.1.0"
     }
     repositories {
         maven {

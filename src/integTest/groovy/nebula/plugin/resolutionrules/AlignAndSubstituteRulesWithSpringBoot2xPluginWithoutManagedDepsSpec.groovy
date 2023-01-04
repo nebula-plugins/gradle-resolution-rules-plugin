@@ -40,8 +40,8 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginWithoutManagedDepsSpec extend
 
         where:
         extSpringVersion = '4.2.4.RELEASE'
-        extSpringBootVersion = '2.1.4.RELEASE'
-        managedSpringVersion = '5.1.6.RELEASE' // from https://repo1.maven.org/maven2/org/springframework/boot/spring-boot-dependencies/2.1.4.RELEASE/spring-boot-dependencies-2.1.4.RELEASE.pom
+        extSpringBootVersion = '2.7.0'
+        managedSpringVersion = '5.3.20' // from https://repo1.maven.org/maven2/org/springframework/boot/spring-boot-dependencies/5.3.20/spring-boot-dependencies-5.3.20.pom
 
         requestedVersion = ':\${springVersion}'
         forcedVersion = ''
@@ -73,9 +73,9 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginWithoutManagedDepsSpec extend
         dependencyInsightContains(output, 'org.springframework:spring-core', extSpringVersion)
 
         where:
-        extSpringVersion = '5.1.8.RELEASE'
-        extSpringBootVersion = '2.1.4.RELEASE'
-        managedSpringVersion = '5.1.6.RELEASE' // from https://repo1.maven.org/maven2/org/springframework/boot/spring-boot-dependencies/2.1.4.RELEASE/spring-boot-dependencies-2.1.4.RELEASE.pom
+        extSpringVersion = '5.3.24'
+        extSpringBootVersion = '2.7.0'
+        managedSpringVersion = '5.3.20' // from https://repo1.maven.org/maven2/org/springframework/boot/spring-boot-dependencies/5.3.20/spring-boot-dependencies-5.3.20.pom
 
         requestedVersion = ':\${springVersion}'
         forcedVersion = '' }
@@ -107,7 +107,7 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginWithoutManagedDepsSpec extend
 
         where:
         extSpringVersion = '4.2.4.RELEASE'
-        extSpringBootVersion = '2.1.4.RELEASE'
+        extSpringBootVersion = '2.7.0'
 
         requestedVersion = ':\${springVersion}'
         forcedVersion = '4.2.4.RELEASE'
@@ -136,7 +136,7 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginWithoutManagedDepsSpec extend
 
         where:
         extSpringVersion = '4.2.4.RELEASE'
-        extSpringBootVersion = '2.1.4.RELEASE'
+        extSpringBootVersion = '2.7.0'
         extSlf4jVersion = '1.6.0'
 
         requestedVersion = ':\$slf4jVersion'
@@ -166,7 +166,7 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginWithoutManagedDepsSpec extend
 
         where:
         extSpringVersion = '4.2.4.RELEASE'
-        extSpringBootVersion = '2.1.4.RELEASE'
+        extSpringBootVersion = '2.7.0'
         extSlf4jVersion = '1.6.0'
 
         requestedVersion = ''
@@ -196,7 +196,7 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginWithoutManagedDepsSpec extend
 
         where:
         extSpringVersion = '4.2.4.RELEASE'
-        extSpringBootVersion = '2.1.4.RELEASE'
+        extSpringBootVersion = '2.7.0'
         extSlf4jVersion = '1.6.0'
 
         requestedVersion = ':\$slf4jVersion'
@@ -226,7 +226,7 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginWithoutManagedDepsSpec extend
 
         where:
         extSpringVersion = '4.2.4.RELEASE'
-        extSpringBootVersion = '2.1.4.RELEASE'
+        extSpringBootVersion = '2.7.0'
         extSlf4jVersion = '1.8.0-beta4'
 
         requestedVersion = ':\$slf4jVersion'
@@ -256,7 +256,7 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginWithoutManagedDepsSpec extend
 
         where:
         extSpringVersion = '4.2.4.RELEASE'
-        extSpringBootVersion = '2.1.4.RELEASE'
+        extSpringBootVersion = '2.7.0'
         extSlf4jVersion = '1.6.0'
 
         requestedVersion = ':\$slf4jVersion'
