@@ -1,13 +1,13 @@
 package nebula.plugin.resolutionrules
 
-import nebula.test.IntegrationSpec
-import org.codehaus.groovy.runtime.StackTraceUtils
+import nebula.test.IntegrationTestKitSpec
 
-class IgnoredConfigurationsWithRulesSpec extends IntegrationSpec {
+class IgnoredConfigurationsWithRulesSpec extends IntegrationTestKitSpec {
     File rulesJsonFile
 
     def setup() {
         rulesJsonFile = new File(projectDir, "${moduleName}.json")
+        definePluginOutsideOfPluginBlock = true
 
         buildFile << """
                      apply plugin: 'java'
@@ -61,11 +61,70 @@ class IgnoredConfigurationsWithRulesSpec extends IntegrationSpec {
                      """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compileClasspath', '-PresolutionRulesIgnoredConfigurations=myIgnoredConfiguration,myExtraIgnoredConfiguration')
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath', '-PresolutionRulesIgnoredConfigurations=myIgnoredConfiguration,myExtraIgnoredConfiguration')
 
         then:
-        !result.standardOutput.contains('com.google.guava:guava:19.0-rc2 -> 19.0-rc1')
-        !result.standardOutput.contains('bouncycastle:bcmail-jdk16:1.40 -> org.bouncycastle:bcmail-jdk16:')
+        !result.output.contains('com.google.guava:guava:19.0-rc2 -> 19.0-rc1')
+        !result.output.contains('bouncycastle:bcmail-jdk16:1.40 -> org.bouncycastle:bcmail-jdk16:')
+    }
+
+
+    def 'does not apply for configurations housing only built artifacts'() {
+        given:
+        forwardOutput = true
+        keepFiles = true
+        def intermediateBuildFileText = buildFile.text
+        buildFile.delete()
+        buildFile.createNewFile()
+        buildFile << """
+            buildscript {
+              repositories {
+                maven {
+                  url = uri("https://plugins.gradle.org/m2/")
+                }
+              }
+              dependencies {
+                classpath("org.springframework.boot:spring-boot-gradle-plugin:2.+")
+              }
+            }""".stripIndent()
+        buildFile << intermediateBuildFileText
+        buildFile << """
+            apply plugin: 'org.springframework.boot'
+            dependencies {
+                implementation 'com.google.guava:guava:19.0-rc2'
+                implementation 'bouncycastle:bcmail-jdk16:1.40'
+            }
+            tasks.named("bootJar") {
+                mainClass = 'com.test.HelloWorldApp'
+            }
+            project.tasks.register("viewSpecificConfigurations").configure {
+                it.dependsOn project.tasks.named('bootJar')
+                it.dependsOn project.tasks.named('assemble')
+                doLast {
+                    project.configurations.matching { it.name == 'bootArchives' || it.name == 'archives' }.each {
+                        println "Dependencies for \${it}: " + it.allDependencies 
+                        println "Artifacts for \${it}: " + it.allArtifacts
+                    }
+                }
+            }
+            """.stripIndent()
+        writeJavaSourceFile("""
+            package com.test;
+            
+            class HelloWorldApp {
+                public static void main(String[] args) {
+                    System.out.println("Hello World");
+                }
+            }""".stripIndent())
+
+        when:
+        def result = runTasks( 'bootJar', 'assemble')
+        def resolutionResult = runTasks( 'viewSpecificConfigurations')
+
+        then:
+        !result.output.contains('FAIL')
+        !resolutionResult.output.contains('FAIL')
+        resolutionResult.output.contains(':jar')
     }
 
 }

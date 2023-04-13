@@ -42,8 +42,16 @@ class ResolutionRulesPlugin : Plugin<Project> {
     private lateinit var project: Project
     private lateinit var configurations: ConfigurationContainer
     private lateinit var extension: NebulaResolutionRulesExtension
-    private val ignoredConfigurationPrefixes = listOf(RESOLUTION_RULES_CONFIG_NAME, SPRING_VERSION_MANAGEMENT_CONFIG_NAME,
-        NEBULA_RECOMMENDER_BOM_CONFIG_NAME, SCALA_INCREMENTAL_ANALYSIS_CONFIGURATION_PREFIX, KTLINT_CONFIGURATION_PREFIX, REPOSITORY_CONTENT_DESCRIPTOR_CONFIGURATION_PREFIX)
+    private val ignoredConfigurationPrefixes = listOf(
+        RESOLUTION_RULES_CONFIG_NAME,
+        SPRING_VERSION_MANAGEMENT_CONFIG_NAME,
+        NEBULA_RECOMMENDER_BOM_CONFIG_NAME,
+        SCALA_INCREMENTAL_ANALYSIS_CONFIGURATION_PREFIX,
+        KTLINT_CONFIGURATION_PREFIX,
+        REPOSITORY_CONTENT_DESCRIPTOR_CONFIGURATION_PREFIX,
+        BOOT_ARCHIVES_CONFIGURATION_NAME,
+        ARCHIVES_CONFIGURATION_NAME,
+    )
     private val ignoredConfigurationSuffixes = listOf(PMD_CONFIGURATION_SUFFIX)
 
     companion object {
@@ -55,6 +63,8 @@ class ResolutionRulesPlugin : Plugin<Project> {
         const val PMD_CONFIGURATION_SUFFIX = "PmdAuxClasspath"
         const val SCALA_INCREMENTAL_ANALYSIS_CONFIGURATION_PREFIX = "incrementalScalaAnalysis"
         const val REPOSITORY_CONTENT_DESCRIPTOR_CONFIGURATION_PREFIX = "repositoryContentDescriptor"
+        const val BOOT_ARCHIVES_CONFIGURATION_NAME = "bootArchives"
+        const val ARCHIVES_CONFIGURATION_NAME = "archives"
         const val JSON_EXT = ".json"
         const val JAR_EXT = ".jar"
         const val ZIP_EXT = ".zip"
