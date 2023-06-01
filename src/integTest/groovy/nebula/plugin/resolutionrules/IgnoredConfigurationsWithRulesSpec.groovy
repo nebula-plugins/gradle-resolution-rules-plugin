@@ -71,6 +71,8 @@ class IgnoredConfigurationsWithRulesSpec extends IntegrationTestKitSpec {
 
     def 'does not apply for configurations housing only built artifacts'() {
         given:
+        System.setProperty('ignoreDeprecations', 'true')
+
         forwardOutput = true
         keepFiles = true
         def intermediateBuildFileText = buildFile.text

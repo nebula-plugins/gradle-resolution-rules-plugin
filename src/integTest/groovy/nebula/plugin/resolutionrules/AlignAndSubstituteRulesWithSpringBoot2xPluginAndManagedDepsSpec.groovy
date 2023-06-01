@@ -11,6 +11,7 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginAndManagedDepsSpec extends Ab
 
         debug = true
         keepFiles = true
+        System.setProperty('ignoreDeprecations', 'true')
     }
 
     @Unroll
