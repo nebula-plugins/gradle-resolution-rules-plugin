@@ -19,7 +19,6 @@ package nebula.plugin.resolutionrules
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.netflix.nebula.interop.onExecute
-import com.netflix.nebula.interop.onResolve
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
@@ -97,31 +96,36 @@ class ResolutionRulesPlugin : Plugin<Project> {
         }
 
         project.configurations.all { config ->
-            if (ignoredConfigurationPrefixes.any { config.name.startsWith(it) }) {
-                return@all
-            }
-
-            if (ignoredConfigurationSuffixes.any { config.name.endsWith(it) }) {
-                return@all
-            }
-
-            var dependencyRulesApplied = false
             project.onExecute {
                 val ruleSet = extension.ruleSet()
-                when {
-                    config.state != Configuration.State.UNRESOLVED || config.getObservedState() != Configuration.State.UNRESOLVED -> Logger.warn(
-                        "Dependency resolution rules will not be applied to $config, it was resolved before the project was executed"
-                    )
-                    else -> {
-                        ruleSet.dependencyRulesPartOne().forEach { rule ->
-                            rule.apply(project, config, config.resolutionStrategy, extension)
-                        }
+                applyRuleSet(ruleSet, config)
+            }
+        }
+    }
 
-                        ruleSet.dependencyRulesPartTwo().forEach { rule ->
-                            rule.apply(project, config, config.resolutionStrategy, extension)
-                        }
-                        dependencyRulesApplied = true
-                    }
+    fun applyRuleSet(ruleNames: ArrayList<String>, config: Configuration) {
+        val ruleSet = extension.ruleSetByNames(ruleNames)
+        applyRuleSet(ruleSet, config)
+    }
+    private fun applyRuleSet(ruleSet: RuleSet, config: Configuration) {
+        if (ignoredConfigurationPrefixes.any { config.name.startsWith(it) }) {
+            return
+        }
+
+        if (ignoredConfigurationSuffixes.any { config.name.endsWith(it) }) {
+            return
+        }
+        when {
+            config.state != Configuration.State.UNRESOLVED || config.getObservedState() != Configuration.State.UNRESOLVED -> Logger.warn(
+                "Dependency resolution rules will not be applied to $config, it was resolved before the project was executed"
+            )
+            else -> {
+                ruleSet.dependencyRulesPartOne().forEach { rule ->
+                    rule.apply(project, config, config.resolutionStrategy, extension)
+                }
+
+                ruleSet.dependencyRulesPartTwo().forEach { rule ->
+                    rule.apply(project, config, config.resolutionStrategy, extension)
                 }
             }
         }
@@ -207,12 +211,7 @@ open class NebulaResolutionRulesExtension @Inject constructor(private val projec
     var exclude = ArrayList<String>()
 
     fun ruleSet(): RuleSet {
-        val service = NebulaResolutionRulesService.registerService(project).get()
-        @Suppress("UnstableApiUsage") val rulesByFile = service.parameters
-            .getResolutionRules()
-            .get()
-            .byFile
-        return rulesByFile.filterKeys { ruleSet ->
+        return getAllRuleSets().filterKeys { ruleSet ->
             when {
                 ruleSet.startsWith(ResolutionRulesPlugin.OPTIONAL_PREFIX) -> {
                     val ruleSetWithoutPrefix = ruleSet.substring(ResolutionRulesPlugin.OPTIONAL_PREFIX.length)
@@ -222,5 +221,19 @@ open class NebulaResolutionRulesExtension @Inject constructor(private val projec
                 else -> !exclude.contains(ruleSet)
             }
         }.values.flatten()
+    }
+
+    fun ruleSetByNames(names: ArrayList<String>): RuleSet {
+        return getAllRuleSets().filterKeys { ruleSet ->
+            names.contains(ruleSet)
+        }.values.flatten()
+    }
+
+    private fun getAllRuleSets(): Map<String, RuleSet> {
+        val service = NebulaResolutionRulesService.registerService(project).get()
+        return service.parameters
+            .getResolutionRules()
+            .get()
+            .byFile
     }
 }
