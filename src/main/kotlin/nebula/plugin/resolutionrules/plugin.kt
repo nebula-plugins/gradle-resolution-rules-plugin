@@ -203,8 +203,19 @@ abstract class NebulaResolutionRulesService : BuildService<NebulaResolutionRules
 
 open class NebulaResolutionRulesExtension @Inject constructor(private val project: Project) {
     var include = ArrayList<String>()
+        set(value) {
+            field.addAll(value)
+        }
+
     var optional = ArrayList<String>()
+        set(value) {
+            field.addAll(value)
+        }
     var exclude = ArrayList<String>()
+        // Setter should add to the existing array rather than replacing all values
+        set(value) {
+            field.addAll(value)
+        }
 
     fun ruleSet(): RuleSet {
         val service = NebulaResolutionRulesService.registerService(project).get()
