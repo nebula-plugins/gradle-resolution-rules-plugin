@@ -24,14 +24,14 @@ class AlignAndLockWithDowngradedTransitiveDependenciesSpec extends IntegrationTe
                     }
                 }
                 dependencies {
-                    classpath "com.netflix.nebula:gradle-dependency-lock-plugin:12.+"
+                    classpath "com.netflix.nebula:gradle-dependency-lock-plugin:13.+"
                 }
             }
             plugins {
                 id 'com.netflix.nebula.resolution-rules'
                 id 'java'
             }
-            apply plugin: 'nebula.dependency-lock'
+            apply plugin: 'com.netflix.nebula.dependency-lock'
             dependencies {
                 resolutionRules files('$rulesJsonFile')
             }
