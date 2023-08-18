@@ -85,7 +85,3 @@ tasks.withType(GenerateModuleMetadata).configureEach {
 javaCrossCompile {
     disableKotlinSupport = true
 }
-
-nebulaRelease {
-    releaseBranchPatterns.add("replacements-as-capabilities")
-}
