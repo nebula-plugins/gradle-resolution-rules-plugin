@@ -59,10 +59,7 @@ fun Configuration.getObservedState(): Configuration.State {
     val f: Field = this::class.java.findDeclaredField("observedState")
     f.isAccessible = true
     val resolvedState = f.get(this) as ConfigurationInternal.InternalState
-    if (resolvedState != ConfigurationInternal.InternalState.ARTIFACTS_RESOLVED && resolvedState != ConfigurationInternal.InternalState.GRAPH_RESOLVED) {
-        return Configuration.State.UNRESOLVED
-    } else
-    //whether resolution contained error is not handled
-        return Configuration.State.RESOLVED
+    return if(resolvedState != ConfigurationInternal.InternalState.UNRESOLVED)
+        Configuration.State.RESOLVED else Configuration.State.UNRESOLVED
 }
 
