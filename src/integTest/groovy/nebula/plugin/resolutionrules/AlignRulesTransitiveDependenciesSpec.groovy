@@ -371,7 +371,6 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
     @Unroll
     def 'alignment of group 1 upgrades and introduces a new dependencies contributing to alignment of group 2'() {
         given:
-        debug = true
         def graph = new DependencyGraphBuilder()
                 .addModule(new ModuleBuilder("test.another:newlyIntroducedParentModule:1.0.0")
                 .addDependency("test.group2:module1:3.0.0").build())
@@ -442,7 +441,6 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
     @Unroll
     def 'alignment of group 1 upgrades and introduces a new dependencies contributing to alignment of group 2 and substitution still takes effect'() {
         given:
-        debug = true
         def graph = new DependencyGraphBuilder()
                 .addModule(new ModuleBuilder("test.another:newlyIntroducedParentModule:1.0.0")
                 .addDependency("test.group2:module1:3.0.0").build())

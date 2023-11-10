@@ -1,6 +1,5 @@
 package nebula.plugin.resolutionrules
 
-import nebula.test.IntegrationTestKitSpec
 import nebula.test.dependencies.DependencyGraphBuilder
 import nebula.test.dependencies.GradleDependencyGenerator
 import nebula.test.dependencies.ModuleBuilder
@@ -8,11 +7,10 @@ import org.gradle.api.logging.LogLevel
 import org.gradle.util.GradleVersion
 import spock.lang.Unroll
 
-class AlignRulesBasicWithCoreSpec extends IntegrationTestKitSpec {
+class AlignRulesBasicWithCoreSpec extends AbstractIntegrationTestKitSpec {
     private def rulesJsonFile
 
     def setup() {
-        debug = true
         keepFiles = true
         if (GradleVersion.current().baseVersion < GradleVersion.version("6.0")) {
             settingsFile << '''\

@@ -1,8 +1,7 @@
 package nebula.plugin.resolutionrules
 
-import nebula.test.IntegrationTestKitSpec
 
-class IgnoredConfigurationsWithRulesSpec extends IntegrationTestKitSpec {
+class IgnoredConfigurationsWithRulesSpec extends AbstractIntegrationTestKitSpec {
     File rulesJsonFile
 
     def setup() {
@@ -118,6 +117,7 @@ class IgnoredConfigurationsWithRulesSpec extends IntegrationTestKitSpec {
                     System.out.println("Hello World");
                 }
             }""".stripIndent())
+        new File(projectDir, 'gradle.properties').text = '''org.gradle.configuration-cache=false'''.stripIndent()
 
         when:
         def result = runTasks( 'bootJar', 'assemble')

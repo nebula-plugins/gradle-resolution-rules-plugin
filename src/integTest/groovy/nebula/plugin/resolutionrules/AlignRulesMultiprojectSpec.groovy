@@ -112,7 +112,7 @@ class AlignRulesMultiprojectSpec extends IntegrationSpec {
         if (parallel) {
             tasks += "--parallel"
         }
-        def results = runTasksSuccessfully(*tasks)
+        def results = runTasks(*tasks)
 
         then:
         results.standardOutput.contains('\\--- project :a\n')
@@ -155,7 +155,7 @@ class AlignRulesMultiprojectSpec extends IntegrationSpec {
         if (parallel) {
             tasks += "--parallel"
         }
-        runTasksSuccessfully(*tasks)
+        runTasks(*tasks)
 
         then:
         noExceptionThrown()
@@ -221,7 +221,7 @@ class AlignRulesMultiprojectSpec extends IntegrationSpec {
         if (parallel) {
             tasks += "--parallel"
         }
-        def result = runTasksSuccessfully(*tasks)
+        def result = runTasks(*tasks)
 
         then:
         result.standardOutput.contains '+--- other.nebula:a:1.0.0 -> 1.1.0'
@@ -296,7 +296,7 @@ class AlignRulesMultiprojectSpec extends IntegrationSpec {
         if (parallel) {
             tasks += "--parallel"
         }
-        def result = runTasksSuccessfully(*tasks)
+        def result = runTasks(*tasks)
 
         then:
         result.standardOutput.contains '+--- other.nebula:a:1.0.0 -> 1.1.0'

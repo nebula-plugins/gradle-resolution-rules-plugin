@@ -8,8 +8,6 @@ class AlignAndSubstituteRulesWithSpringBoot2xPluginAndManagedDepsSpec extends Ab
 
     def setup() {
         rulesJsonFile = new File(projectDir, "rules.json")
-
-        debug = true
         keepFiles = true
         System.setProperty('ignoreDeprecations', 'true')
     }

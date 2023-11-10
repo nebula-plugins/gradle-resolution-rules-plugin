@@ -7,7 +7,6 @@ import spock.lang.Unroll
 class AlignRulesForceSpec extends AbstractAlignRulesSpec {
     def setup() {
         keepFiles = true
-        debug = true
     }
 
     @Unroll

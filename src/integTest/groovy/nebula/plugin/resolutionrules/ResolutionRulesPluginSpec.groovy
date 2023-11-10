@@ -31,11 +31,12 @@ import spock.lang.Unroll
 /**
  * Functional test for {@link ResolutionRulesPlugin}.
  */
-class ResolutionRulesPluginSpec extends IntegrationSpec {
+class ResolutionRulesPluginSpec extends AbstractIntegrationTestKitSpec {
     File rulesJsonFile
     File optionalRulesJsonFile
 
     def setup() {
+        definePluginOutsideOfPluginBlock = true
         rulesJsonFile = new File(projectDir, "${moduleName}.json")
         optionalRulesJsonFile = new File(projectDir, "optional-${moduleName}.json")
 
@@ -138,16 +139,13 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
     }
 
     def 'plugin applies'() {
-        when:
-        def result = runTasksSuccessfully('help')
-
-        then:
-        result.standardError.isEmpty()
+        expect:
+        runTasks('help')
     }
 
     def 'empty configuration'() {
         expect:
-        runTasksSuccessfully()
+        runTasks()
     }
 
     def 'duplicate rules sources'() {
@@ -167,10 +165,10 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
 
         when:
         logLevel = logLevel.DEBUG
-        def result = runTasksSuccessfully('dependencies')
+        def result = runTasks('dependencies')
 
         then:
-        def output = result.standardOutput
+        def output = result.output
         output.contains 'Using duplicate-rules-sources (duplicate-rules-sources.json) a dependency rules source'
         output.contains 'Found rules with the same name. Overriding existing ruleset duplicate-rules-sources'
         output.contains "Using duplicate-rules-sources ($projectDir/rules.jar) a dependency rules source"
@@ -190,10 +188,10 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
                      """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--debug')
+        def result = runTasks('dependencies', '--debug')
 
         then:
-        def output = result.standardOutput
+        def output = result.output
         output.contains 'nebula.resolution-rules is using ruleset: rules.jar'
     }
 
@@ -205,10 +203,10 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
         """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully(':subprojectA:dependencies', '--configuration', 'compileClasspath', '-Dorg.gradle.configureondemand=true')
+        def result = runTasks(':subprojectA:dependencies', '--configuration', 'compileClasspath', '-Dorg.gradle.configureondemand=true')
 
         then:
-        result.standardOutput.contains("Configuration on demand is an incubating feature.")
+        result.output.contains("Configuration on demand is an incubating feature.")
     }
 
     def 'replace module'() {
@@ -221,10 +219,10 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
                      """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compileClasspath')
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
 
         then:
-        result.standardOutput.contains('asm:asm:3.3.1 -> org.ow2.asm:asm:5.0.4')
+        result.output.contains('asm:asm:3.3.1 -> org.ow2.asm:asm:5.0.4')
     }
 
     def 'replaced module is shown by dependencyInsight'() {
@@ -237,15 +235,15 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
                      """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencyInsight', '--dependency', 'asm')
+        def result = runTasks('dependencyInsight', '--dependency', 'asm')
 
         then:
         // reasons
-        result.standardOutput.contains("replaced asm:asm -> org.ow2.asm:asm because 'The asm group id changed for 4.0 and later' by rule replaced-module-is-shown-by-dependencyInsight")
-        result.standardOutput.contains('asm:asm:3.3.1 -> org.ow2.asm:asm:5.0.4')
+        result.output.contains("replaced asm:asm -> org.ow2.asm:asm because 'The asm group id changed for 4.0 and later' by rule replaced-module-is-shown-by-dependencyInsight")
+        result.output.contains('asm:asm:3.3.1 -> org.ow2.asm:asm:5.0.4')
 
         // final result
-        result.standardOutput.findAll('Task.*\n.*org.ow2.asm:asm:5.0.4').size() > 0
+        result.output.findAll('Task.*\n.*org.ow2.asm:asm:5.0.4').size() > 0
     }
 
     def "module is not replaced if the replacement isn't in the configuration"() {
@@ -257,11 +255,11 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
                      """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compileClasspath')
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
 
         then:
-        result.standardOutput.contains('asm:asm:3.3.1')
-        !result.standardOutput.contains('asm:asm:3.3.1 -> org.ow2.asm:asm:5.0.4')
+        result.output.contains('asm:asm:3.3.1')
+        !result.output.contains('asm:asm:3.3.1 -> org.ow2.asm:asm:5.0.4')
     }
 
 
@@ -274,20 +272,20 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
                      """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compileClasspath')
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
 
         then:
-        result.standardOutput.contains('No dependencies')
+        result.output.contains('No dependencies')
     }
 
     @Issue('#33')
     def 'excludes apply without configuration warnings'() {
         when:
-        def result = runTasksSuccessfully('dependencies')
+        def result = runTasks('dependencies')
 
         then:
-        !result.standardOutput.contains("Changed dependencies of configuration ':compileOnly' after it has been included in dependency resolution. This behaviour has been deprecated and is scheduled to be removed in Gradle 3.0. Use 'defaultDependencies' instead of 'befo reResolve' to specify default dependencies for a configuration.")
-        !result.standardOutput.contains("Changed dependencies of parent of configuration ':compileClasspath' after it has been resolved. This behaviour has been deprecated and is scheduled to be removed in Gradle 3.0')")
+        !result.output.contains("Changed dependencies of configuration ':compileOnly' after it has been included in dependency resolution. This behaviour has been deprecated and is scheduled to be removed in Gradle 3.0. Use 'defaultDependencies' instead of 'befo reResolve' to specify default dependencies for a configuration.")
+        !result.output.contains("Changed dependencies of parent of configuration ':compileClasspath' after it has been resolved. This behaviour has been deprecated and is scheduled to be removed in Gradle 3.0')")
     }
 
 
@@ -301,10 +299,10 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
 
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compileClasspath')
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
 
         then:
-        result.standardOutput.contains('\\--- log4j:log4j:1.2.17\n')
+        result.output.contains('\\--- log4j:log4j:1.2.17\n')
     }
 
     def 'optional rules are applied when specified'() {
@@ -324,13 +322,13 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
 
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compileClasspath')
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
 
         then:
-        result.standardOutput.contains '+--- log4j:log4j:1.2.17 -> org.slf4j:log4j-over-slf4j:1.7.21\n'
-        result.standardOutput.contains '|    \\--- org.slf4j:slf4j-api:1.7.21\n'
-        result.standardOutput.contains '\\--- org.slf4j:jcl-over-slf4j:1.7.0 -> 1.7.21\n'
-        result.standardOutput.contains '\\--- org.slf4j:slf4j-api:1.7.21\n'
+        result.output.contains '+--- log4j:log4j:1.2.17 -> org.slf4j:log4j-over-slf4j:1.7.21\n'
+        result.output.contains '|    \\--- org.slf4j:slf4j-api:1.7.21\n'
+        result.output.contains '\\--- org.slf4j:jcl-over-slf4j:1.7.0 -> 1.7.21\n'
+        result.output.contains '\\--- org.slf4j:slf4j-api:1.7.21\n'
     }
 
     def 'only included rules are applied'() {
@@ -365,11 +363,11 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
 
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compileClasspath')
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
 
         then:
-        result.standardOutput.contains('log4j:log4j:1.2.17 -> org.slf4j:log4j-over-slf4j:1.7.21')
-        !result.standardOutput.contains('asm:asm:3.3.1 -> org.ow2.asm:asm:5.0.4')
+        result.output.contains('log4j:log4j:1.2.17 -> org.slf4j:log4j-over-slf4j:1.7.21')
+        !result.output.contains('asm:asm:3.3.1 -> org.ow2.asm:asm:5.0.4')
     }
 
     @Unroll
@@ -382,12 +380,10 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
                      """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
+        def result = runTasksAndFail('dependencies', '--configuration', 'compileClasspath')
 
         then:
-        def rootCause = StackTraceUtils.extractRootCause(result.failure)
-        rootCause.class.simpleName == 'DependencyDeniedException'
-        rootCause.message.contains("Dependency com.google.guava:guava:19.0-rc2 denied by rule deny-dependency")
+        result.output.contains("Dependency com.google.guava:guava:19.0-rc2 denied by rule deny-dependency")
     }
 
     @Unroll
@@ -400,12 +396,10 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
                      """.stripIndent()
 
         when:
-        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
+        def result = runTasksAndFail('dependencies', '--configuration', 'compileClasspath')
 
         then:
-        def rootCause = StackTraceUtils.extractRootCause(result.failure)
-        rootCause.class.simpleName == 'DependencyDeniedException'
-        rootCause.message.contains("Dependency com.sun.jersey:jersey-bundle: denied by rule deny-dependency-without-version")
+        result.output.contains("Dependency com.sun.jersey:jersey-bundle: denied by rule deny-dependency-without-version")
     }
 
     def 'reject dependency'() {
@@ -417,10 +411,10 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
                      """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compileClasspath')
+        def result = runTasks('dI', '--configuration', 'compileClasspath', '--dependency', 'com.google.guava:guava')
 
         then:
-        result.standardOutput.contains("rejected by component selection rule: rejected by rule reject-dependency because 'Guava 12.0 significantly regressed LocalCache performance'")
+        result.output.contains("Could not find com.google.guava:guava:12.0")
     }
 
     def 'reject dependency with selector'() {
@@ -446,10 +440,10 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
                      """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('dependencies', '--configuration', 'compileClasspath')
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath')
 
         then:
-        result.standardOutput.contains("rejected by rule reject-dependency-with-selector because 'Just a Guava release that happens to have a patch release'")
+        result.output.contains("com.google.guava:guava:16.0.1 FAILED")
     }
 
     def 'rules apply to detached configurations that have been added to the configurations container'() {
@@ -463,12 +457,13 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
                         }
                      }
                      """
+        new File(projectDir, 'gradle.properties').text = '''org.gradle.configuration-cache=false'''.stripIndent()
 
         when:
-        def result = runTasksSuccessfully('testDetached')
+        def result = runTasks('testDetached')
 
         then:
-        result.standardOutput.contains('FILES: 1')
+        result.output.contains('FILES: 1')
     }
 
     def 'warning logged when configuration has been resolved'() {
@@ -489,10 +484,10 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
              """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully()
+        def result = runTasks()
 
         then:
-        result.standardOutput.contains("Dependency resolution rules will not be applied to configuration ':compileClasspath', it was resolved before the project was executed")
+        result.output.contains("Dependency resolution rules will not be applied to configuration ':compileClasspath', it was resolved before the project was executed")
     }
 
     def 'warning should not be logged when using nebulaRecommenderBom'() {
@@ -559,10 +554,10 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
              """.stripIndent()
 
         when:
-        def result = runTasksSuccessfully()
+        def result = runTasks()
 
         then:
-        !result.standardOutput.contains("Dependency resolution rules will not be applied to configuration ':nebulaRecommenderBom', it was resolved before the project was executed")
+        !result.output.contains("Dependency resolution rules will not be applied to configuration ':nebulaRecommenderBom', it was resolved before the project was executed")
     }
 
     def 'do not reject dependency if version is not part of the selector in rule'() {
@@ -577,7 +572,7 @@ class ResolutionRulesPluginSpec extends IntegrationSpec {
         def result = runTasks('dependencies', '--configuration', 'compileClasspath')
 
         then:
-        !result.standardError.contains("Resolution rules could not resolve all dependencies to align configuration ':compileClasspath':\n" +
+        !result.output.contains("Resolution rules could not resolve all dependencies to align configuration ':compileClasspath':\n" +
                 " - com.google.guava:guava:19.0 -> com.google.guava:guava:19.0 - Could not find com.google.guava:guava:19.0")
     }
 }

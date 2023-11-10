@@ -27,8 +27,6 @@ class AbstractAlignAndMigrateSpec extends AbstractAlignRulesSpec {
             implementation 'other:e:4.0.0'
         }
         """.stripIndent()
-
-        debug = true
     }
 
     private void createTestDependencies() {

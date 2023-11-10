@@ -6,9 +6,6 @@ import nebula.test.dependencies.ModuleBuilder
 import spock.lang.Unroll
 
 class AlignRulesVersionSuffixesSpec extends AbstractAlignRulesSpec {
-    def setup() {
-        debug = true
-    }
 
     @Unroll
     def 'requesting a specific version with no release version available'() {

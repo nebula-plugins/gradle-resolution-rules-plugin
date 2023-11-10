@@ -1,14 +1,11 @@
 package nebula.plugin.resolutionrules
 
-import nebula.test.IntegrationTestKitSpec
 
-class AbstractRulesWithSpringBootPluginSpec extends IntegrationTestKitSpec {
+class AbstractRulesWithSpringBootPluginSpec extends AbstractIntegrationTestKitSpec {
     File rulesJsonFile
 
     def setup() {
         rulesJsonFile = new File(projectDir, "rules.json")
-
-        debug = true
         keepFiles = true
     }
 

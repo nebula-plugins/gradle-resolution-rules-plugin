@@ -29,10 +29,9 @@ import java.util.jar.JarEntry
 import java.util.jar.JarOutputStream
 import java.util.jar.Manifest
 
-class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
+class AlignRulesPluginInteractionSpec extends AbstractIntegrationTestKitSpec {
     def setup() {
         definePluginOutsideOfPluginBlock = true
-        debug = true
         keepFiles = true
     }
 
@@ -539,6 +538,7 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
 
     @Unroll
     def 'able to lock rules'() {
+        System.setProperty('ignoreDeprecations', 'true')
         def graph = new DependencyGraphBuilder()
                 .addModule('test.nebula:a:1.41.5')
                 .addModule('test.nebula:a:1.42.2')
@@ -598,12 +598,12 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
             buildscript {
                 repositories { mavenCentral() }
                 dependencies {
-                    classpath 'com.netflix.nebula:gradle-dependency-lock-plugin:11.+'
+                    classpath 'com.netflix.nebula:gradle-dependency-lock-plugin:14.+'
                 }
             }
 
             apply plugin: 'com.netflix.nebula.resolution-rules'
-            apply plugin: 'nebula.dependency-lock'
+            apply plugin: 'com.netflix.nebula.dependency-lock'
             apply plugin: 'java'
 
             repositories {
@@ -687,11 +687,11 @@ class AlignRulesPluginInteractionSpec extends IntegrationTestKitSpec {
             buildscript {
                 repositories { mavenCentral() }
                 dependencies {
-                    classpath 'com.netflix.nebula:gradle-dependency-lock-plugin:11.+'
+                    classpath 'com.netflix.nebula:gradle-dependency-lock-plugin:14.+'
                 }
             }
             apply plugin: 'com.netflix.nebula.resolution-rules'
-            apply plugin: 'nebula.dependency-lock'
+            apply plugin: 'com.netflix.nebula.dependency-lock'
             apply plugin: 'java'
             repositories {
                 ${mavenrepo.mavenRepositoryBlock}

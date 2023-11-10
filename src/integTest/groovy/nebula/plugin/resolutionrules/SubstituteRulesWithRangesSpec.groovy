@@ -1,7 +1,6 @@
 package nebula.plugin.resolutionrules
 
 
-import nebula.test.IntegrationTestKitSpec
 import nebula.test.dependencies.DependencyGraphBuilder
 import nebula.test.dependencies.GradleDependencyGenerator
 import nebula.test.dependencies.ModuleBuilder
@@ -11,10 +10,11 @@ import spock.lang.Unroll
  * Substitutions apply to declared dependencies, not resolved ones
  * See: https://github.com/nebula-plugins/gradle-nebula-integration/issues/50#issuecomment-433934842
  */
-class SubstituteRulesWithRangesSpec extends IntegrationTestKitSpec {
+class SubstituteRulesWithRangesSpec extends AbstractIntegrationTestKitSpec {
     File rulesJsonFile
 
     def setup() {
+        definePluginOutsideOfPluginBlock = true
         rulesJsonFile = new File(projectDir, "${moduleName}.json")
 
         def graph = new DependencyGraphBuilder()
@@ -45,7 +45,6 @@ class SubstituteRulesWithRangesSpec extends IntegrationTestKitSpec {
                      """.stripIndent()
 
         definePluginOutsideOfPluginBlock = true
-        debug = true
         keepFiles = true
     }
 

@@ -1,6 +1,5 @@
 package nebula.plugin.resolutionrules
 
-import nebula.test.IntegrationTestKitSpec
 import nebula.test.dependencies.DependencyGraphBuilder
 import nebula.test.dependencies.GradleDependencyGenerator
 import nebula.test.dependencies.ModuleBuilder
@@ -10,7 +9,7 @@ import nebula.test.dependencies.repositories.MavenRepo
 import spock.lang.Ignore
 import spock.lang.Issue
 
-class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
+class AlignAndSubstituteRulesSpec extends AbstractIntegrationTestKitSpec {
     File rulesJsonFile
     File mavenrepo
     String reason = "★ custom reason"
@@ -75,8 +74,6 @@ class AlignAndSubstituteRulesSpec extends IntegrationTestKitSpec {
         mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
 
         buildFile << baseBuildGradleFile()
-
-        debug = true
         keepFiles = true
     }
 

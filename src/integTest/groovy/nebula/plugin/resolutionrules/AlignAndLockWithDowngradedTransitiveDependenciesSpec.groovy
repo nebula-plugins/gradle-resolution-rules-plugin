@@ -1,13 +1,12 @@
 package nebula.plugin.resolutionrules
 
-import nebula.test.IntegrationTestKitSpec
 import nebula.test.dependencies.DependencyGraphBuilder
 import nebula.test.dependencies.GradleDependencyGenerator
 import nebula.test.dependencies.ModuleBuilder
 import spock.lang.Ignore
 import spock.lang.Unroll
 
-class AlignAndLockWithDowngradedTransitiveDependenciesSpec extends IntegrationTestKitSpec {
+class AlignAndLockWithDowngradedTransitiveDependenciesSpec extends AbstractIntegrationTestKitSpec {
     def rulesJsonFile
     static def STATIC_MAJOR_MINOR_PATCH_2_9_9 = "2.9.9"
     static def STATIC_MAJOR_MINOR_PATCH_MICRO_PATCH_2_9_9_3 = "2.9.9.3"
@@ -36,9 +35,10 @@ class AlignAndLockWithDowngradedTransitiveDependenciesSpec extends IntegrationTe
                 resolutionRules files('$rulesJsonFile')
             }
         """.stripIndent()
+        // TODO: enable once nebula lock is ready for config cache
+        new File(projectDir, 'gradle.properties').text = '''org.gradle.configuration-cache=false'''.stripIndent()
 
         keepFiles = true
-        debug = true
 
         rulesJsonFile << jacksonAlignmentAndSubstitutionRule()
     }

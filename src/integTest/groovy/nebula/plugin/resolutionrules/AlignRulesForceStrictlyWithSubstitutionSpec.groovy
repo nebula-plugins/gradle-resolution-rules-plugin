@@ -23,7 +23,6 @@ import spock.lang.Unroll
 class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec {
     def setup() {
         setupProjectAndDependencies()
-        debug = true
     }
 
     @Unroll

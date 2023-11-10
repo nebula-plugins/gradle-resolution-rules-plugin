@@ -1,8 +1,7 @@
 package nebula.plugin.resolutionrules
 
-import nebula.test.IntegrationTestKitSpec
 
-abstract class AbstractAlignRulesSpec extends IntegrationTestKitSpec {
+abstract class AbstractAlignRulesSpec extends AbstractIntegrationTestKitSpec {
     def rulesJsonFile
 
     def setup() {
