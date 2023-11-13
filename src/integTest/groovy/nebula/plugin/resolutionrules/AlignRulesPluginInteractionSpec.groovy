@@ -681,6 +681,9 @@ class AlignRulesPluginInteractionSpec extends AbstractIntegrationTestKitSpec {
 
     @Unroll
     def 'dependency-lock plugin applied after resolution-rules plugin with non-locked resolution rules - fail due to dependency lock state is out of date '() {
+        // This disables configuration cache because dependency verifier is not compatible yet
+        // TODO: change it once dependency verifier is compatible with configuration cache
+        disableConfigurationCache()
         // note: this is a more unusual case. Typically resolution rules are distributed like a library, version controlled, and locked like other dependencies
         def (GradleDependencyGenerator mavenrepo, File rulesJsonFile) = dependencyLockAlignInteractionSetupWithUnlockedResolutionRulesConfiguration()
         buildFile << """\
@@ -1136,6 +1139,9 @@ class AlignRulesPluginInteractionSpec extends AbstractIntegrationTestKitSpec {
 
     @Unroll
     def 'dependency-lock plugin applied before resolution-rules plugin with non-locked resolution rules - fail due to dependency lock state is out of date '() {
+        // This disables configuration cache because dependency verifier is not compatible yet
+        // TODO: change it once dependency verifier is compatible with configuration cache
+        disableConfigurationCache()
         // note: this is a more unusual case. Typically resolution rules are distributed like a library, version controlled, and locked like other dependencies
         def (GradleDependencyGenerator mavenrepo, File rulesJsonFile) = dependencyLockAlignInteractionSetupWithUnlockedResolutionRulesConfiguration()
         buildFile << """\
