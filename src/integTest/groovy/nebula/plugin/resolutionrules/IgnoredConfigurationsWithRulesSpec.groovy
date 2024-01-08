@@ -1,5 +1,7 @@
 package nebula.plugin.resolutionrules
 
+import spock.lang.IgnoreIf
+
 
 class IgnoredConfigurationsWithRulesSpec extends AbstractIntegrationTestKitSpec {
     File rulesJsonFile
@@ -68,6 +70,7 @@ class IgnoredConfigurationsWithRulesSpec extends AbstractIntegrationTestKitSpec 
     }
 
 
+    @IgnoreIf({ !jvm.isJava17Compatible() })
     def 'does not apply for configurations housing only built artifacts'() {
         given:
         System.setProperty('ignoreDeprecations', 'true')
@@ -85,7 +88,7 @@ class IgnoredConfigurationsWithRulesSpec extends AbstractIntegrationTestKitSpec 
                 }
               }
               dependencies {
-                classpath("org.springframework.boot:spring-boot-gradle-plugin:2.+")
+                classpath("org.springframework.boot:spring-boot-gradle-plugin:3.+")
               }
             }""".stripIndent()
         buildFile << intermediateBuildFileText
