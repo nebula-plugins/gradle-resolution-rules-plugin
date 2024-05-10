@@ -16,10 +16,8 @@
  */
 package nebula.plugin.resolutionrules
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.netflix.nebula.interop.onExecute
-import com.netflix.nebula.interop.onResolve
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
@@ -32,9 +30,13 @@ import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
 import java.io.File
 import java.io.Serializable
-import java.util.zip.ZipEntry
+import java.util.*
+import java.util.stream.Collectors
+import java.util.stream.Stream
 import java.util.zip.ZipFile
 import javax.inject.Inject
+import kotlin.collections.ArrayList
+import kotlin.collections.LinkedHashMap
 
 const val RESOLUTION_RULES_CONFIG_NAME = "resolutionRules"
 
@@ -65,9 +67,6 @@ class ResolutionRulesPlugin : Plugin<Project> {
         const val REPOSITORY_CONTENT_DESCRIPTOR_CONFIGURATION_PREFIX = "repositoryContentDescriptor"
         const val BOOT_ARCHIVES_CONFIGURATION_NAME = "bootArchives"
         const val ARCHIVES_CONFIGURATION_NAME = "archives"
-        const val JSON_EXT = ".json"
-        const val JAR_EXT = ".jar"
-        const val ZIP_EXT = ".zip"
         const val OPTIONAL_PREFIX = "optional-"
     }
 
@@ -129,7 +128,6 @@ class ResolutionRulesPlugin : Plugin<Project> {
 
 }
 
-@Suppress("UnstableApiUsage")
 abstract class NebulaResolutionRulesService : BuildService<NebulaResolutionRulesService.Params> {
     companion object {
         private val Logger: Logger = Logging.getLogger(NebulaResolutionRulesService::class.java)
@@ -147,50 +145,48 @@ abstract class NebulaResolutionRulesService : BuildService<NebulaResolutionRules
 
         private fun resolveResolutionRules(project: Project): Map<String, RuleSet> {
             val configuration = project.configurations.getByName(RESOLUTION_RULES_CONFIG_NAME)
-            val files = configuration.resolve()
-            val rules = LinkedHashMap<String, RuleSet>()
-            for (file in files) {
-                val filename = file.name
-                Logger.debug("nebula.resolution-rules uses: $filename")
-                if (filename.endsWith(ResolutionRulesPlugin.JSON_EXT)) {
-                    rules.putRules(Mapper.parseJsonFile(file))
-                } else if (filename.endsWith(ResolutionRulesPlugin.JAR_EXT) || filename.endsWith(ResolutionRulesPlugin.ZIP_EXT)) {
-                    Logger.info("nebula.resolution-rules is using ruleset: $filename")
-                    ZipFile(file).use { zip ->
-                        val entries = zip.entries()
-                        while (entries.hasMoreElements()) {
-                            val entry = entries.nextElement()
-                            if (entry.name.endsWith(ResolutionRulesPlugin.JSON_EXT)) {
-                                rules.putRules(Mapper.parseJsonStream(zip, entry))
-                            }
+            configuration.resolve().stream().use { stream ->
+                return stream.flatMap { file ->
+                    when (file.extension) {
+                        "json" -> {
+                            Logger.debug("nebula.resolution-rules uses: {}", file.name)
+                            Stream.of(file.absolutePath to file.readBytes())
+                        }
+                        "jar", "zip" -> {
+                            Logger.info("nebula.resolution-rules is using ruleset: {}", file.name)
+                            val zipFile = ZipFile(file)
+                            Collections.list(zipFile.entries()).stream()
+                                .onClose(zipFile::close)
+                                .flatMap { entry ->
+                                    val entryFile = File(entry.name)
+                                    if (entryFile.extension == "json") {
+                                        Stream.of("${file.absolutePath}!${entry.name}" to zipFile.getInputStream(entry).readBytes())
+                                    } else Stream.empty()
+                                }
+                        }
+                        else -> {
+                            Logger.debug("Unsupported rules file extension for {}", file)
+                            Stream.empty()
                         }
                     }
-                } else {
-                    Logger.debug("Unsupported rules file extension for $file")
-                }
+                }.parallel()
+                    .map { (path, bytes) ->
+                        val filePath = if (path.contains("!")) path.substringAfter("!") else path
+                        val file = File(filePath)
+                        val ruleSetName = file.nameWithoutExtension
+                        Logger.debug("Using {} ({}) a dependency rules source", ruleSetName, path)
+                        Mapper.readValue<RuleSet>(bytes).withName(ruleSetName)
+                    }.collect(
+                        Collectors.toMap(
+                            { it.name },
+                            { it },
+                            { r1, r2 ->
+                                Logger.info("Found rules with the same name. Overriding existing ruleset {}", r1.name)
+                                r2
+                            },
+                            { LinkedHashMap() })
+                    )
             }
-            return rules
-        }
-
-        private fun MutableMap<String, RuleSet>.putRules(ruleSet: RuleSet) {
-            if (put(ruleSet.name!!, ruleSet) != null) {
-                Logger.info("Found rules with the same name. Overriding existing ruleset ${ruleSet.name}")
-            }
-        }
-
-        private fun ruleSetName(filename: String) =
-            filename.substring(0, filename.lastIndexOf(ResolutionRulesPlugin.JSON_EXT))
-
-        private fun ObjectMapper.parseJsonFile(file: File): RuleSet {
-            val ruleSetName = ruleSetName(file.name)
-            Logger.debug("Using $ruleSetName (${file.name}) a dependency rules source")
-            return readValue<RuleSet>(file).withName(ruleSetName)
-        }
-
-        private fun ObjectMapper.parseJsonStream(zip: ZipFile, entry: ZipEntry): RuleSet {
-            val ruleSetName = ruleSetName(File(entry.name).name)
-            Logger.debug("Using $ruleSetName (${zip.name}) a dependency rules source")
-            return readValue<RuleSet>(zip.getInputStream(entry)).withName(ruleSetName)
         }
     }
 
@@ -219,7 +215,7 @@ open class NebulaResolutionRulesExtension @Inject constructor(private val projec
 
     fun ruleSet(): RuleSet {
         val service = NebulaResolutionRulesService.registerService(project).get()
-        @Suppress("UnstableApiUsage") val rulesByFile = service.parameters
+        val rulesByFile = service.parameters
             .getResolutionRules()
             .get()
             .byFile
