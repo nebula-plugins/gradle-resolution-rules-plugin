@@ -26,8 +26,6 @@ import org.gradle.api.internal.artifacts.DefaultModuleVersionIdentifier
 import org.gradle.api.internal.artifacts.ivyservice.dependencysubstitution.DefaultDependencySubstitutions
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.ExactVersionSelector
 import org.gradle.api.internal.artifacts.ivyservice.ivyresolve.strategy.VersionSelector
-import org.gradle.api.logging.Logger
-import org.gradle.api.logging.Logging
 import java.io.Serializable
 
 interface Rule : Serializable {
@@ -51,7 +49,6 @@ interface ModuleRule : BasicRule {
 }
 
 data class RuleSet(
-    var name: String?,
     val replace: List<ReplaceRule> = emptyList(),
     val substitute: List<SubstituteRule> = emptyList(),
     val reject: List<RejectRule> = emptyList(),
@@ -59,6 +56,8 @@ data class RuleSet(
     val exclude: List<ExcludeRule> = emptyList(),
     val align: List<AlignRule> = emptyList()
 ) : Serializable {
+
+    lateinit var name: String
 
     fun dependencyRulesPartOne() =
         listOf(replace, deny, exclude).flatten() + listOf(SubstituteRules(substitute), RejectRules(reject))
@@ -86,7 +85,6 @@ fun RuleSet.withName(ruleSetName: String): RuleSet {
 }
 
 fun Collection<RuleSet>.flatten() = RuleSet(
-    "flattened",
     flatMap { it.replace },
     flatMap { it.substitute },
     flatMap { it.reject },

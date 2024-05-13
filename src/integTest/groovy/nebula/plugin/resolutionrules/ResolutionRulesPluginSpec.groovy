@@ -169,10 +169,9 @@ class ResolutionRulesPluginSpec extends AbstractIntegrationTestKitSpec {
 
         then:
         def output = result.output
-        output.contains 'Using duplicate-rules-sources (duplicate-rules-sources.json) a dependency rules source'
         output.contains 'Found rules with the same name. Overriding existing ruleset duplicate-rules-sources'
-        output.contains "Using duplicate-rules-sources ($projectDir/rules.jar) a dependency rules source"
-        output.contains "Using duplicate-rules-sources ($projectDir/rules.zip) a dependency rules source"
+        output.contains "Using duplicate-rules-sources ($projectDir/rules.zip!duplicate-rules-sources.json) a dependency rules source"
+        output.contains "Using duplicate-rules-sources ($projectDir/rules.jar!duplicate-rules-sources.json) a dependency rules source"
     }
 
      def 'output ruleset that is being used'() {
