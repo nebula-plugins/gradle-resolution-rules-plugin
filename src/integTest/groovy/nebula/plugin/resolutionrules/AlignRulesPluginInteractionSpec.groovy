@@ -156,6 +156,7 @@ class AlignRulesPluginInteractionSpec extends AbstractIntegrationTestKitSpec {
 
     @Unroll
     def 'alignment interaction with dependency-recommender transitive project dependencies'() {
+        System.setProperty('ignoreDeprecations', 'true')
         def graph = new DependencyGraphBuilder()
                 .addModule('test.a:a:1.42.2')
                 .build()
@@ -186,11 +187,11 @@ class AlignRulesPluginInteractionSpec extends AbstractIntegrationTestKitSpec {
             buildscript {
                 repositories { mavenCentral() }
                 dependencies {
-                    classpath 'com.netflix.nebula:nebula-dependency-recommender:10.0.1'
+                    classpath 'com.netflix.nebula:nebula-dependency-recommender:12.5.1'
                 }
             }
             allprojects {
-                apply plugin: 'nebula.dependency-recommender'
+                apply plugin: 'com.netflix.nebula.dependency-recommender'
                 apply plugin: 'com.netflix.nebula.resolution-rules'
 
                 repositories {
@@ -346,6 +347,7 @@ class AlignRulesPluginInteractionSpec extends AbstractIntegrationTestKitSpec {
 
     @Unroll
     def 'transitive aligns with spring dependency management'() {
+        System.setProperty('ignoreDeprecations', 'true')
         def rulesJsonFile = new File(projectDir, 'rules.json')
 
         rulesJsonFile << '''\

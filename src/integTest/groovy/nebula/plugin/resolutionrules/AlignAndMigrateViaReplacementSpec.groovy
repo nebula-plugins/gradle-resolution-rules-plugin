@@ -15,7 +15,7 @@ class AlignAndMigrateViaReplacementSpec extends AbstractAlignAndMigrateSpec {
         then:
         results.output.contains("test.nebula:a:1.0.0 -> $alignedVersion")
         results.output.contains("test.nebula:b:$alignedVersion")
-        results.output.contains("other:e:4.0.0 -> test.nebula:c:1.0.1") // not aligned :/
+        results.output.contains("other:e:4.0.0 -> test.nebula:c:$alignedVersion")
         results.output.contains("belongs to platform aligned-platform")
 
         when:
@@ -23,7 +23,7 @@ class AlignAndMigrateViaReplacementSpec extends AbstractAlignAndMigrateSpec {
         def resultsForDependencies = runTasks(*dependenciesTasks)
 
         then:
-        resultsForDependencies.output.contains("other:e:4.0.0 -> test.nebula:c:1.0.1") // not aligned :/
+        resultsForDependencies.output.contains("other:e:4.0.0 -> test.nebula:c:1.0.3")
     }
 
     @Unroll
