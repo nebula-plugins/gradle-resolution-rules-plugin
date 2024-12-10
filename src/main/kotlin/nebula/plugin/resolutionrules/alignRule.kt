@@ -71,7 +71,7 @@ class AlignMatcher(val rule: AlignRule, groupPattern: Pattern, includesPatterns:
 }
 
 //@CacheableRule
-open class AlignedPlatformMetadataRule @Inject constructor(val rule: AlignRule) : ComponentMetadataRule, Serializable, ReusableAction {
+open class AlignedPlatformMetadataRule @Inject constructor(val rule: AlignRule) : ComponentMetadataRule, Serializable {
     private val logger: Logger = Logging.getLogger(AlignedPlatformMetadataRule::class.java)
 
     override fun execute(componentMetadataContext: ComponentMetadataContext?) {
