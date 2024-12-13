@@ -34,7 +34,7 @@ class AlignRulesVersionSuffixesSpec extends AbstractAlignRulesSpec {
 
         buildFile << """\
             repositories {
-                maven { url '${mavenrepo.absolutePath}' }
+                maven { url = '${mavenrepo.absolutePath}' }
             }
             dependencies {
                 implementation 'test.nebula:b:1.0.0-1'
@@ -86,7 +86,7 @@ class AlignRulesVersionSuffixesSpec extends AbstractAlignRulesSpec {
 
         buildFile << """\
             repositories {
-                maven { url '${mavenrepo.absolutePath}' }
+                maven { url = '${mavenrepo.absolutePath}' }
             }
             dependencies {
                 implementation 'test.nebula:b:1.0.0-1'
@@ -136,7 +136,7 @@ class AlignRulesVersionSuffixesSpec extends AbstractAlignRulesSpec {
 
         buildFile << """\
             repositories {
-                maven { url '${mavenrepo.absolutePath}' }
+                maven { url = '${mavenrepo.absolutePath}' }
             }
             dependencies {
                 implementation 'test.nebula:b:1.+'
@@ -188,7 +188,7 @@ class AlignRulesVersionSuffixesSpec extends AbstractAlignRulesSpec {
 
         buildFile << """\
             repositories {
-                maven { url '${mavenrepo.absolutePath}' }
+                maven { url = '${mavenrepo.absolutePath}' }
             }
             dependencies {
                 implementation 'test.nebula:b:1.+'

@@ -540,7 +540,7 @@ class ResolutionRulesPluginSpec extends AbstractIntegrationTestKitSpec {
              apply plugin: 'com.netflix.nebula.resolution-rules'
              repositories {
                  mavenCentral()
-                 maven { url '${repo.root.absoluteFile.toURI()}' }
+                 maven { url = '${repo.root.absoluteFile.toURI()}' }
                  ${generator.mavenRepositoryBlock}                 
              }
              dependencies {

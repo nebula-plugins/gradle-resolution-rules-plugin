@@ -36,7 +36,7 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
 
         buildFile << """\
             repositories {
-                maven { url '${mavenrepo.absolutePath}' }
+                maven { url = '${mavenrepo.absolutePath}' }
             }
             dependencies {
                 implementation 'test.nebula:a:1.0.0'
@@ -83,7 +83,7 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
 
         buildFile << """\
             repositories {
-                maven { url '${mavenrepo.absolutePath}' }
+                maven { url = '${mavenrepo.absolutePath}' }
             }
             dependencies {
                 implementation 'test.nebula:a:1.0.0'
@@ -129,7 +129,7 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
 
         buildFile << """\
             repositories {
-                maven { url '${mavenrepo.absolutePath}' }
+                maven { url = '${mavenrepo.absolutePath}' }
             }
             dependencies {
                 implementation 'test.nebula:a:1.1.0'
@@ -173,7 +173,7 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
 
         buildFile << """\
             repositories {
-                maven { url '${mavenrepo.absolutePath}' }
+                maven { url = '${mavenrepo.absolutePath}' }
             }
             dependencies {
                 implementation 'test.nebula:a:1.0.0'
@@ -232,7 +232,7 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
 
         buildFile << """\
             repositories {
-                maven { url '${mavenrepo.absolutePath}' }
+                maven { url = '${mavenrepo.absolutePath}' }
             }
 
             // Make at least one of the dependencies a non-expected dependency
@@ -291,7 +291,7 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
 
         buildFile << """\
             repositories {
-                maven { url '${mavenrepo.absolutePath}' }
+                maven { url = '${mavenrepo.absolutePath}' }
             }
             dependencies {
                 implementation 'test.nebula:a:1.0.0'
@@ -352,7 +352,7 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
 
         buildFile << """\
             repositories {
-                maven { url '${mavenrepo.absolutePath}' }
+                maven { url = '${mavenrepo.absolutePath}' }
             }
             dependencies {
                 implementation 'test.nebula:a:1.0.0'
@@ -416,7 +416,7 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
 
         buildFile << """\
             repositories {
-                maven { url '${mavenrepo.absolutePath}' }
+                maven { url = '${mavenrepo.absolutePath}' }
             }
             dependencies {
                 implementation 'test.group1:module1:2.0.0'
@@ -503,7 +503,7 @@ class AlignRulesTransitiveDependenciesSpec extends AbstractAlignRulesSpec {
 
         buildFile << """\
             repositories {
-                maven { url '${mavenrepo.absolutePath}' }
+                maven { url = '${mavenrepo.absolutePath}' }
             }
             dependencies {
                 implementation 'test.group1:module1:2.0.0'

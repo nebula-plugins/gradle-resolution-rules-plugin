@@ -39,7 +39,7 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
 
         buildFile << """\
             repositories {
-                maven { url '${mavenrepo.absolutePath}' }
+                maven { url = '${mavenrepo.absolutePath}' }
             }
             dependencies {
                 implementation 'test.nebula:a:1.0.0'
@@ -99,7 +99,7 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
 
         buildFile << """\
             repositories {
-                maven { url '${mavenrepo.absolutePath}' }
+                maven { url = '${mavenrepo.absolutePath}' }
             }
             dependencies {
                 implementation 'test.nebula:a:2.0.0'
@@ -156,7 +156,7 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
 
         buildFile << """\
             repositories {
-                maven { url '${mavenrepo.absolutePath}' }
+                maven { url = '${mavenrepo.absolutePath}' }
             }
             dependencies {
                 implementation 'test.nebula:a:2.0.0'
@@ -215,7 +215,7 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
 
         buildFile << """\
             repositories {
-                maven { url '${mavenrepo.absolutePath}' }
+                maven { url = '${mavenrepo.absolutePath}' }
             }
             dependencies {
                 implementation 'test.nebula:a:2.0.0'
@@ -270,7 +270,7 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
 
         buildFile << """\
             repositories {
-                maven { url '${mavenrepo.absolutePath}' }
+                maven { url = '${mavenrepo.absolutePath}' }
             }
             dependencies {
                 implementation 'test.nebula:a:2.0.0'
@@ -327,7 +327,7 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
 
         buildFile << """\
             repositories {
-                maven { url '${mavenrepo.absolutePath}' }
+                maven { url = '${mavenrepo.absolutePath}' }
             }
             dependencies {
                 implementation 'test.nebula:a:2.0.0'

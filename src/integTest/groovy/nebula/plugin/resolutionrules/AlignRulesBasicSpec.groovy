@@ -61,7 +61,7 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
 
         buildFile << """\
             repositories {
-                maven { url '${mavenrepo.absolutePath}' }
+                maven { url = '${mavenrepo.absolutePath}' }
             }
             dependencies {
                 implementation 'test.other:c:1.0.0'
@@ -109,7 +109,7 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
 
         buildFile << """\
             repositories {
-                maven { url '${mavenrepo.absolutePath}' }
+                maven { url = '${mavenrepo.absolutePath}' }
             }
             dependencies {
                 implementation 'test.nebula:a:1.0.0'
@@ -161,7 +161,7 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
 
         buildFile << """\
             repositories {
-                maven { url '${mavenrepo.absolutePath}' }
+                maven { url = '${mavenrepo.absolutePath}' }
             }
             dependencies {
                 implementation 'test.nebula:a:1.0.0'
@@ -212,7 +212,7 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
 
         buildFile << """\
             repositories {
-                maven { url '${mavenrepo.absolutePath}' }
+                maven { url = '${mavenrepo.absolutePath}' }
             }
             dependencies {
                 implementation 'test.nebula:a:1.0.0'
@@ -280,7 +280,7 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
 
         buildFile << """\
             repositories {
-                maven { url '${mavenrepo.absolutePath}' }
+                maven { url = '${mavenrepo.absolutePath}' }
             }
             dependencies {
                 implementation 'test.nebula:a:1.0.0'
@@ -330,8 +330,8 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
                 }
                 repositories {
                     maven {
-                        name 'repo'
-                        url 'build/repo'
+                        name = 'repo'
+                        url = 'build/repo'
                     }
                 }
             }
@@ -442,7 +442,7 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
 
         buildFile << """\
             repositories {
-                maven { url '${mavenrepo.absolutePath}' }
+                maven { url = '${mavenrepo.absolutePath}' }
             }
             dependencies {
                 implementation 'test.nebula:a:1.0.0'
@@ -523,7 +523,7 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
 
         buildFile << """\
             repositories {
-                maven { url '${mavenrepo.absolutePath}' }
+                maven { url = '${mavenrepo.absolutePath}' }
             }
             configurations.all {
                 resolutionStrategy {
@@ -582,7 +582,7 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
 
         buildFile << """\
             repositories {
-                maven { url '${mavenrepo.absolutePath}' }
+                maven { url = '${mavenrepo.absolutePath}' }
             }
             dependencies {
                 implementation 'test.nebula.one:a:1.0.0'
@@ -628,7 +628,7 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
 
         buildFile << """\
             repositories {
-                maven { url '${mavenrepo.absolutePath}' }
+                maven { url = '${mavenrepo.absolutePath}' }
             }
             dependencies {
                 implementation 'test.nebula:a:1.0.0'
@@ -676,7 +676,7 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
 
         buildFile << """\
             repositories {
-                maven { url '${mavenrepo.absolutePath}' }
+                maven { url = '${mavenrepo.absolutePath}' }
             }
             dependencies {
                 implementation 'test.nebula:a:1.0.0'
@@ -723,7 +723,7 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
 
         buildFile << """\
             repositories {
-                maven { url '${mavenrepo.absolutePath}' }
+                maven { url = '${mavenrepo.absolutePath}' }
             }
             dependencies {
                 implementation 'test.nebula:a:1.0.0'
@@ -863,7 +863,7 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
 
         buildFile << """\
             repositories {
-                maven { url '${mavenrepo.absolutePath}' }
+                maven { url = '${mavenrepo.absolutePath}' }
             }
             
             dependencies {

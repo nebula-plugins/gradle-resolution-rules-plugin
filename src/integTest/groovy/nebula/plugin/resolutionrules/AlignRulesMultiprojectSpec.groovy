@@ -100,7 +100,7 @@ class AlignRulesMultiprojectSpec extends IntegrationSpec {
                     repositories {
                         maven {
                             name 'repo'
-                            url 'build/repo'
+                            url = 'build/repo'
                         }
                     }
                 }
@@ -197,7 +197,7 @@ class AlignRulesMultiprojectSpec extends IntegrationSpec {
         buildFile << """\
             subprojects {
                 repositories {
-                    maven { url '${mavenrepo.absolutePath}' }
+                    maven { url = '${mavenrepo.absolutePath}' }
                 }
             }
 
@@ -267,7 +267,7 @@ class AlignRulesMultiprojectSpec extends IntegrationSpec {
 
             subprojects {
                 repositories {
-                    maven { url '${mavenrepo.absolutePath}' }
+                    maven { url = '${mavenrepo.absolutePath}' }
                 }
             }
 

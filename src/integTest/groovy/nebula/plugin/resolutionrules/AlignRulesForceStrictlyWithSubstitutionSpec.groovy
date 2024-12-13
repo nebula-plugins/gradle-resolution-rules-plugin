@@ -378,7 +378,7 @@ class AlignRulesForceStrictlyWithSubstitutionSpec extends AbstractAlignRulesSpec
 
         buildFile << """
             repositories {
-                maven { url '${mavenrepo.absolutePath}' }
+                maven { url = '${mavenrepo.absolutePath}' }
             }
             """.stripIndent()
     }
