@@ -324,7 +324,7 @@ class AlignRulesPluginInteractionSpec extends AbstractIntegrationTestKitSpec {
 
             repositories {
                 mavenCentral()
-                maven { url '${mavenForRules.absolutePath}' }
+                maven { url = '${mavenForRules.absolutePath}' }
             }
 
             dependencies {
@@ -610,7 +610,7 @@ class AlignRulesPluginInteractionSpec extends AbstractIntegrationTestKitSpec {
 
             repositories {
                 ${mavenrepo.mavenRepositoryBlock}
-                maven { url '${mavenForRules.absolutePath}' }
+                maven { url = '${mavenForRules.absolutePath}' }
             }
 
             dependencies {
@@ -650,7 +650,7 @@ class AlignRulesPluginInteractionSpec extends AbstractIntegrationTestKitSpec {
 
             repositories {
                 ${mavenrepo.mavenRepositoryBlock}
-                maven { url '${mavenForRules.absolutePath}' }
+                maven { url = '${mavenForRules.absolutePath}' }
             }
 
             dependencies {
@@ -982,7 +982,7 @@ class AlignRulesPluginInteractionSpec extends AbstractIntegrationTestKitSpec {
 
             subprojects {
                 repositories {
-                    maven { url '${mavenrepo.absolutePath}' }
+                    maven { url = '${mavenrepo.absolutePath}' }
                 }
             }
         """.stripIndent()
@@ -1075,7 +1075,7 @@ class AlignRulesPluginInteractionSpec extends AbstractIntegrationTestKitSpec {
             subprojects {
                 apply plugin: 'java'
                 repositories {
-                    maven { url '${mavenrepo.absolutePath}' }
+                    maven { url = '${mavenrepo.absolutePath}' }
                 }
             }
         """.stripIndent()
@@ -1108,7 +1108,7 @@ class AlignRulesPluginInteractionSpec extends AbstractIntegrationTestKitSpec {
 
             repositories {
                 ${mavenrepo.mavenRepositoryBlock}
-                maven { url '${mavenForRules.absolutePath}' }
+                maven { url = '${mavenForRules.absolutePath}' }
             }
 
             dependencies {
