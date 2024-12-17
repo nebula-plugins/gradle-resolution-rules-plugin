@@ -19,7 +19,7 @@ class AbstractAlignAndMigrateSpec extends AbstractAlignRulesSpec {
         createTestDependencies()
         buildFile << """
         repositories {
-            maven { url '${projectDir.toPath().relativize(mavenrepo.toPath()).toFile()}' }
+            maven { url = '${projectDir.toPath().relativize(mavenrepo.toPath()).toFile()}' }
         }
         dependencies {
             implementation 'test.nebula:a:1.0.0'

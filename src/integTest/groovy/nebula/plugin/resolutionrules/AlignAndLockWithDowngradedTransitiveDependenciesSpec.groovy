@@ -19,11 +19,11 @@ class AlignAndLockWithDowngradedTransitiveDependenciesSpec extends AbstractInteg
             buildscript {
                 repositories {
                     maven {
-                        url "https://plugins.gradle.org/m2/"
+                        url = "https://plugins.gradle.org/m2/"
                     }
                 }
                 dependencies {
-                    classpath "com.netflix.nebula:gradle-dependency-lock-plugin:13.+"
+                    classpath "com.netflix.nebula:gradle-dependency-lock-plugin:15.+"
                 }
             }
             plugins {
@@ -376,7 +376,7 @@ class AlignAndLockWithDowngradedTransitiveDependenciesSpec extends AbstractInteg
 
         buildFile << """
             repositories {
-                maven { url '${mavenrepo.absolutePath}' }
+                maven { url = '${mavenrepo.absolutePath}' }
                 mavenCentral()
             }
             dependencies {

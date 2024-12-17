@@ -1861,7 +1861,7 @@ class AlignAndSubstituteRulesSpec extends AbstractIntegrationTestKitSpec {
             id 'com.netflix.nebula.resolution-rules'$pluginToAdd
         }
         repositories {
-            maven { url '${projectDir.toPath().relativize(mavenrepo.toPath()).toFile()}' }
+            maven { url = '${projectDir.toPath().relativize(mavenrepo.toPath()).toFile()}' }
         }
         dependencies {
             resolutionRules files("${projectDir.toPath().relativize(rulesJsonFile.toPath()).toFile()}")
@@ -1942,7 +1942,7 @@ class AlignAndSubstituteRulesSpec extends AbstractIntegrationTestKitSpec {
                 implementation 'test.nebula:b'
             }
             repositories {
-                 maven { url '${bomRepo.root.absoluteFile.toURI()}' }
+                 maven { url = '${bomRepo.root.absoluteFile.toURI()}' }
             }
             """.stripIndent()
     }
@@ -1995,7 +1995,7 @@ class AlignAndSubstituteRulesSpec extends AbstractIntegrationTestKitSpec {
 repositories {
     mavenCentral()
     maven {
-        url 'repo'
+        url = 'repo'
     }
 }
 
