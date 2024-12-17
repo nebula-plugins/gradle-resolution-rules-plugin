@@ -3,7 +3,6 @@ package nebula.plugin.resolutionrules
 import org.gradle.api.Project
 import org.gradle.api.artifacts.*
 import org.gradle.api.artifacts.ModuleVersionIdentifier
-import org.gradle.api.internal.ReusableAction
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import java.io.Serializable
