@@ -120,8 +120,8 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
         then:
         assert dependencyInsightResult.output.contains('Multiple forces on different versions for virtual platform ')
         assert dependencyInsightResult.output.contains('Could not resolve test.nebula:a:2.0.0')
-        assert dependencyInsightResult.output.contains('Could not resolve test.nebula:b:2.0.0')
-        assert dependencyInsightResult.output.contains('Could not resolve test.nebula:c:1.0.0')
+        assert dependencyInsightResult.output.contains('Could not resolve test.nebula:b:1.0.0. (already reported)')
+        assert dependencyInsightResult.output.contains('Could not resolve test.nebula:c:0.15.0. (already reported)')
     }
 
     @Unroll
@@ -177,9 +177,9 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
 
         then:
         assert dependencyInsightResult.output.contains('Multiple forces on different versions for virtual platform ')
-        assert dependencyInsightResult.output.contains('Could not resolve test.nebula:a:2.0.0')
-        assert dependencyInsightResult.output.contains('Could not resolve test.nebula:b:2.0.0')
-        assert dependencyInsightResult.output.contains('Could not resolve test.nebula:c:1.0.0')
+        assert dependencyInsightResult.output.contains('Could not resolve test.nebula:a:latest.release')
+        assert dependencyInsightResult.output.contains('Could not resolve test.nebula:b:1.+. (already reported)')
+        assert dependencyInsightResult.output.contains('Could not resolve test.nebula:c:0.15.0. (already reported)')
 
     }
 
@@ -349,8 +349,8 @@ class AlignRulesForceSpec extends AbstractAlignRulesSpec {
 
         then:
         assert dependencyInsightResult.output.contains('Multiple forces on different versions for virtual platform ')
-        assert dependencyInsightResult.output.contains('Could not resolve test.nebula:a:2.0.0')
-        assert dependencyInsightResult.output.contains('Could not resolve test.nebula:b:1.0.0')
-        assert dependencyInsightResult.output.contains('Could not resolve test.nebula:c:0.15.0')
+        assert dependencyInsightResult.output.contains('Could not resolve test.nebula:a:latest.release')
+        assert dependencyInsightResult.output.contains('Could not resolve test.nebula:b:1.+. (already reported)')
+        assert dependencyInsightResult.output.contains('Could not resolve test.nebula:c:[1.0, 2.0). (already reported)')
     }
 }
