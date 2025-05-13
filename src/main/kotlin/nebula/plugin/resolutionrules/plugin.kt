@@ -68,6 +68,9 @@ class ResolutionRulesPlugin : Plugin<Project> {
         const val BOOT_ARCHIVES_CONFIGURATION_NAME = "bootArchives"
         const val ARCHIVES_CONFIGURATION_NAME = "archives"
         const val OPTIONAL_PREFIX = "optional-"
+        const val OPTIONAL_RULES_PROJECT_PROPERTY = "nebulaResolutionRules.optional"
+        const val INCLUDE_RULES_PROJECT_PROPERTY = "nebulaResolutionRules.include"
+        const val EXCLUDE_RULES_PROJECT_PROPERTY = "nebulaResolutionRules.exclude"
     }
 
     override fun apply(project: Project) {
@@ -75,7 +78,7 @@ class ResolutionRulesPlugin : Plugin<Project> {
         configurations = project.configurations
         extension =
             project.extensions.create("nebulaResolutionRules", NebulaResolutionRulesExtension::class.java, project)
-
+        addRulesFromProjectProperties(project, extension)
         val rootProject = project.rootProject
         val configuration = project.configurations.maybeCreate(RESOLUTION_RULES_CONFIG_NAME)
         if (project != rootProject) {
@@ -124,6 +127,22 @@ class ResolutionRulesPlugin : Plugin<Project> {
                 }
             }
         }
+    }
+
+    /**
+     * Search for optional, include and exclude rules in project properties
+     * Add them to the extension if found
+     */
+    private fun addRulesFromProjectProperties(
+        project: Project,
+        extension: NebulaResolutionRulesExtension
+    ) {
+        val optionalRules = project.findStringProperty(OPTIONAL_RULES_PROJECT_PROPERTY)
+        optionalRules?.let { rules -> parseRuleNames(rules).forEach { extension.optional.add(it) } }
+        val includeRules = project.findStringProperty(INCLUDE_RULES_PROJECT_PROPERTY)
+        includeRules?.let { rules -> parseRuleNames(rules).forEach { extension.include.add(it) } }
+        val excludeRules = project.findStringProperty(EXCLUDE_RULES_PROJECT_PROPERTY)
+        excludeRules?.let { rules -> parseRuleNames(rules).forEach { extension.exclude.add(it) } }
     }
 
 }

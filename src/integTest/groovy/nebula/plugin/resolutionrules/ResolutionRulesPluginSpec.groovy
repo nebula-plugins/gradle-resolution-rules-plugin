@@ -330,6 +330,28 @@ class ResolutionRulesPluginSpec extends AbstractIntegrationTestKitSpec {
         result.output.contains '\\--- org.slf4j:slf4j-api:1.7.21\n'
     }
 
+    def 'optional rules are applied when specified through project properties'() {
+        given:
+        buildFile << """
+                     dependencies {
+                         resolutionRules files("$optionalRulesJsonFile")
+
+                         implementation 'log4j:log4j:1.2.17'
+                         implementation 'org.slf4j:jcl-over-slf4j:1.7.0'
+                     }
+                     """.stripIndent()
+
+
+        when:
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath', "-PnebulaResolutionRules.optional=${moduleName}")
+
+        then:
+        result.output.contains '+--- log4j:log4j:1.2.17 -> org.slf4j:log4j-over-slf4j:1.7.21\n'
+        result.output.contains '|    \\--- org.slf4j:slf4j-api:1.7.21\n'
+        result.output.contains '\\--- org.slf4j:jcl-over-slf4j:1.7.0 -> 1.7.21\n'
+        result.output.contains '\\--- org.slf4j:slf4j-api:1.7.21\n'
+    }
+
     def 'only included rules are applied'() {
         given:
         def otherRulesFile = new File(projectDir, "other-${moduleName}.json")
@@ -363,6 +385,41 @@ class ResolutionRulesPluginSpec extends AbstractIntegrationTestKitSpec {
 
         when:
         def result = runTasks('dependencies', '--configuration', 'compileClasspath')
+
+        then:
+        result.output.contains('log4j:log4j:1.2.17 -> org.slf4j:log4j-over-slf4j:1.7.21')
+        !result.output.contains('asm:asm:3.3.1 -> org.ow2.asm:asm:5.0.4')
+    }
+
+    def 'only included rules are applied via project properties'() {
+        given:
+        def otherRulesFile = new File(projectDir, "other-${moduleName}.json")
+        otherRulesFile << """
+                                    {
+                                        "substitute" : [
+                                            {
+                                                "module" : "log4j:log4j",
+                                                "with" : "org.slf4j:log4j-over-slf4j:1.7.21",
+                                                "reason" : "SLF4J bridge replacement",
+                                                "author" : "Danny Thomas <dmthomas@gmail.com>",
+                                                "date" : "2015-10-07T20:21:20.368Z"
+                                            }
+                                        ]
+                                    }
+                                 """
+        buildFile << """
+                     dependencies {
+                         resolutionRules files("$optionalRulesJsonFile", "$otherRulesFile")
+
+                         implementation 'log4j:log4j:1.2.17'
+                         implementation 'asm:asm:3.3.1'
+                         implementation 'org.ow2.asm:asm:5.0.4'
+                     }
+                     """.stripIndent()
+
+
+        when:
+        def result = runTasks('dependencies', '--configuration', 'compileClasspath', "-PnebulaResolutionRules.include=other-${moduleName}")
 
         then:
         result.output.contains('log4j:log4j:1.2.17 -> org.slf4j:log4j-over-slf4j:1.7.21')
