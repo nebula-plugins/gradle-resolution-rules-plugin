@@ -62,16 +62,19 @@ class AlignRulesPluginInteractionSpec extends AbstractIntegrationTestKitSpec {
 
         buildFile << """\
             buildscript {
-                repositories { mavenCentral() }
+                repositories { 
+                    mavenCentral() 
+                    gradlePluginPortal()
+                }
 
                 dependencies {
-                    classpath 'com.netflix.nebula:nebula-dependency-recommender:10.0.1'
+                        classpath("com.netflix.nebula.dependency-recommender:com.netflix.nebula.dependency-recommender.gradle.plugin:13.0.0")
                 }
             }
 
             apply plugin: 'com.netflix.nebula.resolution-rules'
             apply plugin: 'java'
-            apply plugin: 'nebula.dependency-recommender'
+            apply plugin: 'com.netflix.nebula.dependency-recommender'
 
             repositories {
                 ${mavenrepo.mavenRepositoryBlock}
@@ -124,11 +127,11 @@ class AlignRulesPluginInteractionSpec extends AbstractIntegrationTestKitSpec {
                 repositories { mavenCentral() }
 
                 dependencies {
-                    classpath 'com.netflix.nebula:nebula-dependency-recommender:10.0.1'
+                    classpath 'com.netflix.nebula:nebula-dependency-recommender:13.0.0'
                 }
             }
 
-            apply plugin: 'nebula.dependency-recommender'
+            apply plugin: 'com.netflix.nebula.dependency-recommender'
             apply plugin: 'com.netflix.nebula.resolution-rules'
             apply plugin: 'java'
 
@@ -185,9 +188,14 @@ class AlignRulesPluginInteractionSpec extends AbstractIntegrationTestKitSpec {
 
         buildFile << """\
             buildscript {
-                repositories { mavenCentral() }
+                repositories { 
+                    mavenCentral() 
+                    maven {
+                        url = 'https://netflixoss.jfrog.io/artifactory/gradle-plugins/'
+                    }
+                }
                 dependencies {
-                    classpath 'com.netflix.nebula:nebula-dependency-recommender:12.5.1'
+                    classpath 'com.netflix.nebula:nebula-dependency-recommender:13.0.0'
                 }
             }
             allprojects {
@@ -371,7 +379,7 @@ class AlignRulesPluginInteractionSpec extends AbstractIntegrationTestKitSpec {
         buildFile << """\
             buildscript {
                 dependencies {
-                    classpath 'io.spring.gradle:dependency-management-plugin:0.6.1.RELEASE'
+                    classpath 'io.spring.gradle:dependency-management-plugin:1.1.7'
                 }
                 repositories {
                     mavenCentral()
@@ -439,12 +447,12 @@ class AlignRulesPluginInteractionSpec extends AbstractIntegrationTestKitSpec {
                 repositories { mavenCentral() }
 
                 dependencies {
-                    classpath 'com.netflix.nebula:nebula-dependency-recommender:10.0.1'
+                    classpath 'com.netflix.nebula:nebula-dependency-recommender:13.0.0'
                     classpath 'com.netflix.nebula:nebula-publishing-plugin:17.3.2'
                 }
             }
 
-            apply plugin: 'nebula.dependency-recommender'
+            apply plugin: 'com.netflix.nebula.dependency-recommender'
             apply plugin: 'nebula.maven-publish'
             apply plugin: 'com.netflix.nebula.resolution-rules'
             apply plugin: 'java'
@@ -967,13 +975,18 @@ class AlignRulesPluginInteractionSpec extends AbstractIntegrationTestKitSpec {
 
         buildFile << """\
             buildscript {
-                repositories { mavenCentral() }
-                dependencies { classpath 'com.netflix.nebula:nebula-dependency-recommender:10.0.1' }
+                repositories { 
+                    mavenCentral() 
+                    maven {
+                        url = 'https://netflixoss.jfrog.io/artifactory/gradle-plugins/'
+                    }
+                }
+                dependencies { classpath 'com.netflix.nebula:nebula-dependency-recommender:13.0.0' }
             }
             
             allprojects {
                 apply plugin: 'com.netflix.nebula.resolution-rules'
-                apply plugin: 'nebula.dependency-recommender'
+                apply plugin: 'com.netflix.nebula.dependency-recommender'
             }
 
             dependencies {
@@ -1056,13 +1069,18 @@ class AlignRulesPluginInteractionSpec extends AbstractIntegrationTestKitSpec {
 
         buildFile << """\
             buildscript {
-                repositories { mavenCentral() }
-                dependencies { classpath 'com.netflix.nebula:nebula-dependency-recommender:10.0.1' }
+                repositories { 
+                    mavenCentral()
+                    maven {
+                        url = 'https://netflixoss.jfrog.io/artifactory/gradle-plugins/'
+                    }
+                 }
+                dependencies { classpath 'com.netflix.nebula:nebula-dependency-recommender:13.0.0' }
             }
             
             allprojects {
                 apply plugin: 'com.netflix.nebula.resolution-rules'
-                apply plugin: 'nebula.dependency-recommender'
+                apply plugin: 'com.netflix.nebula.dependency-recommender'
                 dependencyRecommendations {
                     strictMode = true
                 }

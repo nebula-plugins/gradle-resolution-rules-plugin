@@ -148,11 +148,16 @@ data class SubstituteRule(
 
 class SubstituteRules(val rules: List<SubstituteRule>) : Rule {
     companion object {
-        private val SUBSTITUTIONS_ADD_RULE = DefaultDependencySubstitutions::class.java.getDeclaredMethod(
-            "addSubstitution",
-            Action::class.java,
-            Boolean::class.java
-        ).apply { isAccessible = true }
+        private val SUBSTITUTIONS_ADD_RULE = try {
+            DefaultDependencySubstitutions::class.java.getDeclaredMethod(
+                "addSubstitution",
+                Action::class.java,
+                Boolean::class.java
+            ).apply { isAccessible = true }
+        } catch (e: NoSuchMethodException) {
+            // Method not available in this Gradle version - will fall back to public API
+            null
+        }
     }
 
     @Transient private lateinit var rulesById: Map<ModuleIdentifier, List<SubstituteRule>>
@@ -207,7 +212,17 @@ class SubstituteRules(val rules: List<SubstituteRule>) : Rule {
          *
          * There's no alternative to all that only allows module substitution and we only ever substitute modules for modules, so this is completely safe.
          */
-        SUBSTITUTIONS_ADD_RULE.invoke(resolutionStrategy.dependencySubstitution, substitutionAction, false)
+        if (SUBSTITUTIONS_ADD_RULE != null) {
+            try {
+                SUBSTITUTIONS_ADD_RULE.invoke(resolutionStrategy.dependencySubstitution, substitutionAction, false)
+            } catch (e: Exception) {
+                // Fall back to public API if reflection fails
+                resolutionStrategy.dependencySubstitution.all(substitutionAction)
+            }
+        } else {
+            // Use public API for newer Gradle versions
+            resolutionStrategy.dependencySubstitution.all(substitutionAction)
+        }
     }
 }
 

@@ -1919,7 +1919,7 @@ class AlignAndSubstituteRulesSpec extends AbstractIntegrationTestKitSpec {
                 repositories { mavenCentral() }
             }
             """.stripIndent()
-        buildFile << baseBuildGradleFile("'nebula.dependency-recommender' version '9.0.1\'")
+        buildFile << baseBuildGradleFile("'com.netflix.nebula.dependency-recommender' version '13.0.0\'")
 
 
         if (!usingEnforcedPlatform) {
