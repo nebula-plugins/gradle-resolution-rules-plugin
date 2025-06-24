@@ -164,7 +164,7 @@ abstract class NebulaResolutionRulesService : BuildService<NebulaResolutionRules
 
         private fun resolveResolutionRules(project: Project): Map<String, RuleSet> {
             val configuration = project.configurations.getByName(RESOLUTION_RULES_CONFIG_NAME)
-            configuration.resolve().stream().use { stream ->
+            configuration.incoming.files.files.stream().use { stream ->
                 return stream.flatMap { file ->
                     when (file.extension) {
                         "json" -> {

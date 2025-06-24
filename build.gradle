@@ -16,8 +16,8 @@
  */
 
 plugins {
-    id 'com.netflix.nebula.plugin-plugin' version '21.3.3'
-    id "org.jetbrains.kotlin.jvm" version "2.1.0"
+    id 'com.netflix.nebula.plugin-plugin' version '22.0.2'
+    id "org.jetbrains.kotlin.jvm" version "2.2.0"
     id 'java-gradle-plugin'
 }
 
@@ -34,8 +34,6 @@ dependencies {
     testImplementation gradleTestKit()
     testRuntimeOnly 'com.netflix.nebula:gradle-dependency-lock-plugin:latest.release'
 }
-
-apply from: 'gradle/idea.gradle'
 
 description 'Gradle resolution rules plugin'
 
@@ -66,14 +64,14 @@ gradlePlugin {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(8)
+        languageVersion = JavaLanguageVersion.of(17)
     }
 }
 
 idea {
     project {
-        jdkName = '1.8'
-        languageLevel = '1.8'
+        jdkName = '17'
+        languageLevel = '17'
     }
 }
 

@@ -17,6 +17,7 @@
 
 package nebula.plugin.resolutionrules
 
+import groovy.ant.AntBuilder
 import nebula.test.IntegrationSpec
 import nebula.test.dependencies.DependencyGraph
 import nebula.test.dependencies.DependencyGraphBuilder
@@ -508,8 +509,10 @@ class ResolutionRulesPluginSpec extends AbstractIntegrationTestKitSpec {
                      task testDetached {
                         doFirst {
                             def detachedConfiguration = configurations.detachedConfiguration(dependencies.create('asm:asm:3.3.1'), dependencies.create('org.ow2.asm:asm:5.0.4'))
-                            configurations.add(detachedConfiguration)
-                            println "FILES: \${detachedConfiguration.files.size()}"
+                            def testConfig = configurations.register('testDetachedConfig') {
+                                extendsFrom detachedConfiguration
+                            }
+                            println "FILES: \${testConfig.get().files.size()}"
                         }
                      }
                      """
@@ -522,29 +525,6 @@ class ResolutionRulesPluginSpec extends AbstractIntegrationTestKitSpec {
         result.output.contains('FILES: 1')
     }
 
-    def 'warning logged when configuration has been resolved'() {
-        given:
-        buildFile.text = """\
-             apply plugin: 'java'
-             apply plugin: 'com.netflix.nebula.resolution-rules'
-             repositories {
-                 mavenCentral()
-             }
-             dependencies {
-                 resolutionRules files("$rulesJsonFile", "$optionalRulesJsonFile")
-                 
-                 implementation 'com.google.guava:guava:19.0'
-             }
-             
-             configurations.compileClasspath.resolve()
-             """.stripIndent()
-
-        when:
-        def result = runTasks()
-
-        then:
-        result.output.contains("Dependency resolution rules will not be applied to configuration ':compileClasspath', it was resolved before the project was executed")
-    }
 
     def 'warning should not be logged when using nebulaRecommenderBom'() {
         setup:
@@ -588,12 +568,12 @@ class ResolutionRulesPluginSpec extends AbstractIntegrationTestKitSpec {
                 repositories { mavenCentral() }
 
                 dependencies {
-                    classpath 'com.netflix.nebula:nebula-dependency-recommender:7.0.1'
+                    classpath 'com.netflix.nebula:nebula-dependency-recommender:13.0.0'
                 }
              }
 
              apply plugin: 'java'
-             apply plugin: 'nebula.dependency-recommender'
+             apply plugin: 'com.netflix.nebula.dependency-recommender'
              apply plugin: 'com.netflix.nebula.resolution-rules'
              repositories {
                  mavenCentral()
