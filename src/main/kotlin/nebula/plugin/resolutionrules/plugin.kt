@@ -98,13 +98,13 @@ class ResolutionRulesPlugin : Plugin<Project> {
             )
         }
 
-        project.configurations.all { config ->
+        project.configurations.configureEach { config ->
             if (ignoredConfigurationPrefixes.any { config.name.startsWith(it) }) {
-                return@all
+                return@configureEach
             }
 
             if (ignoredConfigurationSuffixes.any { config.name.endsWith(it) }) {
-                return@all
+                return@configureEach
             }
 
             var dependencyRulesApplied = false
