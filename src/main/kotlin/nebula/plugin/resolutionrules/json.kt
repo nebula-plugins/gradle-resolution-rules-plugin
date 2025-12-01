@@ -19,6 +19,8 @@ package nebula.plugin.resolutionrules
 import com.fasterxml.jackson.databind.*
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 
-fun objectMapper(): ObjectMapper {
-    return jacksonObjectMapper()
-}
+/**
+ * Lazily initialized, shared ObjectMapper instance for JSON deserialization.
+ * Thread-safe singleton that is only created when first accessed.
+ */
+val objectMapper: ObjectMapper by lazy { jacksonObjectMapper() }

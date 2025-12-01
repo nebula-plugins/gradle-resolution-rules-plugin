@@ -73,7 +73,7 @@ class RulesTest extends Specification {
     }
 
     static RuleSet parseJsonText(String json) {
-        def ruleSet = JsonKt.objectMapper().readValue(json, RuleSet)
+        def ruleSet = JsonKt.getObjectMapper().readValue(json, RuleSet)
         return RulesKt.withName(ruleSet, "dummy")
     }
 }

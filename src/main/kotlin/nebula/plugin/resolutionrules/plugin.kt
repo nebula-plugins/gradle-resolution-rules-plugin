@@ -107,7 +107,6 @@ class ResolutionRulesPlugin : Plugin<Project> {
                 return@configureEach
             }
 
-            var dependencyRulesApplied = false
             project.onExecute {
                 val ruleSet = extension.ruleSet()
                 when {
@@ -122,7 +121,6 @@ class ResolutionRulesPlugin : Plugin<Project> {
                         ruleSet.dependencyRulesPartTwo().forEach { rule ->
                             rule.apply(project, config, config.resolutionStrategy, extension)
                         }
-                        dependencyRulesApplied = true
                     }
                 }
             }
@@ -150,7 +148,11 @@ class ResolutionRulesPlugin : Plugin<Project> {
 abstract class NebulaResolutionRulesService : BuildService<NebulaResolutionRulesService.Params> {
     companion object {
         private val Logger: Logger = Logging.getLogger(NebulaResolutionRulesService::class.java)
-        private val Mapper = objectMapper()
+        private val Mapper = objectMapper
+
+        private const val JSON_EXTENSION = "json"
+        private const val JAR_EXTENSION = "jar"
+        private const val ZIP_EXTENSION = "zip"
 
         fun registerService(project: Project): Provider<NebulaResolutionRulesService> {
             return project.gradle.sharedServices.registerIfAbsent(
@@ -167,18 +169,18 @@ abstract class NebulaResolutionRulesService : BuildService<NebulaResolutionRules
             configuration.incoming.files.files.stream().use { stream ->
                 return stream.flatMap { file ->
                     when (file.extension) {
-                        "json" -> {
+                        JSON_EXTENSION -> {
                             Logger.debug("nebula.resolution-rules uses: {}", file.name)
                             Stream.of(file.absolutePath to file.readBytes())
                         }
-                        "jar", "zip" -> {
+                        JAR_EXTENSION, ZIP_EXTENSION -> {
                             Logger.info("nebula.resolution-rules is using ruleset: {}", file.name)
                             val zipFile = ZipFile(file)
                             Collections.list(zipFile.entries()).stream()
                                 .onClose(zipFile::close)
                                 .flatMap { entry ->
                                     val entryFile = File(entry.name)
-                                    if (entryFile.extension == "json") {
+                                    if (entryFile.extension == JSON_EXTENSION) {
                                         Stream.of("${file.absolutePath}!${entry.name}" to zipFile.getInputStream(entry).readBytes())
                                     } else Stream.empty()
                                 }
@@ -190,7 +192,7 @@ abstract class NebulaResolutionRulesService : BuildService<NebulaResolutionRules
                     }
                 }.parallel()
                     .map { (path, bytes) ->
-                        val filePath = if (path.contains("!")) path.substringAfter("!") else path
+                        val filePath = path.substringAfterLast('!', path)
                         val file = File(filePath)
                         val ruleSetName = file.nameWithoutExtension
                         Logger.debug("Using {} ({}) a dependency rules source", ruleSetName, path)
