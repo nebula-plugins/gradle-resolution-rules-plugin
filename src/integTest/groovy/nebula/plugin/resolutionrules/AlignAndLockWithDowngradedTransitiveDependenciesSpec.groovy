@@ -14,6 +14,7 @@ class AlignAndLockWithDowngradedTransitiveDependenciesSpec extends AbstractInteg
     static def DYNAMIC_RANGE = "[2.9.9,2.10.0)"
 
     def setup() {
+        System.setProperty('ignoreDeprecations', 'true') // core locking triggers "DomainObjectCollection.findAll(Closure) method has been deprecated"
         rulesJsonFile = new File(projectDir, "${moduleName}.json")
         buildFile << """\
             buildscript {

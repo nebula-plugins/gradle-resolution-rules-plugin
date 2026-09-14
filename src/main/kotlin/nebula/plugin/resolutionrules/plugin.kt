@@ -74,7 +74,6 @@ class ResolutionRulesPlugin : Plugin<Project> {
     }
 
     override fun apply(project: Project) {
-        this.project = project
         configurations = project.configurations
         extension =
             project.extensions.create("nebulaResolutionRules", NebulaResolutionRulesExtension::class.java, project)

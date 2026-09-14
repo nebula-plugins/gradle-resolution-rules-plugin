@@ -825,7 +825,7 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
         buildFile << """\
             repositories { mavenCentral() }
 
-            configurations.findAll { it.isCanBeResolved() }.collect { it.resolvedConfiguration.resolvedArtifacts }
+            configurations.matching { it.isCanBeResolved() }.collect { it.resolvedConfiguration.resolvedArtifacts }
         """
 
         when:
@@ -996,8 +996,8 @@ class AlignRulesBasicSpec extends AbstractAlignRulesSpec {
         def result = runTasks(':sub0:dependencies', '--configuration', 'compileClasspath', ':sub1:dependencies', '--configuration', 'compileClasspath')
 
         then:
-        result.output.contains 'example.nebula:sub0:1.0.0 -> project :sub0'
-        result.output.contains 'example.nebula:sub1:1.1.0 -> project :sub1'
+        result.output.contains("example.nebula:sub0:1.0.0 -> project ':sub0'")
+        result.output.contains("example.nebula:sub1:1.1.0 -> project ':sub1'")
     }
 
 
