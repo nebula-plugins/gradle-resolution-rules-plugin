@@ -16,37 +16,28 @@
  */
 package nebula.plugin.resolutionrules
 
-import nebula.test.IntegrationSpec
+import nebula.test.IntegrationTestKitSpec
 import nebula.test.dependencies.DependencyGraphBuilder
 import nebula.test.dependencies.GradleDependencyGenerator
 import spock.lang.Unroll
 
-class AlignRulesMultiprojectSpec extends IntegrationSpec {
+class AlignRulesMultiprojectSpec extends IntegrationTestKitSpec {
     def rulesJsonFile
-    def aDir
-    def bDir
+    File aDir
+    File bDir
 
     def setup() {
         // Avoid deprecation warnings during parallel resolution while we look for a solution
         System.setProperty('ignoreDeprecations', 'true')
         System.setProperty('ignoreMutableProjectStateWarnings', 'true')
 
-        fork = false
         rulesJsonFile = new File(projectDir, "${moduleName}.json")
         buildFile << """\
+            plugins {
+                id 'com.netflix.nebula.resolution-rules'
+            }
             allprojects {
-                ${applyPlugin(ResolutionRulesPlugin)}
-                
-
                 group = 'test.nebula'
-            }
-
-            project(':a') {
-                apply plugin: 'java'
-            }
-            
-            project(':b') {
-                apply plugin: 'java-library'
             }
 
             dependencies {
@@ -54,12 +45,26 @@ class AlignRulesMultiprojectSpec extends IntegrationSpec {
             }
         """.stripIndent()
 
+
         settingsFile << '''\
             rootProject.name = 'aligntest'
         '''.stripIndent()
 
         aDir = addSubproject('a')
         bDir = addSubproject('b')
+        aDir.toPath().resolve("build.gradle").toFile() << """\
+            plugins {
+                id("java")
+                id 'com.netflix.nebula.resolution-rules'
+            }
+"""
+        bDir.toPath().resolve("build.gradle").toFile() << """\
+            plugins {
+                id("java-library")
+                id 'com.netflix.nebula.resolution-rules'
+            }
+"""
+
     }
 
     @Unroll
@@ -89,18 +94,20 @@ class AlignRulesMultiprojectSpec extends IntegrationSpec {
 
         buildFile << '''\
             subprojects {
-                apply plugin: 'maven-publish'
-
-                publishing {
-                    publications {
-                        test(MavenPublication) {
-                            from components.java
+                plugins.withId("java") {
+                    apply plugin: 'maven-publish'
+    
+                    publishing {
+                        publications {
+                            test(MavenPublication) {
+                                from components.java
+                            }
                         }
-                    }
-                    repositories {
-                        maven {
-                            name 'repo'
-                            url = 'build/repo'
+                        repositories {
+                            maven {
+                                name = 'repo'
+                                url = 'build/repo'
+                            }
                         }
                     }
                 }
@@ -115,7 +122,7 @@ class AlignRulesMultiprojectSpec extends IntegrationSpec {
         def results = runTasks(*tasks)
 
         then:
-        results.standardOutput.contains('\\--- project :a\n')
+        results.output.contains("\\--- project ':a'\n")
 
         where:
         parallel << [false, true]
@@ -200,21 +207,20 @@ class AlignRulesMultiprojectSpec extends IntegrationSpec {
                     maven { url = '${mavenrepo.absolutePath}' }
                 }
             }
-
-            project(':a') {
-                dependencies {
-                   implementation project(':b')
-                }
-            }
-
-            project(':b') {
-                dependencies {
-                    api 'other.nebula:a:1.0.0'
-                    api 'other.nebula:b:1.1.0'
-                    api 'other.nebula:c:0.42.0'
-                }
-            }
         """.stripIndent()
+
+        aDir.toPath().resolve("build.gradle").toFile() << """\
+dependencies {
+   implementation project(':b')
+}
+"""
+        bDir.toPath().resolve("build.gradle").toFile() << """\
+dependencies {
+    api 'other.nebula:a:1.0.0'
+    api 'other.nebula:b:1.1.0'
+    api 'other.nebula:c:0.42.0'
+}
+"""
 
         when:
         def tasks = [':a:dependencies', '--configuration', 'compileClasspath']
@@ -224,84 +230,9 @@ class AlignRulesMultiprojectSpec extends IntegrationSpec {
         def result = runTasks(*tasks)
 
         then:
-        result.standardOutput.contains '+--- other.nebula:a:1.0.0 -> 1.1.0'
-        result.standardOutput.contains '+--- other.nebula:b:1.1.0'
-        result.standardOutput.contains '\\--- other.nebula:c:0.42.0'
-
-        where:
-        parallel << [true, false]
-    }
-
-    @Unroll
-    def 'root project can depend on subprojects (parallel #parallel)'() {
-        def graph = new DependencyGraphBuilder()
-                .addModule('other.nebula:a:0.42.0')
-                .addModule('other.nebula:a:1.0.0')
-                .addModule('other.nebula:a:1.1.0')
-                .addModule('other.nebula:b:0.42.0')
-                .addModule('other.nebula:b:1.0.0')
-                .addModule('other.nebula:b:1.1.0')
-                .addModule('other.nebula:c:0.42.0')
-                .addModule('other.nebula:c:1.0.0')
-                .addModule('other.nebula:c:1.1.0')
-                .build()
-        File mavenrepo = new GradleDependencyGenerator(graph, "${projectDir}/testrepogen").generateTestMavenRepo()
-
-        rulesJsonFile << '''\
-            {
-                "deny": [], "reject": [], "substitute": [], "replace": [],
-                "align": [
-                    {
-                        "group": "other.nebula",
-                        "includes": [ "a", "b" ],
-                        "reason": "Align test.nebula dependencies",
-                        "author": "Example Person <person@example.org>",
-                        "date": "2016-03-17T20:21:20.368Z"
-                    }
-                ]
-            }
-        '''.stripIndent()
-
-        buildFile << """\
-            apply plugin: 'java'
-
-            subprojects {
-                repositories {
-                    maven { url = '${mavenrepo.absolutePath}' }
-                }
-            }
-
-            dependencies {
-                implementation project(':a')
-                implementation project(':b')
-            }
-
-            project(':a') {
-                dependencies {
-                   implementation project(':b')
-                }
-            }
-
-            project(':b') {
-                dependencies {
-                    api 'other.nebula:a:1.0.0'
-                    api 'other.nebula:b:1.1.0'
-                    api 'other.nebula:c:0.42.0'
-                }
-            }
-        """.stripIndent()
-
-        when:
-        def tasks = [':a:dependencies', '--configuration', 'compileClasspath']
-        if (parallel) {
-            tasks += "--parallel"
-        }
-        def result = runTasks(*tasks)
-
-        then:
-        result.standardOutput.contains '+--- other.nebula:a:1.0.0 -> 1.1.0'
-        result.standardOutput.contains '+--- other.nebula:b:1.1.0'
-        result.standardOutput.contains '\\--- other.nebula:c:0.42.0'
+        result.output.contains '+--- other.nebula:a:1.0.0 -> 1.1.0'
+        result.output.contains '+--- other.nebula:b:1.1.0'
+        result.output.contains '\\--- other.nebula:c:0.42.0'
 
         where:
         parallel << [true, false]

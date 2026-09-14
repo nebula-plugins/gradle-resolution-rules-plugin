@@ -16,8 +16,8 @@
  */
 
 plugins {
-    id 'com.netflix.nebula.plugin-plugin' version '22.0.2'
-    id "org.jetbrains.kotlin.jvm" version "2.2.0"
+    id 'com.netflix.nebula.plugin-plugin'
+    id "org.jetbrains.kotlin.jvm"
     id 'java-gradle-plugin'
 }
 
@@ -31,8 +31,8 @@ dependencies {
     implementation 'com.fasterxml.jackson.module:jackson-module-kotlin'
     implementation 'com.netflix.nebula:nebula-dependency-recommender:latest.release'
 
-    testImplementation gradleTestKit()
     testRuntimeOnly 'com.netflix.nebula:gradle-dependency-lock-plugin:latest.release'
+    testImplementation("org.spockframework:spock-junit4:2.4-groovy-4.0")
 }
 
 description 'Gradle resolution rules plugin'
@@ -43,8 +43,6 @@ contacts {
         github 'nebula-plugins'
     }
 }
-
-
 
 tasks.integrationTest {
     maxParallelForks = (int) (Runtime.getRuntime().availableProcessors() / 2 + 1)
@@ -68,18 +66,8 @@ java {
     }
 }
 
-idea {
-    project {
-        jdkName = '17'
-        languageLevel = '17'
-    }
-}
-
-
-tasks.withType(GenerateModuleMetadata).configureEach {
-    suppressedValidationErrors.add('enforced-platform')
-}
-
-javaCrossCompile {
-    disableKotlinSupport = true
+tasks.wrapper {
+    distributionType = Wrapper.DistributionType.ALL
+    gradleVersion = "9.7.1"
+    distributionSha256Sum = "92c1a136d76b5017732a66d2e0a648ebff00dd3687d8bff0d0047a1bd904fdf2"
 }
