@@ -583,7 +583,7 @@ class ResolutionRulesPluginSpec extends AbstractIntegrationTestKitSpec {
              dependencies {
                  resolutionRules files("$nebulaBomResolutionRulesFile")
                  nebulaRecommenderBom 'test.nebula.bom:testbom:1.0.0@pom'
-                 implementation group: 'com.google.guava', name: 'guava', version: '19.0'
+                 implementation("com.google.guava:guava:19.0")
              }
              
              configurations.nebulaRecommenderBom.resolve()
