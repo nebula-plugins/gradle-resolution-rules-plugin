@@ -108,4 +108,35 @@ internal class ResolutionRulesPluginTest {
         assertThat(diResult.output)
             .contains("Variant runtimeElements:")
     }
+
+    @Test
+    fun `resolutionRules configuration has attributes before it is realized`() {
+        val runner = testProject(projectDir) {
+            rootProject {
+                plugins {
+                    id("com.netflix.nebula.resolution-rules")
+                }
+            }
+            subProject("sub") {
+                plugins {
+                    id("java")
+                }
+                rawBuildScript(
+                    """
+afterEvaluate {
+    configurations.configureEach {
+        if(name == "resolutionRules") {
+            if(attributes.isEmpty) {
+                throw RuntimeException("no attributes " + name)
+            }
+        }
+    }
+}
+apply(plugin = "com.netflix.nebula.resolution-rules")
+"""
+                )
+            }
+        }
+        runner.run("sub:build")
+    }
 }

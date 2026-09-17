@@ -85,9 +85,6 @@ class ResolutionRulesPlugin : Plugin<Project> {
             val rootProjectDependency = project.dependencies.project(
                 mapOf("path" to rootProject.path, "configuration" to RESOLUTION_RULES_CONFIG_NAME)
             )
-            configuration.withDependencies { dependencies ->
-                dependencies.add(rootProjectDependency)
-            }
             configuration.attributes {
                 it.attribute(
                     Usage.USAGE_ATTRIBUTE,
@@ -101,6 +98,9 @@ class ResolutionRulesPlugin : Plugin<Project> {
                     Category.CATEGORY_ATTRIBUTE,
                     project.objects.named(Category::class.java, Category.LIBRARY)
                 )
+            }
+            configuration.withDependencies { dependencies ->
+                dependencies.add(rootProjectDependency)
             }
         }
         if (rootProject.extensions.findByType(NebulaResolutionRulesExtension::class.java) == null) {
