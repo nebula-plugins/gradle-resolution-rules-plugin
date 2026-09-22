@@ -31,9 +31,7 @@ internal class ResolutionRulesPluginTest {
                 }
             }
         }
-        val result = runner.run("sub:dependencies", "--configuration", "resolutionRules", "--stacktrace") {
-            forwardOutput()
-        }
+        val result = runner.run("sub:dependencies", "--configuration", "resolutionRules", "--stacktrace")
         assertThat(result)
             .hasNoProblemsReport()
             .hasNoDeprecationWarnings()
@@ -75,6 +73,9 @@ internal class ResolutionRulesPluginTest {
         )
         assertThat(diResult.output)
             .contains("Variant runtimeElements:")
+            .containsIgnoringWhitespaces("| org.gradle.category | library | library |")
+            .containsIgnoringWhitespaces("| org.gradle.libraryelements | jar | jar |")
+            .containsIgnoringWhitespaces("| org.gradle.usage | java-runtime | java-runtime |")
     }
 
     @Test
@@ -107,9 +108,6 @@ internal class ResolutionRulesPluginTest {
         )
         assertThat(diResult.output)
             .contains("Variant runtimeElements:")
-            .containsIgnoringWhitespaces("| org.gradle.category | library | library |")
-            .containsIgnoringWhitespaces("| org.gradle.libraryelements | jar | classes+resources |")
-            .containsIgnoringWhitespaces("| org.gradle.usage | java-runtime | java-runtime |")
     }
 
     @Test
@@ -137,8 +135,5 @@ internal class ResolutionRulesPluginTest {
         )
         assertThat(rootDiResult.output)
             .contains("Variant runtimeElements:")
-            .containsIgnoringWhitespaces("| org.gradle.category | library | library |")
-            .containsIgnoringWhitespaces("| org.gradle.libraryelements | jar | classes+resources |")
-            .containsIgnoringWhitespaces("| org.gradle.usage | java-runtime | java-runtime |")
     }
 }
