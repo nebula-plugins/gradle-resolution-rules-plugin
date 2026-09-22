@@ -107,5 +107,38 @@ internal class ResolutionRulesPluginTest {
         )
         assertThat(diResult.output)
             .contains("Variant runtimeElements:")
+            .containsIgnoringWhitespaces("| org.gradle.category | library | library |")
+            .containsIgnoringWhitespaces("| org.gradle.libraryelements | jar | classes+resources |")
+            .containsIgnoringWhitespaces("| org.gradle.usage | java-runtime | java-runtime |")
+    }
+
+    @Test
+    fun `resolutionRules configuration can resolve a library dependency in root with newer java version`() {
+        val runner = testProject(projectDir) {
+            rootProject {
+                plugins {
+                    id("java")
+                    id("com.netflix.nebula.resolution-rules")
+                }
+                javaToolchain(8)
+                repositories {
+                    mavenCentral()
+                }
+                dependencies {
+                    add("resolutionRules", "com.netflix.nebula:nebula-test:latest.release")
+                }
+            }
+        }
+
+        val rootDiResult = runner.run(
+            "dependencyInsight",
+            "--configuration", "resolutionRules",
+            "--dependency", "nebula-test"
+        )
+        assertThat(rootDiResult.output)
+            .contains("Variant runtimeElements:")
+            .containsIgnoringWhitespaces("| org.gradle.category | library | library |")
+            .containsIgnoringWhitespaces("| org.gradle.libraryelements | jar | classes+resources |")
+            .containsIgnoringWhitespaces("| org.gradle.usage | java-runtime | java-runtime |")
     }
 }
