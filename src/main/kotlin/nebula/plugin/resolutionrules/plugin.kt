@@ -87,7 +87,7 @@ class ResolutionRulesPlugin : Plugin<Project> {
                 )
                 it.attribute(
                     LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE,
-                    project.objects.named(LibraryElements::class.java, LibraryElements.CLASSES_AND_RESOURCES)
+                    project.objects.named(LibraryElements::class.java, LibraryElements.JAR)
                 )
                 it.attribute(
                     Category.CATEGORY_ATTRIBUTE,
