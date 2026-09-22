@@ -79,16 +79,8 @@ class ResolutionRulesPlugin : Plugin<Project> {
             project.extensions.create("nebulaResolutionRules", NebulaResolutionRulesExtension::class.java, project)
         addRulesFromProjectProperties(project, extension)
         val rootProject = project.rootProject
-        val configuration = project.configurations.maybeCreate(RESOLUTION_RULES_CONFIG_NAME)
-        if (project != rootProject) {
-            configuration.isCanBeConsumed = false
-            val rootProjectDependency = project.dependencies.project(
-                mapOf("path" to rootProject.path, "configuration" to RESOLUTION_RULES_CONFIG_NAME)
-            )
-            configuration.withDependencies { dependencies ->
-                dependencies.add(rootProjectDependency)
-            }
-            configuration.attributes {
+        val configuration = project.configurations.create(RESOLUTION_RULES_CONFIG_NAME) {
+            it.attributes {
                 it.attribute(
                     Usage.USAGE_ATTRIBUTE,
                     project.objects.named(Usage::class.java, Usage.JAVA_RUNTIME)
@@ -101,6 +93,15 @@ class ResolutionRulesPlugin : Plugin<Project> {
                     Category.CATEGORY_ATTRIBUTE,
                     project.objects.named(Category::class.java, Category.LIBRARY)
                 )
+            }
+        }
+        if (project != rootProject) {
+            configuration.isCanBeConsumed = false
+            val rootProjectDependency = project.dependencies.project(
+                mapOf("path" to rootProject.path, "configuration" to RESOLUTION_RULES_CONFIG_NAME)
+            )
+            configuration.withDependencies { dependencies ->
+                dependencies.add(rootProjectDependency)
             }
         }
         if (rootProject.extensions.findByType(NebulaResolutionRulesExtension::class.java) == null) {
