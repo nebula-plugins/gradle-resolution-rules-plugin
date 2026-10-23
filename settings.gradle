@@ -8,4 +8,6 @@ plugins {
     id("com.netflix.nebula.oss.settings")
 }
 
+enableFeaturePreview("ENHANCED_GRAPH_ORDERING")
+
 rootProject.name = 'gradle-resolution-rules-plugin'

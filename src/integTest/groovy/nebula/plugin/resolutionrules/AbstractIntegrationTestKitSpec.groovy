@@ -4,6 +4,7 @@ import nebula.test.IntegrationTestKitSpec
 
 abstract class AbstractIntegrationTestKitSpec extends IntegrationTestKitSpec {
     def setup() {
+        settingsFile << '\nenableFeaturePreview("ENHANCED_GRAPH_ORDERING")\n'
         // Enable configuration cache :)
         new File(projectDir, 'gradle.properties') << '''org.gradle.configuration-cache=true'''.stripIndent()
     }
