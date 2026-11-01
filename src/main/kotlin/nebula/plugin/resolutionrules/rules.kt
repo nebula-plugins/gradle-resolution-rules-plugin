@@ -59,10 +59,19 @@ data class RuleSet(
 
     lateinit var name: String
 
-    fun dependencyRulesPartOne() =
-        listOf(replace, deny, exclude).flatten() + listOf(SubstituteRules(substitute), RejectRules(reject))
+    // The rule lists never change, so the derived rules are built once per rule set instead of once per configuration.
+    // SubstituteRules and RejectRules index every rule they hold, which is costly when there are thousands of them.
+    @Transient
+    private var rulesPartOne: List<Rule>? = null
 
-    fun dependencyRulesPartTwo() = listOf(align).flatten()
+    @Transient
+    private var rulesPartTwo: List<AlignRule>? = null
+
+    fun dependencyRulesPartOne(): List<Rule> = rulesPartOne
+        ?: (replace + listOf(DenyRules(deny)) + exclude + listOf(SubstituteRules(substitute), RejectRules(reject)))
+            .also { rulesPartOne = it }
+
+    fun dependencyRulesPartTwo(): List<AlignRule> = rulesPartTwo ?: listOf(align).flatten().also { rulesPartTwo = it }
 
     fun generateAlignmentBelongsToName() {
         align.forEachIndexed { index, alignRule ->
@@ -109,6 +118,11 @@ data class ReplaceRule(
         resolutionStrategy: ResolutionStrategy,
         extension: NebulaResolutionRulesExtension
     ) {
+        // Module replacements belong to the project, not the configuration, so declaring one again for each
+        // configuration only repeats the same declaration.
+        if (!extension.markReplaceRuleApplied(this)) {
+            return
+        }
         project.dependencies.modules.module(moduleId) {
             val details = it as ComponentModuleMetadataDetails
             val message = "replaced $module -> $with because '$reason' by rule $ruleSet"
@@ -283,16 +297,25 @@ data class DenyRule(
 ) : ModuleRule {
     private val moduleVersionId = module.toModuleVersionId()
 
+    internal val moduleId: ModuleIdentifier
+        get() = moduleVersionId.module
+
     override fun apply(
         project: Project,
         configuration: Configuration,
         resolutionStrategy: ResolutionStrategy,
         extension: NebulaResolutionRulesExtension
     ) {
-        val moduleId = moduleVersionId.module
         val match = configuration.allDependencies.find {
             it is ExternalModuleDependency && it.group == moduleId.group && it.name == moduleId.name
         }
+        applyToMatch(match, resolutionStrategy)
+    }
+
+    /**
+     * Applies this rule given the first external dependency of the configuration on [moduleId], or null if there is none.
+     */
+    internal fun applyToMatch(match: Dependency?, resolutionStrategy: ResolutionStrategy) {
         if (match != null && (moduleVersionId.version.isEmpty() || match.version == moduleVersionId.version)) {
             resolutionStrategy.componentSelection.withModule(moduleId) { selection ->
                 val message = "denied by rule $ruleSet because '$reason'"
@@ -300,6 +323,32 @@ data class DenyRule(
             }
             throw DependencyDeniedException(moduleVersionId, this)
         }
+    }
+}
+
+/**
+ * Applies deny rules in order, as [DenyRule.apply] would, but walks the dependencies of the configuration once rather
+ * than once per rule.
+ */
+class DenyRules(val rules: List<DenyRule>) : Rule {
+    override fun apply(
+        project: Project,
+        configuration: Configuration,
+        resolutionStrategy: ResolutionStrategy,
+        extension: NebulaResolutionRulesExtension
+    ) {
+        if (rules.isEmpty()) {
+            return
+        }
+        // Keep the first dependency on each module, which is the one DenyRule.apply finds.
+        val firstDependencyByModule = HashMap<ModuleIdentifier, Dependency>()
+        configuration.allDependencies.forEach { dependency ->
+            val group = dependency.group
+            if (dependency is ExternalModuleDependency && group != null) {
+                firstDependencyByModule.putIfAbsent(DefaultModuleIdentifier.newId(group, dependency.name), dependency)
+            }
+        }
+        rules.forEach { rule -> rule.applyToMatch(firstDependencyByModule[rule.moduleId], resolutionStrategy) }
     }
 }
 

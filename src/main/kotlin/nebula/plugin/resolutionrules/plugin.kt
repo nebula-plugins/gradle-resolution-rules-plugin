@@ -258,7 +258,31 @@ open class NebulaResolutionRulesExtension @Inject constructor(private val projec
             field.addAll(value)
         }
 
+    // The rules are read once per build, so the filtered rule set only changes when include, optional or exclude do.
+    // It is asked for once per configuration, so it is kept along with the selections it was built from.
+    private var cachedRuleSet: RuleSet? = null
+    private var cachedRuleSetSelection: List<List<String>>? = null
+
+    private val appliedReplaceRules: MutableSet<ReplaceRule> = Collections.newSetFromMap(IdentityHashMap())
+
     fun ruleSet(): RuleSet {
+        val selection = listOf(ArrayList(include), ArrayList(optional), ArrayList(exclude))
+        val cached = cachedRuleSet
+        if (cached != null && selection == cachedRuleSetSelection) {
+            return cached
+        }
+        return computeRuleSet().also {
+            cachedRuleSet = it
+            cachedRuleSetSelection = selection
+        }
+    }
+
+    /**
+     * Records that [rule] has been applied to this project, and returns false if it already was.
+     */
+    internal fun markReplaceRuleApplied(rule: ReplaceRule): Boolean = appliedReplaceRules.add(rule)
+
+    private fun computeRuleSet(): RuleSet {
         val service = NebulaResolutionRulesService.registerService(project).get()
         val rulesByFile = service.parameters
             .getResolutionRules()
