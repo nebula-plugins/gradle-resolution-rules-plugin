@@ -26,7 +26,8 @@ jobs:
         uses: actions/setup-java@v5
         with:
           distribution: 'zulu'
-          # GradleDependencyGenerator publishes Java 8 fixtures using a toolchain.
+          # Java 8 is only for publishing fixture artifacts, not for running tests.
+          # Keep the matrix JDK last so setup-java makes it the active JAVA_HOME.
           java-version: |
             8
             17

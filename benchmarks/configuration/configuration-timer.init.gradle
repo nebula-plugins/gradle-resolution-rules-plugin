@@ -1,3 +1,5 @@
+// Include project afterEvaluate callbacks; Gradle's profile counter omits some of that work.
+// Benchmark builds disable configuration cache so these callbacks run on every sample.
 def configurationStarted
 gradle.projectsLoaded {
     configurationStarted = System.nanoTime()
