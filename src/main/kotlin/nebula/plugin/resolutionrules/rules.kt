@@ -59,9 +59,15 @@ data class RuleSet(
 
     lateinit var name: String
 
+    /**
+     * Creates the ordered first-pass registrations, including wrappers that hold substitution and rejection indexes.
+     * [NebulaResolutionRulesService.PreparedRules] retains this result for reuse across a project's configurations,
+     * keeping derived runtime caches out of this serializable rule model.
+     */
     fun dependencyRulesPartOne(): List<Rule> =
         replace + listOf(DenyRules(deny)) + exclude + listOf(SubstituteRules(substitute), RejectRules(reject))
 
+    /** Copies the alignment rules for the prepared selection's second registration pass. */
     fun dependencyRulesPartTwo(): List<AlignRule> = align.toList()
 
     fun generateAlignmentBelongsToName() {

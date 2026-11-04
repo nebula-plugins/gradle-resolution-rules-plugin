@@ -7,6 +7,11 @@ import org.junit.jupiter.api.io.TempDir
 import java.io.File
 import java.util.jar.JarOutputStream
 
+/**
+ * Exercises rule registration in real Gradle builds using fixture artifacts from a local Maven repository.
+ * Covers configuration-cache reuse and invalidation, plus independent selections and replacement tracking for projects
+ * that share the same service and parsed rules.
+ */
 internal class ResolutionRulesServiceTest {
     @TempDir lateinit var dir: File
 

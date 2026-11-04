@@ -164,11 +164,29 @@ class ResolutionRulesPlugin : Plugin<Project> {
 
 }
 
+/**
+ * Shares parsed rules within a build and caches the preparation needed by each project's configuration callbacks.
+ *
+ * [Params] carries the parsed rule data. This service instance owns the filtered rule sets, derived rule lists and
+ * replacement application tracking, keeping that runtime state off the extension and the serialized parameters.
+ * Gradle creates fresh runtime caches whenever it creates a new service instance.
+ *
+ * Each project has separate state keyed by its path, which is unique within the build owning this registration.
+ * Cache entries retain rule data and selection snapshots; they do not retain projects, configurations or extensions.
+ * Cache refresh is synchronized per project, and replacement tracking uses a synchronized identity set.
+ */
 abstract class NebulaResolutionRulesService : BuildService<NebulaResolutionRulesService.Params> {
-    // Runtime caches belong to this service instance, separate from its serialized parameters.
-    // Project paths are unique within the build that owns this service registration.
     private val projectStates = ConcurrentHashMap<String, ProjectRuleState>()
 
+    /**
+     * Returns the prepared rules for [projectPath], reusing the previous result while its selections are unchanged.
+     *
+     * Copies the extension's mutable lists into a snapshot so later DSL edits can be detected by value. A changed
+     * snapshot replaces that project's cached selection and derived lists. The returned lists are still applied to
+     * each eligible configuration; this cache avoids repeated preparation rather than caching resolution results.
+     *
+     * @param projectPath the project's path within the build that registered this service
+     */
     internal fun rulesFor(
         projectPath: String,
         include: List<String>,
@@ -180,6 +198,12 @@ abstract class NebulaResolutionRulesService : BuildService<NebulaResolutionRules
         return state.rulesFor(parameters.getResolutionRules().get().byFile, selection)
     }
 
+    /**
+     * A snapshot used both as the cache key and to select rule files.
+     *
+     * Optional files require explicit opt-in. For other files, a nonempty include list takes precedence over excludes;
+     * otherwise every file outside the exclude list is selected. These are the extension's existing selection rules.
+     */
     private data class RuleSelection(
         val include: List<String>,
         val optional: List<String>,
@@ -193,13 +217,24 @@ abstract class NebulaResolutionRulesService : BuildService<NebulaResolutionRules
         }
     }
 
+    /**
+     * Holds one project's latest prepared selection and its replacement history for this service instance.
+     * Keeping one entry per project allows selection changes without accumulating a cache entry for every snapshot.
+     */
     private class ProjectRuleState {
         private var selection: RuleSelection? = null
         private var preparedRules: PreparedRules? = null
+
+        /**
+         * Tracks individual parsed replacement declarations by identity, preserving the once-per-project policy.
+         * Distinct declarations remain distinct even when their values compare equal. This history survives selection
+         * changes, so an already-applied replacement is not replayed to overwrite an intervening declaration.
+         */
         private val appliedReplaceRules = Collections.synchronizedSet(
             Collections.newSetFromMap(IdentityHashMap<ReplaceRule, Boolean>())
         )
 
+        /** Publishes a complete prepared selection under this project's lock, independently of other projects. */
         @Synchronized
         fun rulesFor(rulesByFile: Map<String, RuleSet>, selection: RuleSelection): PreparedRules {
             val cached = preparedRules
@@ -214,14 +249,28 @@ abstract class NebulaResolutionRulesService : BuildService<NebulaResolutionRules
         }
     }
 
+    /**
+     * Prepared registration data for one project and selection snapshot.
+     *
+     * Retaining the derived lists lets [SubstituteRules] and [RejectRules] reuse their indexes across configurations.
+     * Replacement history is shared with the owning [ProjectRuleState], including after a selection refresh.
+     */
     internal class PreparedRules(
         val ruleSet: RuleSet,
         private val appliedReplaceRules: MutableSet<ReplaceRule>
     ) {
+        /** Ordered registrations performed before alignment, including the reusable indexed rule wrappers. */
         val partOne: List<Rule> = ruleSet.dependencyRulesPartOne()
+
+        /** Alignment rules kept on the existing second-pass registration path. */
         val partTwo: List<AlignRule> = ruleSet.dependencyRulesPartTwo()
 
-        // Module replacements are declared once per project, even when its selection changes.
+        /**
+         * Checks whether to apply [rule], recording the first encounter with a project-scoped replacement.
+         * First-pass rules other than replacements are evaluated for every eligible configuration.
+         *
+         * Call once immediately before applying the rule: checking a replacement also updates its application history.
+         */
         fun shouldApply(rule: Rule): Boolean = rule !is ReplaceRule || appliedReplaceRules.add(rule)
     }
 
@@ -322,6 +371,10 @@ open class NebulaResolutionRulesExtension @Inject constructor(private val projec
             field.addAll(value)
         }
 
+    /**
+     * Returns the rules selected by the current [include], [optional] and [exclude] values.
+     * The extension supplies DSL configuration; the build service owns selection snapshots and prepared-rule caches.
+     */
     fun ruleSet(): RuleSet {
         val service = NebulaResolutionRulesService.registerService(project).get()
         return service.rulesFor(project.path, include, optional, exclude).ruleSet
