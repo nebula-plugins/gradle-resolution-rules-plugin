@@ -1,0 +1,121 @@
+{
+  "commits": {
+    "main": "6f2b88aa5e797f13bf92ea5b47be81f263e2575b",
+    "original-pr": "7a71a36d71c8fe7fca28bf02b556d1f96da7a158",
+    "build-service": "e4dfd49bf8a8e6ee13a86efd4462544a15027974"
+  },
+  "environment": {
+    "gradle": "9.7.1",
+    "daemon_jdk": 21,
+    "os": "macOS 15.8",
+    "architecture": "aarch64",
+    "heap_gib": 3,
+    "max_workers": 2,
+    "configuration_cache": false,
+    "parallel_configuration": false,
+    "offline": true
+  },
+  "workload": {
+    "subprojects": 200,
+    "eligible_configurations_per_subproject": 37,
+    "implementation_dependencies_per_subproject": 20,
+    "rules": {
+      "replace": 285,
+      "substitute": 1049,
+      "reject": 692,
+      "deny": 22,
+      "exclude": 41,
+      "align": 106
+    }
+  },
+  "timing_interval": "projectsLoaded to projectsEvaluated, including project afterEvaluate callbacks",
+  "warmups_per_variant": 3,
+  "measured_runs_per_variant": 9,
+  "order": "Rotate variant order each round",
+  "summary": {
+    "main": {
+      "runs": 9,
+      "median_seconds": 1.76534475,
+      "min_seconds": 1.692617792,
+      "max_seconds": 1.905264375,
+      "values": [
+        1.87011075,
+        1.905264375,
+        1.8158631660000002,
+        1.775205334,
+        1.748391416,
+        1.754427792,
+        1.76534475,
+        1.692617792,
+        1.73384575
+      ]
+    },
+    "original-pr": {
+      "runs": 9,
+      "median_seconds": 0.7370309580000001,
+      "min_seconds": 0.654815375,
+      "max_seconds": 0.859331208,
+      "values": [
+        0.777239209,
+        0.781618917,
+        0.859331208,
+        0.786793708,
+        0.7370309580000001,
+        0.702596625,
+        0.654815375,
+        0.670278625,
+        0.71972725
+      ]
+    },
+    "build-service": {
+      "runs": 9,
+      "median_seconds": 0.790622125,
+      "min_seconds": 0.707506375,
+      "max_seconds": 0.814092083,
+      "values": [
+        0.814092083,
+        0.811487209,
+        0.8096693749999999,
+        0.726656917,
+        0.790622125,
+        0.796549375,
+        0.707506375,
+        0.766234208,
+        0.755304125
+      ]
+    }
+  },
+  "warmup_seconds": {
+    "main": [
+      2.530721583,
+      1.92737275,
+      1.861615625
+    ],
+    "original-pr": [
+      0.813505708,
+      0.8009989160000001,
+      0.780333334
+    ],
+    "build-service": [
+      0.83662775,
+      0.774906167,
+      0.8081025
+    ]
+  },
+  "full_test_results": {
+    "original-pr": {
+      "tests": 262,
+      "passed": 247,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 15
+    },
+    "build-service": {
+      "tests": 262,
+      "passed": 247,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 15
+    }
+  }
+}

@@ -1,0 +1,6 @@
+// Apply the same test concurrency limit to every checkout in the full-build comparison.
+gradle.beforeProject { project ->
+    project.tasks.withType(Test).configureEach {
+        maxParallelForks = 2
+    }
+}
