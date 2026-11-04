@@ -1,0 +1,5 @@
+gradle.beforeProject { project ->
+    project.tasks.withType(Test).configureEach {
+        maxParallelForks = 2
+    }
+}
