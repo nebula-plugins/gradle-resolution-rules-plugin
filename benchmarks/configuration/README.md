@@ -71,6 +71,11 @@ Choose a new work directory for each comparison. The script writes generated fix
 profiles, raw CSV/JSON runs and a summary there. It runs Gradle from each checkout's root with `-p` pointing to the fixture.
 Use `--prepare-only` to inspect the fixtures first, or `--help` for workload and sample-count options.
 
+Full test builds additionally require a locally discoverable JDK 8. `nebula-test`'s `GradleDependencyGenerator`
+requests a Java 8 toolchain when publishing fixture dependencies. Without it, publication fails and the generator
+returns without creating the fixture POMs, so subsequent resolution assertions fail. CI explicitly installs JDK 8
+alongside the JDKs used to build and run the tests; the configuration benchmark itself does not publish these fixtures.
+
 The full test builds used this command from each source checkout, with the same test-limit init script:
 
 ```sh
