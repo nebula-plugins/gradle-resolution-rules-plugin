@@ -34,6 +34,7 @@ import org.gradle.api.services.BuildServiceParameters
 import java.io.File
 import java.io.Serializable
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 import java.util.stream.Collectors
 import java.util.stream.Stream
 import java.util.zip.ZipFile
@@ -122,18 +123,21 @@ class ResolutionRulesPlugin : Plugin<Project> {
             }
 
             project.onExecute {
-                val ruleSet = extension.ruleSet()
+                val service = NebulaResolutionRulesService.registerService(project).get()
+                val rules = service.rulesFor(project.path, extension.include, extension.optional, extension.exclude)
                 when {
                     config.state != Configuration.State.UNRESOLVED || config.getObservedState() != Configuration.State.UNRESOLVED -> Logger.warn(
                         "Dependency resolution rules will not be applied to $config, it was resolved before the project was executed"
                     )
 
                     else -> {
-                        ruleSet.dependencyRulesPartOne().forEach { rule ->
-                            rule.apply(project, config, config.resolutionStrategy, extension)
+                        rules.partOne.forEach { rule ->
+                            if (rules.shouldApply(rule)) {
+                                rule.apply(project, config, config.resolutionStrategy, extension)
+                            }
                         }
 
-                        ruleSet.dependencyRulesPartTwo().forEach { rule ->
+                        rules.partTwo.forEach { rule ->
                             rule.apply(project, config, config.resolutionStrategy, extension)
                         }
                     }
@@ -161,6 +165,66 @@ class ResolutionRulesPlugin : Plugin<Project> {
 }
 
 abstract class NebulaResolutionRulesService : BuildService<NebulaResolutionRulesService.Params> {
+    // Runtime caches belong to this service instance, separate from its serialized parameters.
+    // Project paths are unique within the build that owns this service registration.
+    private val projectStates = ConcurrentHashMap<String, ProjectRuleState>()
+
+    internal fun rulesFor(
+        projectPath: String,
+        include: List<String>,
+        optional: List<String>,
+        exclude: List<String>
+    ): PreparedRules {
+        val selection = RuleSelection(include.toList(), optional.toList(), exclude.toList())
+        val state = projectStates.computeIfAbsent(projectPath) { ProjectRuleState() }
+        return state.rulesFor(parameters.getResolutionRules().get().byFile, selection)
+    }
+
+    private data class RuleSelection(
+        val include: List<String>,
+        val optional: List<String>,
+        val exclude: List<String>
+    ) {
+        fun includes(ruleSet: String): Boolean = when {
+            ruleSet.startsWith(ResolutionRulesPlugin.OPTIONAL_PREFIX) ->
+                optional.contains(ruleSet.substring(ResolutionRulesPlugin.OPTIONAL_PREFIX.length))
+            include.isNotEmpty() -> include.contains(ruleSet)
+            else -> !exclude.contains(ruleSet)
+        }
+    }
+
+    private class ProjectRuleState {
+        private var selection: RuleSelection? = null
+        private var preparedRules: PreparedRules? = null
+        private val appliedReplaceRules = Collections.synchronizedSet(
+            Collections.newSetFromMap(IdentityHashMap<ReplaceRule, Boolean>())
+        )
+
+        @Synchronized
+        fun rulesFor(rulesByFile: Map<String, RuleSet>, selection: RuleSelection): PreparedRules {
+            val cached = preparedRules
+            if (cached != null && this.selection == selection) {
+                return cached
+            }
+            val ruleSet = rulesByFile.filterKeys(selection::includes).values.flatten()
+            return PreparedRules(ruleSet, appliedReplaceRules).also {
+                preparedRules = it
+                this.selection = selection
+            }
+        }
+    }
+
+    internal class PreparedRules(
+        val ruleSet: RuleSet,
+        private val appliedReplaceRules: MutableSet<ReplaceRule>
+    ) {
+        val partOne: List<Rule> = ruleSet.dependencyRulesPartOne()
+        val partTwo: List<AlignRule> = ruleSet.dependencyRulesPartTwo()
+
+        // Module replacements are declared once per project, even when its selection changes.
+        fun shouldApply(rule: Rule): Boolean = rule !is ReplaceRule || appliedReplaceRules.add(rule)
+    }
+
     companion object {
         private val Logger: Logger = Logging.getLogger(NebulaResolutionRulesService::class.java)
         private val Mapper = objectMapper
@@ -258,46 +322,8 @@ open class NebulaResolutionRulesExtension @Inject constructor(private val projec
             field.addAll(value)
         }
 
-    // The rules are read once per build, so the filtered rule set only changes when include, optional or exclude do.
-    // It is asked for once per configuration, so it is kept along with the selections it was built from.
-    private var cachedRuleSet: RuleSet? = null
-    private var cachedRuleSetSelection: List<List<String>>? = null
-
-    private val appliedReplaceRules: MutableSet<ReplaceRule> = Collections.newSetFromMap(IdentityHashMap())
-
     fun ruleSet(): RuleSet {
-        val selection = listOf(ArrayList(include), ArrayList(optional), ArrayList(exclude))
-        val cached = cachedRuleSet
-        if (cached != null && selection == cachedRuleSetSelection) {
-            return cached
-        }
-        return computeRuleSet().also {
-            cachedRuleSet = it
-            cachedRuleSetSelection = selection
-        }
-    }
-
-    /**
-     * Records that [rule] has been applied to this project, and returns false if it already was.
-     */
-    internal fun markReplaceRuleApplied(rule: ReplaceRule): Boolean = appliedReplaceRules.add(rule)
-
-    private fun computeRuleSet(): RuleSet {
         val service = NebulaResolutionRulesService.registerService(project).get()
-        val rulesByFile = service.parameters
-            .getResolutionRules()
-            .get()
-            .byFile
-        return rulesByFile.filterKeys { ruleSet ->
-            when {
-                ruleSet.startsWith(ResolutionRulesPlugin.OPTIONAL_PREFIX) -> {
-                    val ruleSetWithoutPrefix = ruleSet.substring(ResolutionRulesPlugin.OPTIONAL_PREFIX.length)
-                    optional.contains(ruleSetWithoutPrefix)
-                }
-
-                include.isNotEmpty() -> include.contains(ruleSet)
-                else -> !exclude.contains(ruleSet)
-            }
-        }.values.flatten()
+        return service.rulesFor(project.path, include, optional, exclude).ruleSet
     }
 }

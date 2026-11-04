@@ -59,19 +59,10 @@ data class RuleSet(
 
     lateinit var name: String
 
-    // The rule lists never change, so the derived rules are built once per rule set instead of once per configuration.
-    // SubstituteRules and RejectRules index every rule they hold, which is costly when there are thousands of them.
-    @Transient
-    private var rulesPartOne: List<Rule>? = null
+    fun dependencyRulesPartOne(): List<Rule> =
+        replace + listOf(DenyRules(deny)) + exclude + listOf(SubstituteRules(substitute), RejectRules(reject))
 
-    @Transient
-    private var rulesPartTwo: List<AlignRule>? = null
-
-    fun dependencyRulesPartOne(): List<Rule> = rulesPartOne
-        ?: (replace + listOf(DenyRules(deny)) + exclude + listOf(SubstituteRules(substitute), RejectRules(reject)))
-            .also { rulesPartOne = it }
-
-    fun dependencyRulesPartTwo(): List<AlignRule> = rulesPartTwo ?: listOf(align).flatten().also { rulesPartTwo = it }
+    fun dependencyRulesPartTwo(): List<AlignRule> = align.toList()
 
     fun generateAlignmentBelongsToName() {
         align.forEachIndexed { index, alignRule ->
@@ -118,11 +109,6 @@ data class ReplaceRule(
         resolutionStrategy: ResolutionStrategy,
         extension: NebulaResolutionRulesExtension
     ) {
-        // Module replacements belong to the project, not the configuration, so declaring one again for each
-        // configuration only repeats the same declaration.
-        if (!extension.markReplaceRuleApplied(this)) {
-            return
-        }
         project.dependencies.modules.module(moduleId) {
             val details = it as ComponentModuleMetadataDetails
             val message = "replaced $module -> $with because '$reason' by rule $ruleSet"
