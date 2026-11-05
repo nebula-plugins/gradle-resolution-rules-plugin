@@ -199,67 +199,124 @@ internal class IsolatedProjectsAssessmentTest {
     @TestFactory
     fun `child sources are independent of project and task order`() = versions.flatMap { version ->
         modes.flatMap { isolated ->
-            listOf(false, true).map { reverse ->
-                DynamicTest.dynamicTest("local sources Gradle $version isolated=$isolated reverse=$reverse") {
-                    val fixture = Fixture(File(dir, "sources-$version-$isolated-$reverse"), version, isolated, watchFs = true)
-                    fixture.write("build.gradle", """
-                        configurations { resolutionRules }
-                        dependencies { resolutionRules files('rules.json') }
-                    """.trimIndent())
-                    // Swap which project has which inputs, as well as settings/task and plugin application order.
-                    val projects = if (reverse) listOf("b", "a") else listOf("a", "b")
-                    fixture.settings(*projects.toTypedArray())
-                    projects.forEachIndexed { index, path ->
-                        fixture.write("$path/local.json", """
-                            {"substitute":[{"module":"probe:local","with":"probe:target:${index + 1}",${Fixture.metadata}}]}
+            listOf(false, true).flatMap { programmatic ->
+                listOf(false, true).map { reverse ->
+                    DynamicTest.dynamicTest("local sources Gradle $version isolated=$isolated reverse=$reverse programmatic=$programmatic") {
+                        val fixture = Fixture(File(dir, "sources-$version-$isolated-$reverse-$programmatic"), version, isolated,
+                            watchFs = true, programmatic = programmatic)
+                        fixture.write("build.gradle", """
+                            configurations { resolutionRules }
+                            dependencies { resolutionRules files('rules.json') }
                         """.trimIndent())
-                        fixture.write("$path/build.gradle", """
-                            ${fixture.consumer("..", false, pluginFirst = index == 0)}
-                            dependencies { resolutionRules files('local.json'); implementation 'probe:local:1' }
-                            providers.gradleProperty('configurationAttempt').orNull
-                            // Public synchronous API: registering early must use this project's inputs. Repeated calls
-                            // preserve within-project identity, including after refreshing the selection snapshot.
-                            def rules = nebulaResolutionRules.ruleSet()
-                            assert rules.dependencyRulesPartOne()*.class*.simpleName ==
-                                ['ReplaceRule', 'DenyRules', 'ExcludeRule', 'SubstituteRules', 'RejectRules']
-                            def substitution = rules.substitute.find { it.module == 'probe:local' }
-                            assert nebulaResolutionRules.ruleSet().substitute.find { it.module == 'probe:local' }.is(substitution)
-                            nebulaResolutionRules.exclude = ['absent']
-                            assert nebulaResolutionRules.ruleSet().substitute.find { it.module == 'probe:local' }.is(substitution)
-                            // All projects read the common root source, but its mutable rules belong only to this project.
-                            assert rules.align[0].ruleSet == 'rules'
-                            rules.align[0].ruleSet = '$path'
-                        """.trimIndent())
-                    }
-                    val tasks = projects.reversed().flatMap { listOf(":$it:resolveRuntimeRules", ":$it:resolveRules") }.toTypedArray()
-                    fun verify(localVersion: String = "1") {
+                        // Swap which project has which inputs, as well as settings/task and plugin application order.
+                        val projects = if (reverse) listOf("b", "a") else listOf("a", "b")
+                        fixture.settings(*projects.toTypedArray())
                         projects.forEachIndexed { index, path ->
-                            val expected = fixture.expected() - "target-1.jar" + "target-${if (index == 0) localVersion else "2"}.jar"
-                            fixture.artifacts(path, expected)
-                            fixture.artifacts(path, expected, "runtimeResolved")
+                            fixture.write("$path/local.json", """
+                                {"substitute":[{"module":"probe:local","with":"probe:target:${index + 1}",${Fixture.metadata}}]}
+                            """.trimIndent())
+                            fixture.write("$path/build.gradle", """
+                                ${fixture.consumer("..", false, pluginFirst = index == 0)}
+                                dependencies { resolutionRules files('local.json'); implementation 'probe:local:1' }
+                                providers.gradleProperty('configurationAttempt').orNull
+                                // Public synchronous API: registering early must use this project's inputs. Repeated calls
+                                // preserve within-project identity, including after refreshing the selection snapshot.
+                                def rules = nebulaResolutionRules.ruleSet()
+                                assert rules.dependencyRulesPartOne()*.class*.simpleName ==
+                                    ['ReplaceRule', 'DenyRules', 'ExcludeRule', 'SubstituteRules', 'RejectRules']
+                                def substitution = rules.substitute.find { it.module == 'probe:local' }
+                                assert nebulaResolutionRules.ruleSet().substitute.find { it.module == 'probe:local' }.is(substitution)
+                                nebulaResolutionRules.exclude = ['absent']
+                                assert nebulaResolutionRules.ruleSet().substitute.find { it.module == 'probe:local' }.is(substitution)
+                                // All projects read the common root source, but its mutable rules belong only to this project.
+                                assert rules.align[0].ruleSet == 'rules'
+                                rules.align[0].ruleSet = '$path'
+                            """.trimIndent())
                         }
-                    }
-                    fixture.stored(fixture.run(*tasks))
-                    verify()
-                    fixture.reused(fixture.run(*tasks))
-                    verify()
-                    // Several fresh concurrent configurations plus reversed task order must give the same outputs.
-                    repeat(3) {
-                        fixture.stored(fixture.run(*tasks.reversedArray(), "-PconfigurationAttempt=$it"))
+                        val tasks = projects.reversed().flatMap { listOf(":$it:resolveRuntimeRules", ":$it:resolveRules") }.toTypedArray()
+                        fun verify(localVersion: String = "1") {
+                            projects.forEachIndexed { index, path ->
+                                val expected = fixture.expected() - "target-1.jar" + "target-${if (index == 0) localVersion else "2"}.jar"
+                                fixture.artifacts(path, expected)
+                                fixture.artifacts(path, expected, "runtimeResolved")
+                            }
+                        }
+                        fixture.stored(fixture.run(*tasks))
                         verify()
+                        fixture.reused(fixture.run(*tasks))
+                        verify()
+                        // Several fresh concurrent configurations plus reversed task order must give the same outputs.
+                        repeat(3) {
+                            fixture.stored(fixture.run(*tasks.reversedArray(), "-PconfigurationAttempt=$it"))
+                            verify()
+                        }
+                        fixture.run(*tasks)
+                        fixture.reused(fixture.run(*tasks))
+                        verify()
+                        fixture.write("${projects.first()}/local.json", """
+                            {"substitute":[{"module":"probe:local","with":"probe:target:2",${Fixture.metadata}}]}
+                        """.trimIndent())
+                        val changed = fixture.run(*tasks)
+                        verify("2")
+                        fixture.stored(changed)
+                        fixture.reused(fixture.run(*tasks))
+                        verify("2")
                     }
-                    fixture.run(*tasks)
-                    fixture.reused(fixture.run(*tasks))
-                    verify()
-                    fixture.write("${projects.first()}/local.json", """
-                        {"substitute":[{"module":"probe:local","with":"probe:target:2",${Fixture.metadata}}]}
-                    """.trimIndent())
-                    val changed = fixture.run(*tasks)
-                    verify("2")
-                    fixture.stored(changed)
-                    fixture.reused(fixture.run(*tasks))
-                    verify("2")
                 }
+            }
+        }
+    }
+
+    @TestFactory
+    fun `programmatic adoption supports explicit overrides and cache reuse`() = versions.map { version ->
+        DynamicTest.dynamicTest("programmatic overrides Gradle $version") {
+            val fixture = Fixture(File(dir, "programmatic-overrides-$version"), version, false, programmatic = true)
+            fixture.settings()
+            fixture.write("build.gradle", """
+                ${fixture.consumer(".", true)}
+                def localRules = providers.gradleProperty('nebulaResolutionRules.isolatedState')
+                    .orElse(providers.gradleProperty('nebulaResolutionRules.projectLocal')).orNull != 'false'
+                def service = nebula.plugin.resolutionrules.NebulaResolutionRulesService.@Companion.registerService(project)
+                assert nebulaResolutionRules.ruleSet().substitute[0].with == 'probe:target:1'
+                nebula.plugin.resolutionrules.ResolutionRulesPlugin.applyWithIsolatedState(project)
+                assert nebula.plugin.resolutionrules.NebulaResolutionRulesService.@Companion.registerService(project).get().is(service.get())
+                assert gradle.sharedServices.registrations.findByName(
+                    localRules ? 'nebulaResolutionRules.projectLocal:' : 'nebulaResolutionRules') != null
+                assert gradle.sharedServices.registrations.findByName(
+                    localRules ? 'nebulaResolutionRules' : 'nebulaResolutionRules.projectLocal:') == null
+            """.trimIndent())
+            listOf(emptyArray<String>(), arrayOf("-PnebulaResolutionRules.projectLocal=false"),
+                arrayOf("-PnebulaResolutionRules.projectLocal=true"),
+                arrayOf("-PnebulaResolutionRules.isolatedState=false"),
+                arrayOf("-PnebulaResolutionRules.isolatedState=true"),
+                arrayOf("-PnebulaResolutionRules.isolatedState=false", "-PnebulaResolutionRules.projectLocal=true"),
+                arrayOf("-PnebulaResolutionRules.isolatedState=true", "-PnebulaResolutionRules.projectLocal=false"),
+                emptyArray()).forEach { flags ->
+                fixture.run(":resolveRules", *flags)
+                fixture.artifacts("", fixture.expected())
+                fixture.reused(fixture.run(":resolveRules", *flags))
+                fixture.artifacts("", fixture.expected())
+            }
+        }
+    }
+
+    @TestFactory
+    fun `programmatic adoption rejects changing a previously selected legacy mode`() = versions.flatMap { version ->
+        listOf(false, true).map { serviceFirst ->
+            DynamicTest.dynamicTest("late programmatic adoption Gradle $version serviceFirst=$serviceFirst") {
+                val fixture = Fixture(File(dir, "late-adoption-$version-$serviceFirst"), version, false, projectLocal = false)
+                fixture.settings()
+                fixture.write("build.gradle", """
+                    plugins { id 'com.netflix.nebula.resolution-rules' ${if (serviceFirst) "apply false" else ""} }
+                    ${if (serviceFirst) """
+                        configurations { resolutionRules }
+                        nebula.plugin.resolutionrules.NebulaResolutionRulesService.@Companion.registerService(project)
+                    """.trimIndent() else ""}
+                    nebula.plugin.resolutionrules.ResolutionRulesPlugin.applyWithIsolatedState(project)
+                """.trimIndent())
+                val result = fixture.fails("help")
+                assertTrue(result.output.contains("Resolution rules mode is already selected for :"), result.output)
+                assertTrue(result.output.contains("before applying ResolutionRulesPlugin or registering its service"), result.output)
             }
         }
     }
@@ -349,7 +406,8 @@ internal class IsolatedProjectsAssessmentTest {
         val version: String,
         val isolated: Boolean,
         val watchFs: Boolean = false,
-        val projectLocal: Boolean = true
+        val projectLocal: Boolean = true,
+        val programmatic: Boolean = false
     ) {
         init {
             root.mkdirs()
@@ -383,7 +441,14 @@ internal class IsolatedProjectsAssessmentTest {
         """.trimIndent()
 
         fun consumer(relativeRoot: String, ownsRules: Boolean, selection: String = "", pluginFirst: Boolean = false) = """
-            plugins { ${if (pluginFirst) "id 'com.netflix.nebula.resolution-rules'; id 'java'" else "id 'java'; id 'com.netflix.nebula.resolution-rules'"} }
+            ${if (programmatic) """
+                plugins { id 'com.netflix.nebula.resolution-rules' apply false }
+                ${if (!pluginFirst) "apply plugin: 'java'" else ""}
+                nebula.plugin.resolutionrules.ResolutionRulesPlugin.applyWithIsolatedState(project)
+                nebula.plugin.resolutionrules.ResolutionRulesPlugin.applyWithIsolatedState(project)
+                apply plugin: 'com.netflix.nebula.resolution-rules'
+                ${if (pluginFirst) "apply plugin: 'java'" else ""}
+            """.trimIndent() else "plugins { ${if (pluginFirst) "id 'com.netflix.nebula.resolution-rules'; id 'java'" else "id 'java'; id 'com.netflix.nebula.resolution-rules'"} }"}
             repositories { maven { url = uri('$relativeRoot/repo') } }
             dependencies {
                 ${if (ownsRules) "resolutionRules files('rules.json')" else ""}
@@ -456,11 +521,13 @@ internal class IsolatedProjectsAssessmentTest {
 
         fun run(vararg arguments: String): BuildResult = runner(*arguments).build()
 
+        fun fails(vararg arguments: String): BuildResult = runner(*arguments).buildAndFail()
+
         private fun runner(vararg arguments: String): GradleRunner {
             val isolationFlags = if (!isolated) emptyList() else if (
                 GradleVersion.version(version) >= GradleVersion.version("9.7")
             ) listOf("--isolated-projects") else listOf("-Dorg.gradle.unsafe.isolated-projects=true")
-            val localRulesFlags = if (projectLocal) listOf("-PnebulaResolutionRules.projectLocal=true") else emptyList()
+            val localRulesFlags = if (projectLocal && !programmatic) listOf("-PnebulaResolutionRules.isolatedState=true") else emptyList()
             return GradleRunner.create().withProjectDir(root).withPluginClasspath().withGradleVersion(version)
                 .withArguments(arguments.toList() + listOf(
                     "--configuration-cache", "--configuration-cache-problems=fail", "--parallel",

@@ -39,14 +39,21 @@ See the [gradle-resolution-rules](https://github.com/nebula-plugins/gradle-resol
 ## Isolated Projects
 
 Existing builds retain the shared service, first-registering-project rule sources, and
-implicit root extension behavior. Project-owned state is an explicit opt-in in the root
-`gradle.properties`:
+implicit root extension behavior. Convention plugins such as Nebula can adopt isolated rule
+state without setting a project property:
 
-```properties
-nebulaResolutionRules.projectLocal=true
+```kotlin
+ResolutionRulesPlugin.applyWithIsolatedState(project)
 ```
 
-For Isolated Projects, enable this option and apply the plugin locally in each participating
+Builds can also opt in through the root `gradle.properties`:
+
+```properties
+nebulaResolutionRules.isolatedState=true
+```
+
+The earlier `nebulaResolutionRules.projectLocal` property remains a compatibility alias.
+For Isolated Projects, adopt isolated state and apply the plugin locally in each participating
 project (directly or through a convention plugin), replacing cross-project `allprojects`
 configuration. Shared rule artifacts still come from the root `resolutionRules` configuration;
 additional child sources affect that child only in the opt-in mode. See

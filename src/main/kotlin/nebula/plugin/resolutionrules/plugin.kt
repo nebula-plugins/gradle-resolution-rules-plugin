@@ -42,8 +42,20 @@ import javax.inject.Inject
 
 const val RESOLUTION_RULES_CONFIG_NAME = "resolutionRules"
 
-private fun Project.usesProjectLocalRules(): Boolean =
-    findStringProperty("nebulaResolutionRules.projectLocal").toBoolean()
+private const val ISOLATED_STATE_PROPERTY = "nebulaResolutionRules.isolatedState"
+private const val PROJECT_LOCAL_RULES_PROPERTY = "nebulaResolutionRules.projectLocal"
+private const val SELECTED_RULES_MODE = "nebulaResolutionRules.internal.selectedProjectLocalMode"
+
+private fun Project.isolatedStateOverride(): Boolean? =
+    (findStringProperty(ISOLATED_STATE_PROPERTY) ?: findStringProperty(PROJECT_LOCAL_RULES_PROPERTY))?.toBoolean()
+
+private fun Project.usesIsolatedRulesState(): Boolean {
+    val state = extensions.extraProperties
+    if (!state.has(SELECTED_RULES_MODE)) {
+        state.set(SELECTED_RULES_MODE, isolatedStateOverride() ?: false)
+    }
+    return state.get(SELECTED_RULES_MODE) as Boolean
+}
 
 class ResolutionRulesPlugin : Plugin<Project> {
     private lateinit var configurations: ConfigurationContainer
@@ -75,9 +87,32 @@ class ResolutionRulesPlugin : Plugin<Project> {
         const val OPTIONAL_RULES_PROJECT_PROPERTY = "nebulaResolutionRules.optional"
         const val INCLUDE_RULES_PROJECT_PROPERTY = "nebulaResolutionRules.include"
         const val EXCLUDE_RULES_PROJECT_PROPERTY = "nebulaResolutionRules.exclude"
+
+        /**
+         * Applies this plugin with project-owned rule state unless the build explicitly sets
+         * `nebulaResolutionRules.isolatedState=false`. Intended for convention plugins such as Nebula.
+         * The earlier `nebulaResolutionRules.projectLocal` property is a fallback alias.
+         *
+         * Call before this project's first plugin application or public service registration. Repeated calls
+         * are safe when the selected mode agrees; an already-selected legacy mode cannot be switched in place.
+         * This configures only [project], including when [project] is the root of a multi-project build.
+         */
+        @JvmStatic
+        fun applyWithIsolatedState(project: Project) {
+            val isolatedState = project.isolatedStateOverride() ?: true
+            val state = project.extensions.extraProperties
+            check(!state.has(SELECTED_RULES_MODE) || state.get(SELECTED_RULES_MODE) == isolatedState) {
+                "Resolution rules mode is already selected for ${project.path}. " +
+                    "Call ResolutionRulesPlugin.applyWithIsolatedState(project) before applying " +
+                    "ResolutionRulesPlugin or registering its service."
+            }
+            state.set(SELECTED_RULES_MODE, isolatedState)
+            project.pluginManager.apply(ResolutionRulesPlugin::class.java)
+        }
     }
 
     override fun apply(project: Project) {
+        val projectLocal = project.usesIsolatedRulesState()
         configurations = project.configurations
         extension =
             project.extensions.create("nebulaResolutionRules", NebulaResolutionRulesExtension::class.java, project)
@@ -110,7 +145,7 @@ class ResolutionRulesPlugin : Plugin<Project> {
         }
         // Preserve the legacy root-extension side effect unless the build explicitly opts into local state.
         // Short-circuit before accessing another project's extensions on the isolated path.
-        if (!project.usesProjectLocalRules() &&
+        if (!projectLocal &&
             rootProject.extensions.findByType(NebulaResolutionRulesExtension::class.java) == null
         ) {
             rootProject.extensions.create(
@@ -179,8 +214,9 @@ class ResolutionRulesPlugin : Plugin<Project> {
  * Gradle creates fresh runtime caches whenever it creates a new service instance.
  *
  * By default, the build-wide registration retains its legacy first-registering-project inputs and shared rule data.
- * With nebulaResolutionRules.projectLocal=true, each project registers its own service and parses separate rules,
- * including their mutable selectors and alignment matchers. State is keyed by project path within the build.
+ * With project-local adoption through the property or programmatic API, each project registers its own service
+ * and parses separate rules, including their mutable selectors and alignment matchers. State is keyed by project
+ * path within the build.
  * Cache entries retain rule data and selection snapshots; they do not retain projects, configurations or extensions.
  * Cache refresh is synchronized per project, and replacement tracking uses a synchronized identity set.
  */
@@ -294,7 +330,7 @@ abstract class NebulaResolutionRulesService : BuildService<NebulaResolutionRules
         fun registerService(project: Project): Provider<NebulaResolutionRulesService> {
             // Keep the legacy service and its first-registering-project inputs by default. The opt-in namespace
             // separates every project (including the root) from legacy registrations in mixed-mode builds.
-            val serviceName = if (project.usesProjectLocalRules()) {
+            val serviceName = if (project.usesIsolatedRulesState()) {
                 "nebulaResolutionRules.projectLocal${project.path}"
             } else {
                 "nebulaResolutionRules"
