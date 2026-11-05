@@ -105,14 +105,6 @@ class ResolutionRulesPlugin : Plugin<Project> {
                 dependencies.add(rootProjectDependency)
             }
         }
-        if (rootProject.extensions.findByType(NebulaResolutionRulesExtension::class.java) == null) {
-            rootProject.extensions.create(
-                "nebulaResolutionRules",
-                NebulaResolutionRulesExtension::class.java,
-                rootProject
-            )
-        }
-
         project.configurations.configureEach { config ->
             if (ignoredConfigurationPrefixes.any { config.name.startsWith(it) }) {
                 return@configureEach
@@ -165,13 +157,15 @@ class ResolutionRulesPlugin : Plugin<Project> {
 }
 
 /**
- * Shares parsed rules within a build and caches the preparation needed by each project's configuration callbacks.
+ * Owns one project's parsed rules and caches the preparation needed by its configuration callbacks.
  *
  * [Params] carries the parsed rule data. This service instance owns the filtered rule sets, derived rule lists and
  * replacement application tracking, keeping that runtime state off the extension and the serialized parameters.
  * Gradle creates fresh runtime caches whenever it creates a new service instance.
  *
- * Each project has separate state keyed by its path, which is unique within the build owning this registration.
+ * Each project registers its own service, with inputs resolved from its own configuration. In particular, parsed
+ * rules (including their mutable selectors and alignment matchers) are never reused by another project's service.
+ * State is keyed by project path, which is unique within the build owning this registration.
  * Cache entries retain rule data and selection snapshots; they do not retain projects, configurations or extensions.
  * Cache refresh is synchronized per project, and replacement tracking uses a synchronized identity set.
  */
@@ -283,8 +277,11 @@ abstract class NebulaResolutionRulesService : BuildService<NebulaResolutionRules
         private const val ZIP_EXTENSION = "zip"
 
         fun registerService(project: Project): Provider<NebulaResolutionRulesService> {
+            // Keep the root registration name for existing root callers. Child registrations must not inherit
+            // whichever project's inputs happen to register first, even when ruleSet() is called early.
+            val serviceName = if (project.path == ":") "nebulaResolutionRules" else "nebulaResolutionRules${project.path}"
             return project.gradle.sharedServices.registerIfAbsent(
-                "nebulaResolutionRules",
+                serviceName,
                 NebulaResolutionRulesService::class.java
             ) { spec ->
                 val resolutionRules = resolveResolutionRules(project)
@@ -297,13 +294,17 @@ abstract class NebulaResolutionRulesService : BuildService<NebulaResolutionRules
             val ruleFiles = configuration.incoming.files.files.stream()
                 .filter { file -> file.exists() }
                 .flatMap { file ->
+                    val contents = project.providers.fileContents(project.layout.file(project.providers.provider { file }))
                     when (file.extension) {
                         JSON_EXTENSION -> {
                             Logger.debug("nebula.resolution-rules uses: {}", file.name)
-                            Stream.of(file.absolutePath to file.readBytes())
+                            Stream.of(file.absolutePath to contents.asBytes.get())
                         }
 
                         ZIP_EXTENSION, JAR_EXTENSION -> {
+                            // ZipFile reads through native code, which is not instrumented as a configuration
+                            // input. Track the complete archive so cached preparation is invalidated on edits.
+                            contents.asBytes.get()
                             processJarOrZip(file)
                         }
 
