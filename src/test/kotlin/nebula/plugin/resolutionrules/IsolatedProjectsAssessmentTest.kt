@@ -1,5 +1,6 @@
 package nebula.plugin.resolutionrules
 
+import org.gradle.api.JavaVersion
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
@@ -268,34 +269,37 @@ internal class IsolatedProjectsAssessmentTest {
     }
 
     @TestFactory
-    fun `programmatic adoption supports explicit overrides and cache reuse`() = versions.map { version ->
-        DynamicTest.dynamicTest("programmatic overrides Gradle $version") {
-            val fixture = Fixture(File(dir, "programmatic-overrides-$version"), version, false, programmatic = true)
-            fixture.settings()
-            fixture.write("build.gradle", """
-                ${fixture.consumer(".", true)}
-                def localRules = providers.gradleProperty('nebulaResolutionRules.isolatedState')
-                    .orElse(providers.gradleProperty('nebulaResolutionRules.projectLocal')).orNull != 'false'
-                def service = nebula.plugin.resolutionrules.NebulaResolutionRulesService.@Companion.registerService(project)
-                assert nebulaResolutionRules.ruleSet().substitute[0].with == 'probe:target:1'
-                nebula.plugin.resolutionrules.ResolutionRulesPlugin.applyWithIsolatedState(project)
-                assert nebula.plugin.resolutionrules.NebulaResolutionRulesService.@Companion.registerService(project).get().is(service.get())
-                assert gradle.sharedServices.registrations.findByName(
-                    localRules ? 'nebulaResolutionRules.projectLocal:' : 'nebulaResolutionRules') != null
-                assert gradle.sharedServices.registrations.findByName(
-                    localRules ? 'nebulaResolutionRules' : 'nebulaResolutionRules.projectLocal:') == null
-            """.trimIndent())
-            listOf(emptyArray<String>(), arrayOf("-PnebulaResolutionRules.projectLocal=false"),
-                arrayOf("-PnebulaResolutionRules.projectLocal=true"),
-                arrayOf("-PnebulaResolutionRules.isolatedState=false"),
-                arrayOf("-PnebulaResolutionRules.isolatedState=true"),
-                arrayOf("-PnebulaResolutionRules.isolatedState=false", "-PnebulaResolutionRules.projectLocal=true"),
-                arrayOf("-PnebulaResolutionRules.isolatedState=true", "-PnebulaResolutionRules.projectLocal=false"),
-                emptyArray()).forEach { flags ->
-                fixture.run(":resolveRules", *flags)
-                fixture.artifacts("", fixture.expected())
-                fixture.reused(fixture.run(":resolveRules", *flags))
-                fixture.artifacts("", fixture.expected())
+    fun `automatic and programmatic adoption support explicit overrides and cache reuse`() = versions.flatMap { version ->
+        listOf(false, true).map { programmatic ->
+            DynamicTest.dynamicTest("adoption overrides Gradle $version programmatic=$programmatic") {
+                val fixture = Fixture(File(dir, "adoption-overrides-$version-$programmatic"), version,
+                    isolated = !programmatic, projectLocal = false, programmatic = programmatic)
+                fixture.settings()
+                fixture.write("build.gradle", """
+                    ${fixture.consumer(".", true)}
+                    def localRules = providers.gradleProperty('nebulaResolutionRules.isolatedState')
+                        .orElse(providers.gradleProperty('nebulaResolutionRules.projectLocal')).orNull != 'false'
+                    def service = nebula.plugin.resolutionrules.NebulaResolutionRulesService.@Companion.registerService(project)
+                    assert nebulaResolutionRules.ruleSet().substitute[0].with == 'probe:target:1'
+                    nebula.plugin.resolutionrules.ResolutionRulesPlugin.applyWithIsolatedState(project)
+                    assert nebula.plugin.resolutionrules.NebulaResolutionRulesService.@Companion.registerService(project).get().is(service.get())
+                    assert gradle.sharedServices.registrations.findByName(
+                        localRules ? 'nebulaResolutionRules.projectLocal:' : 'nebulaResolutionRules') != null
+                    assert gradle.sharedServices.registrations.findByName(
+                        localRules ? 'nebulaResolutionRules' : 'nebulaResolutionRules.projectLocal:') == null
+                """.trimIndent())
+                listOf(emptyArray<String>(), arrayOf("-PnebulaResolutionRules.projectLocal=false"),
+                    arrayOf("-PnebulaResolutionRules.projectLocal=true"),
+                    arrayOf("-PnebulaResolutionRules.isolatedState=false"),
+                    arrayOf("-PnebulaResolutionRules.isolatedState=true"),
+                    arrayOf("-PnebulaResolutionRules.isolatedState=false", "-PnebulaResolutionRules.projectLocal=true"),
+                    arrayOf("-PnebulaResolutionRules.isolatedState=true", "-PnebulaResolutionRules.projectLocal=false"),
+                    emptyArray()).forEach { flags ->
+                    fixture.run(":resolveRules", *flags)
+                    fixture.artifacts("", fixture.expected())
+                    fixture.reused(fixture.run(":resolveRules", *flags))
+                    fixture.artifacts("", fixture.expected())
+                }
             }
         }
     }
@@ -527,12 +531,24 @@ internal class IsolatedProjectsAssessmentTest {
             val isolationFlags = if (!isolated) emptyList() else if (
                 GradleVersion.version(version) >= GradleVersion.version("9.7")
             ) listOf("--isolated-projects") else listOf("-Dorg.gradle.unsafe.isolated-projects=true")
-            val localRulesFlags = if (projectLocal && !programmatic) listOf("-PnebulaResolutionRules.isolatedState=true") else emptyList()
+            // Strict fixtures use the ordinary plugin entry point without an ownership property.
+            val localRulesFlags = if (projectLocal && !programmatic && !isolated)
+                listOf("-PnebulaResolutionRules.isolatedState=true") else emptyList()
+            // Gradle 8.14 cannot run on Java 25. Keep its full coverage on the JDK 21 that CI installs,
+            // while the wrapper fixtures continue to exercise the matrix JDK, including Java 25.
+            val javaFlags = if (GradleVersion.version(version) < GradleVersion.version("9.1") &&
+                JavaVersion.current().majorVersion.toInt() >= 25
+            ) {
+                val compatibleJavaHome = System.getenv("JAVA_HOME_21_X64")
+                    ?: System.getenv("JAVA_HOME_21_AARCH64")
+                    ?: error("Gradle $version needs a compatible JVM: set JAVA_HOME_21_X64 or JAVA_HOME_21_AARCH64 to JDK 21")
+                listOf("-Dorg.gradle.java.home=$compatibleJavaHome")
+            } else emptyList()
             return GradleRunner.create().withProjectDir(root).withPluginClasspath().withGradleVersion(version)
                 .withArguments(arguments.toList() + listOf(
                     "--configuration-cache", "--configuration-cache-problems=fail", "--parallel",
                     "--rerun-tasks", "--stacktrace", "--max-workers=2", if (watchFs) "--watch-fs" else "--no-watch-fs"
-                ) + isolationFlags + localRulesFlags)
+                ) + isolationFlags + localRulesFlags + javaFlags)
         }
 
         fun write(path: String, content: String) {

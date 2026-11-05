@@ -25,12 +25,14 @@ import org.gradle.api.artifacts.ConfigurationContainer
 import org.gradle.api.attributes.Category
 import org.gradle.api.attributes.LibraryElements
 import org.gradle.api.attributes.Usage
+import org.gradle.api.configuration.BuildFeatures
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
+import org.gradle.util.GradleVersion
 import java.io.File
 import java.io.Serializable
 import java.util.*
@@ -49,10 +51,22 @@ private const val SELECTED_RULES_MODE = "nebulaResolutionRules.internal.selected
 private fun Project.isolatedStateOverride(): Boolean? =
     (findStringProperty(ISOLATED_STATE_PROPERTY) ?: findStringProperty(PROJECT_LOCAL_RULES_PROPERTY))?.toBoolean()
 
+internal abstract class ResolutionRulesBuildFeatures {
+    @get:Inject
+    abstract val buildFeatures: BuildFeatures
+}
+
+private fun Project.isolatedProjectsActive(): Boolean {
+    // BuildFeatures is available from Gradle 8.5. Older builds retain the legacy default.
+    if (GradleVersion.current() < GradleVersion.version("8.5")) return false
+    return objects.newInstance(ResolutionRulesBuildFeatures::class.java)
+        .buildFeatures.isolatedProjects.active.get()
+}
+
 private fun Project.usesIsolatedRulesState(): Boolean {
     val state = extensions.extraProperties
     if (!state.has(SELECTED_RULES_MODE)) {
-        state.set(SELECTED_RULES_MODE, isolatedStateOverride() ?: false)
+        state.set(SELECTED_RULES_MODE, isolatedStateOverride() ?: isolatedProjectsActive())
     }
     return state.get(SELECTED_RULES_MODE) as Boolean
 }
@@ -143,7 +157,7 @@ class ResolutionRulesPlugin : Plugin<Project> {
                 dependencies.add(rootProjectDependency)
             }
         }
-        // Preserve the legacy root-extension side effect unless the build explicitly opts into local state.
+        // Preserve the legacy root-extension side effect when project-owned state is not selected.
         // Short-circuit before accessing another project's extensions on the isolated path.
         if (!projectLocal &&
             rootProject.extensions.findByType(NebulaResolutionRulesExtension::class.java) == null

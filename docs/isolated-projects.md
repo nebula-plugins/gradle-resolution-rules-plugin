@@ -1,29 +1,48 @@
-# Opt-in project-owned resolution rules (NEBULA-4645)
+# Project-owned resolution rules for Isolated Projects (NEBULA-4645)
 
-## Existing behavior remains the default
+## Existing behavior remains the default for ordinary builds
 
-Without programmatic adoption or an enabled opt-in property, the plugin retains the existing
-build-wide `nebulaResolutionRules` service. The first project to register it supplies rule
+Without Gradle Isolated Projects, programmatic adoption or an enabled opt-in property, the plugin
+retains the existing build-wide `nebulaResolutionRules` service. The first project to register it supplies rule
 sources for all participating projects. Parsed rule instances remain shared, and child-only
 plugin application retains its implicit creation of the root extension. Direct lookups of the
 legacy service name and the public `registerService(Project)` method continue to work as before.
 
-No automatic switch is tied to Gradle's isolation flag. Convention plugins can explicitly adopt
-the project-owned default through the API below without setting any project property.
+With Gradle Isolated Projects active, the existing plugin automatically uses project-owned rule
+state. Nebula can keep its existing `apply(ResolutionRulesPlugin::class.java)` call after updating
+the plugin dependency; consumers need no second flag or new API call for this mode.
+Convention plugins can also explicitly adopt the project-owned default through the API below
+before enabling Gradle Isolated Projects.
 Exact first-registration behavior can depend on project configuration order; it cannot also
-guarantee deterministic independent child
-inputs under concurrent configuration. This candidate preserves that policy for existing builds
-and makes the source-ownership change an explicit adoption step.
+guarantee deterministic independent child inputs under concurrent configuration. This preserves
+that policy for ordinary builds and changes source ownership when adopting isolated state.
 
 Existing public types and signatures, synchronous `ruleSet()` behavior, append setters, optional opt-in,
 include-over-exclude precedence, rule ordering, duplicate ruleset-name precedence, alignment,
 replacement history and project-local callback timing are unchanged.
 
-## Explicit adoption for Isolated Projects
+## Adoption
+
+### Automatic adoption with the existing plugin
+
+Enable Gradle Isolated Projects using the mechanism supported by your Gradle version, and apply
+the existing plugin locally in every participating project. The plugin reads the effective
+feature state through Gradle's public `BuildFeatures` service, covering both the older system
+property and the newer `--isolated-projects` option.
+
+An explicit `nebulaResolutionRules.isolatedState` property takes precedence over its earlier
+`projectLocal` alias, then over the programmatic default or automatic selection. Setting it to
+`false` restores legacy behavior; that behavior remains incompatible with strict multi-project
+isolation. The programmatic API enables project-owned state in ordinary builds too.
+
+Automatic detection uses a public API available since Gradle 8.5. Older versions keep the legacy
+default unless explicitly opted in. Verification remains limited to the Gradle baselines below;
+this guard does not establish support for additional older versions.
 
 ### From Nebula or another convention plugin
 
-Replace the convention plugin's direct application of `ResolutionRulesPlugin` with:
+To adopt project-owned state before enabling Gradle Isolated Projects, replace the convention
+plugin's direct application of `ResolutionRulesPlugin` with:
 
 ```kotlin
 import nebula.plugin.resolutionrules.ResolutionRulesPlugin
@@ -39,14 +58,15 @@ including the root; root-only adoption does not change the mode of children.
 An explicit `nebulaResolutionRules.isolatedState` Gradle property overrides the programmatic
 default, so `-PnebulaResolutionRules.isolatedState=false` remains a rollback option. The earlier
 `nebulaResolutionRules.projectLocal` name remains a compatibility alias; if both properties are
-set, `isolatedState` takes precedence. Without
-either adoption mechanism, the legacy default remains unchanged. The selected mode is fixed
+set, `isolatedState` takes precedence. Without an explicit adoption mechanism or Gradle Isolated
+Projects, the legacy default remains unchanged. The selected mode is fixed
 when this project's plugin is applied or its public service registration is first requested.
 Repeated compatible calls are safe; adoption after legacy application or service registration
 fails with guidance to move the call earlier, since root-extension access cannot be undone.
 
-In Nebula, make this replacement in `DependencyPlugins.apply` and retain the existing
-root-only `configureResolutionRules()` artifact declarations. Children continue to receive
+In Nebula, this replacement in `DependencyPlugins.apply` is optional when Gradle Isolated
+Projects is enabled. Retain the existing root-only `configureResolutionRules()` artifact
+declarations. Children continue to receive
 those artifacts through their declarative root dependency. SBN's project-local optional rule
 selections continue to work; enabling the default in SBN after Nebula has already applied the
 legacy plugin is too late. Adoption here addresses resolution rules only, not other plugins'
@@ -64,7 +84,7 @@ Apply the existing plugin locally in every participating project, directly or th
 convention plugin. Replace cross-project `allprojects`/`subprojects` configuration when adopting
 Gradle Isolated Projects. Root-only plugin application still does not opt children into rules.
 
-With this option enabled:
+With project-owned state selected by any of these mechanisms:
 
 - Each project resolves its own `resolutionRules` configuration, including its declared root
   dependency. Additional child sources affect only that child. Move intentionally shared sources
@@ -80,8 +100,7 @@ configurations { resolutionRules }
 dependencies { resolutionRules files('rules.json') }
 ```
 
-Multi-project strict isolation requires adoption through the API or property as well as Gradle's
-isolation setting.
+Multi-project strict isolation selects project-owned state automatically unless explicitly overridden.
 The legacy path retains its cross-project access and is not claimed compatible with strict
 multi-project isolation. Rules continue to apply in both paths; neither path disables the plugin.
 Per-project parsing has additional memory and preparation cost; no shared parsed-rule cache is added.
@@ -109,27 +128,31 @@ JAR/ZIP and selection edits, including watcher-enabled input checks. Strict fixt
 `--configuration-cache-problems=fail`; there are no ignored-problem modes or expected isolation
 failures counted as successful migration coverage.
 
+Strict fixtures use the ordinary plugin entry point without an ownership property, exercising
+automatic adoption. The explicit API also runs in the independent-child matrix. Override checks
+exercise automatic and programmatic defaults, both property names and cache reuse.
+
+The CI JDK 25 failure was reproduced as `Unsupported class file major version 69`: Gradle 8.14.3's
+Groovy compiler cannot run on JDK 25. Older Gradle fixtures now select CI's installed JDK 21 through
+`org.gradle.java.home`, while wrapper fixtures retain the matrix JDK. No scenarios are skipped.
+When running the suite from JDK 25 or newer outside CI, set `JAVA_HOME_21_X64` or
+`JAVA_HOME_21_AARCH64` to an installed JDK 21.
+
 ```sh
 ./gradlew test validatePlugins integrationTest --max-workers=2 --console=plain
 ```
 
-Verification on 2026-11-05 completed successfully with JDK 21 in 2m 52s: all 57 unit/TestKit tests
-passed (40 assessment/compatibility scenarios and 17 existing tests), plugin validation passed,
-and the existing integration suite passed with its existing skipped case. Public JVM signature
-comparisons against the original compiled plugin, extension, service, companion, parameter
-interface and rule-data wrapper found no changes.
+Verification on 2026-11-05 passed `./gradlew build --max-workers=2 --console=plain` with JDK 25
+in 3m 14s, using JDK 21 for the Gradle 8.14.3 fixtures. All 73 unit/TestKit tests passed
+(56 assessment scenarios and 17 existing tests), along with plugin validation, the integration
+suite (with its existing skipped case), and ArchRules checks. The preceding 71-test revision
+also passed the unit, validation and integration suites on JDK 21.
 
-The subsequent programmatic API is an additive public method on the plugin and its companion.
-Its assessment coverage exercises property-free adoption on both Gradle baselines, explicit
-property overrides, repeated application and service identity, rejection of late mode changes,
-independent child sources under strict isolation and concurrent configuration, configuration
-cache reuse, and rule-file invalidation.
-
-Programmatic adoption and naming verification on 2026-11-05 passed the same full command above with JDK 21
-in 3m 57s: all 71 unit/TestKit tests passed (54 assessment scenarios and 17 existing tests),
-plugin validation passed, and the integration suite passed with its existing skipped case.
-Coverage includes both property names and the precedence of `isolatedState` over `projectLocal`.
-JVM signature inspection confirmed the static `applyWithIsolatedState` entry point for Java and Groovy callers.
+Public JVM signature comparisons against the original compiled plugin, extension, service,
+companions, parameter interface and rule-data wrapper found no removed or changed signatures.
+The only additions on these types are `applyWithIsolatedState(Project)` on the plugin and its
+companion, including the static entry point for Java and Groovy callers.
 
 No settings plugin or rule-engine redesign is introduced. Consumer cross-project customizations,
-composite builds and alternate JVMs are outside this bounded verification. No release is published.
+composite builds and versions outside the tested baselines are outside this bounded verification.
+No release is published.
