@@ -36,6 +36,34 @@ dependencies {
 
 See the [gradle-resolution-rules](https://github.com/nebula-plugins/gradle-resolution-rules) project for details of the rules, and instructions on how to enable optional rule sets.
 
+## Isolated Projects
+
+When Gradle Isolated Projects is enabled, the existing plugin automatically uses project-owned
+rule state. No additional project property or plugin-application change is required. Ordinary
+builds retain the shared service, first-registering-project rule sources, and implicit root
+extension behavior.
+
+Convention plugins such as Nebula can also adopt isolated rule state before enabling Gradle
+Isolated Projects:
+
+```kotlin
+ResolutionRulesPlugin.applyWithIsolatedState(project)
+```
+
+Builds can explicitly select isolated rule state through the root `gradle.properties`:
+
+```properties
+nebulaResolutionRules.isolatedState=true
+```
+
+The earlier `nebulaResolutionRules.projectLocal` property remains a compatibility alias.
+An explicit property overrides automatic selection and the programmatic default.
+For Isolated Projects, apply the plugin locally in each participating
+project (directly or through a convention plugin), replacing cross-project `allprojects`
+configuration. Shared rule artifacts still come from the root `resolutionRules` configuration;
+additional child sources affect that child only with isolated state. See
+[compatibility and adoption](docs/isolated-projects.md).
+
 # Documentation
 
 The project wiki contains the [full documentation](https://github.com/nebula-plugins/gradle-resolution-rules-plugin/wiki) for the plugin.

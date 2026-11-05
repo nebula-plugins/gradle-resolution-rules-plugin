@@ -10,7 +10,7 @@ import java.util.jar.JarOutputStream
 /**
  * Exercises rule registration in real Gradle builds using fixture artifacts from a local Maven repository.
  * Covers configuration-cache reuse and invalidation, plus independent selections and replacement tracking for projects
- * that share the same service and parsed rules.
+ * that share the legacy build-wide service and parsed rules by default.
  */
 internal class ResolutionRulesServiceTest {
     @TempDir lateinit var dir: File
@@ -68,8 +68,8 @@ internal class ResolutionRulesServiceTest {
         listOf("alpha", "beta").forEach { assertEquals(expected, File(dir, "build/$it").list()!!.toSet()) }
         ruleFile.writeText(ruleFile.readText().replace("probe:target:1", "probe:target:2"))
         val changed = runner("resolveAlpha", "resolveBeta").build()
-        assertFalse(changed.output.contains("Reusing configuration cache"), changed.output)
         listOf("alpha", "beta").forEach { assertEquals(expected - "target-1.jar" + "target-2.jar", File(dir, "build/$it").list()!!.toSet()) }
+        assertFalse(changed.output.contains("Reusing configuration cache"), changed.output)
     }
 
     @Test fun `rule selections and replacement application are isolated by project`() {

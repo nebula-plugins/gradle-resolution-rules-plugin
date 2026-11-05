@@ -25,12 +25,14 @@ import org.gradle.api.artifacts.ConfigurationContainer
 import org.gradle.api.attributes.Category
 import org.gradle.api.attributes.LibraryElements
 import org.gradle.api.attributes.Usage
+import org.gradle.api.configuration.BuildFeatures
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
+import org.gradle.util.GradleVersion
 import java.io.File
 import java.io.Serializable
 import java.util.*
@@ -41,6 +43,33 @@ import java.util.zip.ZipFile
 import javax.inject.Inject
 
 const val RESOLUTION_RULES_CONFIG_NAME = "resolutionRules"
+
+private const val ISOLATED_STATE_PROPERTY = "nebulaResolutionRules.isolatedState"
+private const val PROJECT_LOCAL_RULES_PROPERTY = "nebulaResolutionRules.projectLocal"
+private const val SELECTED_RULES_MODE = "nebulaResolutionRules.internal.selectedProjectLocalMode"
+
+private fun Project.isolatedStateOverride(): Boolean? =
+    (findStringProperty(ISOLATED_STATE_PROPERTY) ?: findStringProperty(PROJECT_LOCAL_RULES_PROPERTY))?.toBoolean()
+
+internal abstract class ResolutionRulesBuildFeatures {
+    @get:Inject
+    abstract val buildFeatures: BuildFeatures
+}
+
+private fun Project.isolatedProjectsActive(): Boolean {
+    // BuildFeatures is available from Gradle 8.5. Older builds retain the legacy default.
+    if (GradleVersion.current() < GradleVersion.version("8.5")) return false
+    return objects.newInstance(ResolutionRulesBuildFeatures::class.java)
+        .buildFeatures.isolatedProjects.active.get()
+}
+
+private fun Project.usesIsolatedRulesState(): Boolean {
+    val state = extensions.extraProperties
+    if (!state.has(SELECTED_RULES_MODE)) {
+        state.set(SELECTED_RULES_MODE, isolatedStateOverride() ?: isolatedProjectsActive())
+    }
+    return state.get(SELECTED_RULES_MODE) as Boolean
+}
 
 class ResolutionRulesPlugin : Plugin<Project> {
     private lateinit var configurations: ConfigurationContainer
@@ -72,9 +101,32 @@ class ResolutionRulesPlugin : Plugin<Project> {
         const val OPTIONAL_RULES_PROJECT_PROPERTY = "nebulaResolutionRules.optional"
         const val INCLUDE_RULES_PROJECT_PROPERTY = "nebulaResolutionRules.include"
         const val EXCLUDE_RULES_PROJECT_PROPERTY = "nebulaResolutionRules.exclude"
+
+        /**
+         * Applies this plugin with project-owned rule state unless the build explicitly sets
+         * `nebulaResolutionRules.isolatedState=false`. Intended for convention plugins such as Nebula.
+         * The earlier `nebulaResolutionRules.projectLocal` property is a fallback alias.
+         *
+         * Call before this project's first plugin application or public service registration. Repeated calls
+         * are safe when the selected mode agrees; an already-selected legacy mode cannot be switched in place.
+         * This configures only [project], including when [project] is the root of a multi-project build.
+         */
+        @JvmStatic
+        fun applyWithIsolatedState(project: Project) {
+            val isolatedState = project.isolatedStateOverride() ?: true
+            val state = project.extensions.extraProperties
+            check(!state.has(SELECTED_RULES_MODE) || state.get(SELECTED_RULES_MODE) == isolatedState) {
+                "Resolution rules mode is already selected for ${project.path}. " +
+                    "Call ResolutionRulesPlugin.applyWithIsolatedState(project) before applying " +
+                    "ResolutionRulesPlugin or registering its service."
+            }
+            state.set(SELECTED_RULES_MODE, isolatedState)
+            project.pluginManager.apply(ResolutionRulesPlugin::class.java)
+        }
     }
 
     override fun apply(project: Project) {
+        val projectLocal = project.usesIsolatedRulesState()
         configurations = project.configurations
         extension =
             project.extensions.create("nebulaResolutionRules", NebulaResolutionRulesExtension::class.java, project)
@@ -105,7 +157,11 @@ class ResolutionRulesPlugin : Plugin<Project> {
                 dependencies.add(rootProjectDependency)
             }
         }
-        if (rootProject.extensions.findByType(NebulaResolutionRulesExtension::class.java) == null) {
+        // Preserve the legacy root-extension side effect when project-owned state is not selected.
+        // Short-circuit before accessing another project's extensions on the isolated path.
+        if (!projectLocal &&
+            rootProject.extensions.findByType(NebulaResolutionRulesExtension::class.java) == null
+        ) {
             rootProject.extensions.create(
                 "nebulaResolutionRules",
                 NebulaResolutionRulesExtension::class.java,
@@ -165,13 +221,16 @@ class ResolutionRulesPlugin : Plugin<Project> {
 }
 
 /**
- * Shares parsed rules within a build and caches the preparation needed by each project's configuration callbacks.
+ * Caches the preparation needed by project configuration callbacks.
  *
  * [Params] carries the parsed rule data. This service instance owns the filtered rule sets, derived rule lists and
  * replacement application tracking, keeping that runtime state off the extension and the serialized parameters.
  * Gradle creates fresh runtime caches whenever it creates a new service instance.
  *
- * Each project has separate state keyed by its path, which is unique within the build owning this registration.
+ * By default, the build-wide registration retains its legacy first-registering-project inputs and shared rule data.
+ * With project-local adoption through the property or programmatic API, each project registers its own service
+ * and parses separate rules, including their mutable selectors and alignment matchers. State is keyed by project
+ * path within the build.
  * Cache entries retain rule data and selection snapshots; they do not retain projects, configurations or extensions.
  * Cache refresh is synchronized per project, and replacement tracking uses a synchronized identity set.
  */
@@ -283,8 +342,15 @@ abstract class NebulaResolutionRulesService : BuildService<NebulaResolutionRules
         private const val ZIP_EXTENSION = "zip"
 
         fun registerService(project: Project): Provider<NebulaResolutionRulesService> {
+            // Keep the legacy service and its first-registering-project inputs by default. The opt-in namespace
+            // separates every project (including the root) from legacy registrations in mixed-mode builds.
+            val serviceName = if (project.usesIsolatedRulesState()) {
+                "nebulaResolutionRules.projectLocal${project.path}"
+            } else {
+                "nebulaResolutionRules"
+            }
             return project.gradle.sharedServices.registerIfAbsent(
-                "nebulaResolutionRules",
+                serviceName,
                 NebulaResolutionRulesService::class.java
             ) { spec ->
                 val resolutionRules = resolveResolutionRules(project)
@@ -297,13 +363,17 @@ abstract class NebulaResolutionRulesService : BuildService<NebulaResolutionRules
             val ruleFiles = configuration.incoming.files.files.stream()
                 .filter { file -> file.exists() }
                 .flatMap { file ->
+                    val contents = project.providers.fileContents(project.layout.file(project.providers.provider { file }))
                     when (file.extension) {
                         JSON_EXTENSION -> {
                             Logger.debug("nebula.resolution-rules uses: {}", file.name)
-                            Stream.of(file.absolutePath to file.readBytes())
+                            Stream.of(file.absolutePath to contents.asBytes.get())
                         }
 
                         ZIP_EXTENSION, JAR_EXTENSION -> {
+                            // ZipFile reads through native code, which is not instrumented as a configuration
+                            // input. Track the complete archive so cached preparation is invalidated on edits.
+                            contents.asBytes.get()
                             processJarOrZip(file)
                         }
 
