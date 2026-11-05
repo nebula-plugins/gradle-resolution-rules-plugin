@@ -10,7 +10,7 @@ import java.util.jar.JarOutputStream
 /**
  * Exercises rule registration in real Gradle builds using fixture artifacts from a local Maven repository.
  * Covers configuration-cache reuse and invalidation, plus independent selections and replacement tracking for projects
- * that consume the same root rule sources through project-owned services.
+ * that share the legacy build-wide service and parsed rules by default.
  */
 internal class ResolutionRulesServiceTest {
     @TempDir lateinit var dir: File

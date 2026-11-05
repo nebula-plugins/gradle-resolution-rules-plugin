@@ -42,6 +42,9 @@ import javax.inject.Inject
 
 const val RESOLUTION_RULES_CONFIG_NAME = "resolutionRules"
 
+private fun Project.usesProjectLocalRules(): Boolean =
+    findStringProperty("nebulaResolutionRules.projectLocal").toBoolean()
+
 class ResolutionRulesPlugin : Plugin<Project> {
     private lateinit var configurations: ConfigurationContainer
     private lateinit var extension: NebulaResolutionRulesExtension
@@ -105,6 +108,18 @@ class ResolutionRulesPlugin : Plugin<Project> {
                 dependencies.add(rootProjectDependency)
             }
         }
+        // Preserve the legacy root-extension side effect unless the build explicitly opts into local state.
+        // Short-circuit before accessing another project's extensions on the isolated path.
+        if (!project.usesProjectLocalRules() &&
+            rootProject.extensions.findByType(NebulaResolutionRulesExtension::class.java) == null
+        ) {
+            rootProject.extensions.create(
+                "nebulaResolutionRules",
+                NebulaResolutionRulesExtension::class.java,
+                rootProject
+            )
+        }
+
         project.configurations.configureEach { config ->
             if (ignoredConfigurationPrefixes.any { config.name.startsWith(it) }) {
                 return@configureEach
@@ -157,15 +172,15 @@ class ResolutionRulesPlugin : Plugin<Project> {
 }
 
 /**
- * Owns one project's parsed rules and caches the preparation needed by its configuration callbacks.
+ * Caches the preparation needed by project configuration callbacks.
  *
  * [Params] carries the parsed rule data. This service instance owns the filtered rule sets, derived rule lists and
  * replacement application tracking, keeping that runtime state off the extension and the serialized parameters.
  * Gradle creates fresh runtime caches whenever it creates a new service instance.
  *
- * Each project registers its own service, with inputs resolved from its own configuration. In particular, parsed
- * rules (including their mutable selectors and alignment matchers) are never reused by another project's service.
- * State is keyed by project path, which is unique within the build owning this registration.
+ * By default, the build-wide registration retains its legacy first-registering-project inputs and shared rule data.
+ * With nebulaResolutionRules.projectLocal=true, each project registers its own service and parses separate rules,
+ * including their mutable selectors and alignment matchers. State is keyed by project path within the build.
  * Cache entries retain rule data and selection snapshots; they do not retain projects, configurations or extensions.
  * Cache refresh is synchronized per project, and replacement tracking uses a synchronized identity set.
  */
@@ -277,9 +292,13 @@ abstract class NebulaResolutionRulesService : BuildService<NebulaResolutionRules
         private const val ZIP_EXTENSION = "zip"
 
         fun registerService(project: Project): Provider<NebulaResolutionRulesService> {
-            // Keep the root registration name for existing root callers. Child registrations must not inherit
-            // whichever project's inputs happen to register first, even when ruleSet() is called early.
-            val serviceName = if (project.path == ":") "nebulaResolutionRules" else "nebulaResolutionRules${project.path}"
+            // Keep the legacy service and its first-registering-project inputs by default. The opt-in namespace
+            // separates every project (including the root) from legacy registrations in mixed-mode builds.
+            val serviceName = if (project.usesProjectLocalRules()) {
+                "nebulaResolutionRules.projectLocal${project.path}"
+            } else {
+                "nebulaResolutionRules"
+            }
             return project.gradle.sharedServices.registerIfAbsent(
                 serviceName,
                 NebulaResolutionRulesService::class.java

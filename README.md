@@ -38,15 +38,19 @@ See the [gradle-resolution-rules](https://github.com/nebula-plugins/gradle-resol
 
 ## Isolated Projects
 
-Apply the plugin locally in each participating project (directly or through a convention plugin).
-Declare shared rule artifacts on the root project's `resolutionRules` configuration as above;
-children consume them through a project dependency. For Isolated Projects, replace the
-`allprojects` block with local plugin application. Applying the plugin only to the root does
-not enable rules in children.
+Existing builds retain the shared service, first-registering-project rule sources, and
+implicit root extension behavior. Project-owned state is an explicit opt-in in the root
+`gradle.properties`:
 
-Each project prepares rules from its own `resolutionRules` configuration, including the
-root dependency. Additional child rule sources and selections affect that child only.
-See [migration decisions and verification](docs/isolated-projects.md).
+```properties
+nebulaResolutionRules.projectLocal=true
+```
+
+For Isolated Projects, enable this option and apply the plugin locally in each participating
+project (directly or through a convention plugin), replacing cross-project `allprojects`
+configuration. Shared rule artifacts still come from the root `resolutionRules` configuration;
+additional child sources affect that child only in the opt-in mode. See
+[compatibility and adoption](docs/isolated-projects.md).
 
 # Documentation
 

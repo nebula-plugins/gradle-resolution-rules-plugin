@@ -14,7 +14,7 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
 /**
- * Strict isolation regression coverage derived from the NEBULA-4645 assessment.
+ * Strict isolation regression coverage for the opt-in mode, plus legacy default compatibility contracts.
  * All plugins, repositories, tasks and selections are configured in their owning project's script.
  * The repository has no declared Gradle minimum; 8.14.3 is a provisional lower baseline.
  * Filesystem watching is disabled for deterministic edits made outside the fixture daemon.
@@ -25,6 +25,74 @@ internal class IsolatedProjectsAssessmentTest {
 
     private val versions = listOf("8.14.3", GradleVersion.current().version).distinct()
     private val modes = listOf(false, true)
+
+    @TestFactory
+    fun `legacy contracts survive explicit opt in and returning to the default`() = versions.flatMap { version ->
+        listOf("a", "b").map { first ->
+            DynamicTest.dynamicTest("legacy Gradle $version first=$first") {
+                val fixture = Fixture(File(dir, "legacy-$version-$first"), version, false, projectLocal = false)
+                fixture.settings("a", "b")
+                fixture.write("build.gradle", """
+                    configurations { resolutionRules }
+                    dependencies { resolutionRules files('rules.json') }
+                    evaluationDependsOn(':$first')
+                    def localRules = providers.gradleProperty('nebulaResolutionRules.projectLocal').orNull == 'true'
+                    if (localRules) {
+                        assert extensions.findByName('nebulaResolutionRules') == null
+                    } else {
+                        // Child-only application still creates the root extension in legacy mode.
+                        assert extensions.findByName('nebulaResolutionRules') != null
+                        assert gradle.sharedServices.registrations.findByName('nebulaResolutionRules') != null
+                        assert nebulaResolutionRules.ruleSet().align[0].ruleSet == 'legacy-shared'
+                    }
+                """.trimIndent())
+                listOf("a", "b").forEachIndexed { index, path ->
+                    fixture.write("$path/local.json", """
+                        {"substitute":[{"module":"probe:local","with":"probe:target:${index + 1}",${Fixture.metadata}}]}
+                    """.trimIndent())
+                    fixture.write("$path/build.gradle", """
+                        ${fixture.consumer("..", false)}
+                        dependencies { resolutionRules files('local.json'); implementation 'probe:local:1' }
+                        def localRules = providers.gradleProperty('nebulaResolutionRules.projectLocal').orNull == 'true'
+                        def rules = nebulaResolutionRules.ruleSet()
+                        assert rules.substitute.find { it.module == 'probe:local' }.with ==
+                            (localRules ? 'probe:target:${index + 1}' : 'probe:target:${if (first == "a") "1" else "2"}')
+                        assert rules.align[0].ruleSet ==
+                            (localRules ? 'rules' : '${if (path == first) "rules" else "legacy-shared"}')
+                        rules.align[0].ruleSet = 'legacy-shared'
+                        def serviceName = localRules ? 'nebulaResolutionRules.projectLocal:$path' : 'nebulaResolutionRules'
+                        assert gradle.sharedServices.registrations.findByName(serviceName) != null
+                    """.trimIndent())
+                }
+                val tasks = arrayOf(":b:resolveRuntimeRules", ":a:resolveRules", ":a:resolveRuntimeRules", ":b:resolveRules")
+                fun verify(projectLocal: Boolean = false) {
+                    listOf("a", "b").forEach { path ->
+                        val source = if (projectLocal) path else first
+                        fixture.artifacts(path, fixture.expected(if (source == "a") "1" else "2"))
+                        fixture.artifacts(path, fixture.expected(if (source == "a") "1" else "2"), "runtimeResolved")
+                    }
+                }
+                fixture.stored(fixture.run(*tasks))
+                verify()
+                fixture.reused(fixture.run(*tasks))
+                verify()
+                // An explicit false setting also retains the old source policy and service contract.
+                fixture.run(*tasks, "-PnebulaResolutionRules.projectLocal=false")
+                verify()
+                fixture.reused(fixture.run(*tasks, "-PnebulaResolutionRules.projectLocal=false"))
+                verify()
+                val optedIn = fixture.run(*tasks, "-PnebulaResolutionRules.projectLocal=true")
+                verify(projectLocal = true)
+                fixture.stored(optedIn)
+                fixture.reused(fixture.run(*tasks, "-PnebulaResolutionRules.projectLocal=true"))
+                verify(projectLocal = true)
+                fixture.run(*tasks)
+                verify()
+                fixture.reused(fixture.run(*tasks))
+                verify()
+            }
+        }
+    }
 
     @TestFactory
     fun `replacement history survives a selection refresh and late configurations`() = versions.flatMap { version ->
@@ -276,7 +344,13 @@ internal class IsolatedProjectsAssessmentTest {
         }
     }
 
-    private class Fixture(val root: File, val version: String, val isolated: Boolean, val watchFs: Boolean = false) {
+    private class Fixture(
+        val root: File,
+        val version: String,
+        val isolated: Boolean,
+        val watchFs: Boolean = false,
+        val projectLocal: Boolean = true
+    ) {
         init {
             root.mkdirs()
             listOf("old", "replacement", "sub", "target", "rejected", "excluded").forEach {
@@ -386,11 +460,12 @@ internal class IsolatedProjectsAssessmentTest {
             val isolationFlags = if (!isolated) emptyList() else if (
                 GradleVersion.version(version) >= GradleVersion.version("9.7")
             ) listOf("--isolated-projects") else listOf("-Dorg.gradle.unsafe.isolated-projects=true")
+            val localRulesFlags = if (projectLocal) listOf("-PnebulaResolutionRules.projectLocal=true") else emptyList()
             return GradleRunner.create().withProjectDir(root).withPluginClasspath().withGradleVersion(version)
                 .withArguments(arguments.toList() + listOf(
                     "--configuration-cache", "--configuration-cache-problems=fail", "--parallel",
                     "--rerun-tasks", "--stacktrace", "--max-workers=2", if (watchFs) "--watch-fs" else "--no-watch-fs"
-                ) + isolationFlags)
+                ) + isolationFlags + localRulesFlags)
         }
 
         fun write(path: String, content: String) {
