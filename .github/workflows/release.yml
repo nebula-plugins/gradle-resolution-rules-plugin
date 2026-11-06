@@ -31,7 +31,10 @@ jobs:
         uses: actions/setup-java@v5
         with:
           distribution: 'zulu'
+          # Java 8 is required to publish dependency fixtures during integration tests.
+          # Keep Java 21 last so it remains the active JAVA_HOME for the release build.
           java-version: |
+            8
             17
             21
           java-package: jdk
