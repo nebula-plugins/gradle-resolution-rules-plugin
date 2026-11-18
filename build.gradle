@@ -83,3 +83,7 @@ testing {
         }
     }
 }
+
+nebulaRelease {
+    releaseBranchPatterns.add("replacements-as-capabilities")
+}
