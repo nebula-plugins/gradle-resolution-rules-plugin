@@ -143,6 +143,9 @@ data class SubstituteRule(
     fun isInitialized(): Boolean = this::substitutedVersionId.isInitialized
 
     fun acceptsVersion(version: String): Boolean {
+        if (substitutedVersionId.version.isNotEmpty() && version.isEmpty()) {
+            return false
+        }
         return if (substitutedVersionId.version.isNotEmpty()) {
             when (VersionWithSelector(version).asSelector()) {
                 is ExactVersionSelector -> versionSelector.accept(version)
